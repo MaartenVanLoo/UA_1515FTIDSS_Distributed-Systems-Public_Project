@@ -1,0 +1,26 @@
+
+/****************
+	INIT
+**************/
+ cd ~
+ apt install git
+ apt install maven -y
+ git clone https://github.com/MaartenVanLoo/UA_1515FTIDSS_Distributed-Systems-Public_Project
+ cd UA_1515FTIDSS_Distributed-Systems-Public_Project
+ git pull
+ mvn package
+ 
+ /***********
+ run nameserver
+ ***********/
+ mvn spring-boot:run
+ 
+  /***********
+ run node
+ ***********/
+ 
+ java -cp target/G1-ProjectY-1.0.jar Node.Node Node0
+ java -cp target/G1-ProjectY-1.0.jar Node.Node Node1
+ java -cp target/G1-ProjectY-1.0.jar Node.Node Node2
+ java -cp target/G1-ProjectY-1.0.jar Node.Node Node3
+ java -cp target/G1-ProjectY-1.0.jar Node.Node Node4
