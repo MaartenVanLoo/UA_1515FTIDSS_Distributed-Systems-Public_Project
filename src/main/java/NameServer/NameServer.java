@@ -1,6 +1,7 @@
 package NameServer;
 
 import java.io.*;
+import java.lang.reflect.Array;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketException;
@@ -18,7 +19,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 public class NameServer {
     private final String mappingFile = "nameServerMap.json";
-    private final HashMap<Integer,String> ipMapping = new HashMap<>(); //id =>ip;
+    private final TreeMap<Integer,String> ipMapping = new TreeMap<>(); //id =>ip;
     private final DiscoveryHandler discoveryHandler = new DiscoveryHandler(this);
     public NameServer() throws IOException {
         //init
@@ -77,6 +78,7 @@ public class NameServer {
     @PostMapping("/ns/addNode")
     public void addNode(@RequestParam int Id, @RequestParam String ip){
         synchronized (this.ipMapping) {
+            if (ipMapping.containsKey(Id)) return;
             this.ipMapping.put(Id, ip);
             //A=(Id.hashcode()+2147483648)*(32768/(2147483648+abs(-2147483648)))
             try {
@@ -87,7 +89,7 @@ public class NameServer {
         }
     }
 
-    @DeleteMapping("/ns/deleteNode")
+    @DeleteMapping("/ns/removeNode")
     public void removeNode(@RequestParam int Id,@RequestParam String ip){
         synchronized (this.ipMapping) {
             if (this.ipMapping.containsKey(Id)) {
