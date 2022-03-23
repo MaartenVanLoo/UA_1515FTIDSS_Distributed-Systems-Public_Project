@@ -11,11 +11,9 @@ import java.util.stream.Collectors;
 
 import org.json.simple.*;
 import org.json.simple.parser.*;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
+@RestController
 public class NameServer {
     private final String mappingFile = "rsc/nameServerMap";
     private final HashMap<Integer,String> ipMapping = new HashMap<>(); //id =>ip;
