@@ -1,6 +1,11 @@
 package NameServer;
 
 import java.io.*;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.SocketException;
+import java.net.SocketTimeoutException;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.stream.Collectors;
 
@@ -14,10 +19,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 public class NameServer {
     private final String mappingFile = "rsc/nameServerMap";
     private final HashMap<Integer,String> ipMapping = new HashMap<>(); //id =>ip;
+    private final DiscoveryHandler discoveryHandler = new DiscoveryHandler(this);
     public NameServer() throws IOException {
         //init
-        try {
-            readMapFromFile(this.mappingFile);
+        /*try {
+            //readMapFromFile(this.mappingFile);
         }catch (IOException e){
             System.out.println("File reading error:" + e.getMessage());
             System.out.println("Creating new file.");
@@ -31,8 +37,8 @@ public class NameServer {
             this.ipMapping.clear();
             writeMapToFile(this.mappingFile);
             System.out.println("Starting with empty map.");
-
-        }
+        }*/
+        discoveryHandler.start();
     }
 
     private void writeMapToFile(String filename) throws IOException {
@@ -104,12 +110,52 @@ public class NameServer {
         }
     }
 
-    public static void main(String[] args) throws IOException {
-        System.out.println("Starting NameServer");
-        NameServer nameServer = new NameServer();
-        nameServer.addNode(5, "192.168.0.5");
-        nameServer.addNode(6, "192.168.0.6");
-        nameServer.addNode(7, "192.168.0.7");
-        nameServer.addNode(8, "192.168.0.8");
+
+    private class DiscoveryHandler extends Thread{
+        NameServer nameServer;
+        boolean running = false;
+        DatagramSocket socket = new DatagramSocket(8001);
+
+        private DiscoveryHandler() throws SocketException {}
+        public DiscoveryHandler(NameServer nameServer) throws SocketException {
+            this.nameServer = nameServer;
+            this.socket.setBroadcast(true);
+            this.socket.setSoTimeout(888);
+        }
+
+        @Override
+        public void run() {
+            this.running = true;
+            byte[] receiveBuffer = new byte[512];
+            byte[] responseBuffer = new byte[512];
+            DatagramPacket receivePacket = new DatagramPacket(receiveBuffer, receiveBuffer.length);
+            while (this.running) {
+                try {
+                    this.socket.receive(receivePacket);
+                    System.out.println("Discovery package received! -> " + receivePacket.getAddress() + ":" + receivePacket.getPort());
+                    String data = new String(receivePacket.getData()).trim();
+
+                    String response = "test";
+                    DatagramPacket responsePacket = new DatagramPacket(response.getBytes(StandardCharsets.UTF_8), response.length(), receivePacket.getAddress(), receivePacket.getPort());
+                    this.socket.send(responsePacket);
+                } catch (IOException ignore) {}
+            }
+        }
+    }
+
+    // main method
+    public void run() {
+        System.out.println("Starting NameServer...");
+        try {
+            NameServer nameServer = new NameServer();
+            nameServer.addNode(5, "192.168.0.5");
+            nameServer.addNode(6, "192.168.0.6");
+            nameServer.addNode(7, "192.168.0.7");
+            nameServer.addNode(8, "192.168.0.8");
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("NamingServer failed to start.");
+        }
     }
 }
