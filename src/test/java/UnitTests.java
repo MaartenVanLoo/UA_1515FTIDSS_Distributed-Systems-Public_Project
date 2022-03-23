@@ -30,8 +30,14 @@ public class UnitTests {
     }
 
     @Test
-    public void addNodeUnique(){
-        //NameServer test = new NameServer();
+    public void addNodeUnique() throws Exception {
+        NameServer test = new NameServer();
+        TreeMap<Integer,String> idMap = test.getIdMap();
+        test.addNode(1, "192.168.3.55");
+        System.out.println("nodes: "+idMap.toString());
+        test.addNode(2, "192.168.3.55");
+        System.out.println("nodes: "+idMap.toString());
+    }
 
     }
 
@@ -42,12 +48,16 @@ public class UnitTests {
     public void sendFileNameIP(){
 
     }
-
-    public void sendFileNameLower(){
+    @Test
+    public void sendFileNameLower() throws Exception{
 
     }
-
-    public void sendFileNameRemove(){
+    @Test
+    public void sendFileNameRemove() throws Exception{
+        NameServer test5 = new NameServer();
+        test5.addNode(5, "192.168.5.5");
+        //test5.sendFile();
+        test5.removeNode(5, "ip192.168.5.5");
 
     }
     @Test
