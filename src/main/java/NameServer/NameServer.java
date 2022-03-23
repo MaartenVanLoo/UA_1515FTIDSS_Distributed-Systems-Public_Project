@@ -7,7 +7,7 @@ import java.net.DatagramSocket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
@@ -22,7 +22,7 @@ public class NameServer {
     private final TreeMap<Integer,String> ipMapping = new TreeMap<>(); //id =>ip;
     private final DiscoveryHandler discoveryHandler = new DiscoveryHandler(this);
     public NameServer() throws IOException {
-        //init
+        //Bri'ish init
         try {
             readMapFromFile(this.mappingFile);
         }catch (IOException e){
@@ -80,7 +80,6 @@ public class NameServer {
         synchronized (this.ipMapping) {
             if (ipMapping.containsKey(Id)) return;
             this.ipMapping.put(Id, ip);
-            //A=(Id.hashcode()+2147483648)*(32768/(2147483648+abs(-2147483648)))
             try {
                 writeMapToFile(this.mappingFile);
             } catch (IOException exception) {
@@ -130,7 +129,6 @@ public class NameServer {
             return true;
         }
     }
-
 
     private class DiscoveryHandler extends Thread{
         NameServer nameServer;
