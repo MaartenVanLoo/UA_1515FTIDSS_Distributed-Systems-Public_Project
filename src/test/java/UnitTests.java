@@ -39,13 +39,15 @@ public class UnitTests {
         System.out.println("nodes: "+idMap.toString());
     }
 
+
+    @Test
+    public void addNodeExisting() throws Exception{
+        NameServer test2 = new NameServer();
+        test2.addNode(2, "192.168.2.2");
+        test2.addNode(2, "192.168.2.2");
     }
-
-    public void addNodeExisting(){
-
-    }
-
-    public void sendFileNameIP(){
+    @Test
+    public void sendFileNameIP() throws Exception{
 
     }
     @Test
