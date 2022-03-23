@@ -39,6 +39,8 @@ public class NameServer {
         discoveryHandler.start();
     }
 
+
+
     private void writeMapToFile(String filename) throws IOException {
         JSONObject jsonObject = new JSONObject();
         synchronized (this.ipMapping) {
@@ -71,6 +73,7 @@ public class NameServer {
     public void addNode(@RequestParam int Id, @RequestParam String ip){
         synchronized (this.ipMapping) {
             this.ipMapping.put(Id, ip);
+            //A=(Id.hashcode()+2147483648)*(32768/(2147483648+abs(-2147483648)))
             try {
                 writeMapToFile(this.mappingFile);
             } catch (IOException exception) {
