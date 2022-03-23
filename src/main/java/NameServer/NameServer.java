@@ -18,9 +18,12 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 public class NameServer {
+    static final int DATAGRAM_PORT = 8001;
+
     private final String mappingFile = "nameServerMap.json";
     private final TreeMap<Integer,String> ipMapping = new TreeMap<>(); //id =>ip;//MOET PRIVATE!!!
     private final DiscoveryHandler discoveryHandler = new DiscoveryHandler(this);
+
     public NameServer() throws IOException {
         //Bri'ish init
         try {
@@ -136,7 +139,7 @@ public class NameServer {
     private class DiscoveryHandler extends Thread{
         NameServer nameServer;
         boolean running = false;
-        DatagramSocket socket = new DatagramSocket(8001);
+        DatagramSocket socket = new DatagramSocket(DATAGRAM_PORT);
 
         private DiscoveryHandler() throws SocketException {}
         public DiscoveryHandler(NameServer nameServer) throws SocketException {
@@ -168,7 +171,7 @@ public class NameServer {
             }
         }
 
-        public void terimnate(){
+        public void terminate(){
             this.running = false;
         }
     }
