@@ -151,6 +151,10 @@ public class NameServer {
                 } catch (IOException ignore) {}
             }
         }
+
+        public void terimnate(){
+            this.running = false;
+        }
     }
 
     // main method
