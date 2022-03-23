@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 public class NameServer {
     private final String mappingFile = "nameServerMap.json";
-    private final TreeMap<Integer,String> ipMapping = new TreeMap<>(); //id =>ip;
+    private final TreeMap<Integer,String> ipMapping = new TreeMap<>(); //id =>ip;//MOET PRIVATE!!!
     private final DiscoveryHandler discoveryHandler = new DiscoveryHandler(this);
     public NameServer() throws IOException {
         //Bri'ish init
@@ -88,7 +88,6 @@ public class NameServer {
         }
     }
 
-
     //location of the file (what node?)
     @GetMapping("/ns/getFile")
     public String getLocation(@RequestParam String fileName) {
@@ -128,6 +127,10 @@ public class NameServer {
             }
             return true;
         }
+    }
+
+    public TreeMap<Integer,String> getIdMap(){
+        return this.ipMapping;
     }
 
     private class DiscoveryHandler extends Thread{
