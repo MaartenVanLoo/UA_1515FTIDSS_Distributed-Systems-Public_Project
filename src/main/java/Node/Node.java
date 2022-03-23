@@ -6,6 +6,7 @@ import java.net.*;
 public class Node {
     private String ip;
     private String name;
+    private int id;
 
     public Node(String name) {
         this.name = name;
@@ -35,6 +36,9 @@ public class Node {
                 System.out.println(responsePacket.getSocketAddress());
                 String responseData = new String(responsePacket.getData()).trim();
                 System.out.println("Response:" + responseData);
+
+                this.ip = String.valueOf(socket.getInetAddress());
+                this.id = Integer.parseInt(responseData);
                 received = true;
             }catch (SocketTimeoutException ignored){}
         }
@@ -43,7 +47,13 @@ public class Node {
 
     public static void main(String[] args) throws IOException {
         System.out.println("Starting Node");
-        Node node = new Node("THIS NODE");
+        String name;
+        if (args.length > 0) {
+            name = args[0];
+        }else{
+            name = "default node";
+        }
+        Node node = new Node(name);
         node.discoverNameServer();
     }
 }

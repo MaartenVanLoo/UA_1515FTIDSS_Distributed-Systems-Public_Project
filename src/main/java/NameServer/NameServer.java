@@ -7,21 +7,23 @@ import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
 import org.json.simple.*;
 import org.json.simple.parser.*;
 import org.springframework.web.bind.annotation.*;
 
+
 @RestController
 public class NameServer {
-    private final String mappingFile = "rsc/nameServerMap";
+    private final String mappingFile = "nameServerMap.json";
     private final HashMap<Integer,String> ipMapping = new HashMap<>(); //id =>ip;
     private final DiscoveryHandler discoveryHandler = new DiscoveryHandler(this);
     public NameServer() throws IOException {
         //init
-        /*try {
-            //readMapFromFile(this.mappingFile);
+        try {
+            readMapFromFile(this.mappingFile);
         }catch (IOException e){
             System.out.println("File reading error:" + e.getMessage());
             System.out.println("Creating new file.");
@@ -35,12 +37,15 @@ public class NameServer {
             this.ipMapping.clear();
             writeMapToFile(this.mappingFile);
             System.out.println("Starting with empty map.");
-        }*/
+        }
         discoveryHandler.start();
     }
 
-
-
+    private int hash(String string){
+        long max = 2147483647;
+        long min = -2147483648;
+        return (int)(((long)string.hashCode()+max)*(32768.0/(max+Math.abs(min))));
+    }
     private void writeMapToFile(String filename) throws IOException {
         JSONObject jsonObject = new JSONObject();
         synchronized (this.ipMapping) {
@@ -136,7 +141,11 @@ public class NameServer {
                     System.out.println("Discovery package received! -> " + receivePacket.getAddress() + ":" + receivePacket.getPort());
                     String data = new String(receivePacket.getData()).trim();
 
-                    String response = "test";
+                    int Id = this.nameServer.hash(data); //Todo: assign correct ID;
+                    String ip = receivePacket.getAddress().getHostAddress();
+                    this.nameServer.addNode(Id,ip);
+
+                    String response = Integer.toString(Id);
                     DatagramPacket responsePacket = new DatagramPacket(response.getBytes(StandardCharsets.UTF_8), response.length(), receivePacket.getAddress(), receivePacket.getPort());
                     this.socket.send(responsePacket);
                 } catch (IOException ignore) {}
