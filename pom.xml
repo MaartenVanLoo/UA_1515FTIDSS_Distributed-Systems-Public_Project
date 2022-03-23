@@ -7,6 +7,10 @@
         <maven.compiler.release>11</maven.compiler.release>
     </properties>
 
+    <groupId>groupId</groupId>
+    <artifactId>G1-ProjectY</artifactId>
+    <version>1.0</version>
+
     <build>
         <pluginManagement>
             <plugins>
@@ -18,6 +22,7 @@
             </plugins>
         </pluginManagement>
     </build>
+
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
@@ -25,9 +30,9 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
 
-    <groupId>groupId</groupId>
-    <artifactId>UA_1515FTIDSS_Distributed-Systems-Public_Project</artifactId>
-    <version>1.0-SNAPSHOT</version>
+
+
+
     <dependencies>
         <dependency>
             <groupId>com.googlecode.json-simple</groupId>

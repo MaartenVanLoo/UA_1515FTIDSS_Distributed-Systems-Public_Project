@@ -7,7 +7,7 @@ import java.util.Properties;
 
 @SpringBootApplication
 public class NamingServerApp {
-    public static void main(String... args) {
+    public static void main(String[]  args) {
         SpringApplication app = new SpringApplication(NamingServerApp.class);
         Properties properties = new Properties();
         properties.put("server.port", "8081");
