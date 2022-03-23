@@ -89,6 +89,19 @@ public class NameServer {
         }
     }
 
+
+    //location of the file (what node?)
+    @GetMapping("/ns/getFile")
+    public String getLocation(@RequestParam String fileName) {
+        int hash =hash(fileName);
+        Map.Entry<Integer,String> entry;
+        entry = this.ipMapping.floorEntry(hash-1); //searches for equal or lower than
+        if (entry == null){ //no smaller key
+            entry = this.ipMapping.lastEntry();// biggest
+        }
+        return entry.getValue();
+    }
+
     @DeleteMapping("/ns/removeNode")
     public void removeNode(@RequestParam int Id,@RequestParam String ip){
         synchronized (this.ipMapping) {
