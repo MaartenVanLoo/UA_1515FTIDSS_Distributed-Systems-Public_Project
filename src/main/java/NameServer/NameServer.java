@@ -7,9 +7,11 @@ import java.net.DatagramSocket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
+import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
+import java.security.MessageDigest;
 
 import org.json.simple.*;
 import org.json.simple.parser.*;
@@ -45,10 +47,17 @@ public class NameServer {
         discoveryHandler.start();
     }
 
-    private int hash(String string){
+    public int hash(String string)  {
+        MessageDigest messageDigest;
+        try {
+            messageDigest = MessageDigest.getInstance("SHA-256");
+            messageDigest.update(string.getBytes());
+        } catch (Exception e){return -1;}
+        String stringHash = new String(messageDigest.digest());
+        //System.out.println(javax.xml.bind.DatatypeConverter.printHexBinary(stringHash.getBytes()));
         long max = 2147483647;
         long min = -2147483648;
-        return (int)(((long)string.hashCode()+max)*(32768.0/(max+Math.abs(min))));
+        return (int)(((long)stringHash.hashCode()+max)*(32768.0/(max+Math.abs(min))));
     }
     private void writeMapToFile(String filename) throws IOException {
         JSONObject jsonObject = new JSONObject();
@@ -78,17 +87,18 @@ public class NameServer {
         }
     }
 
-    @PostMapping("/ns/addNode")
-    public void addNode(@RequestParam int Id, @RequestParam String ip){
+    public boolean addNode(int Id, String ip){
         synchronized (this.ipMapping) {
-            if (ipMapping.containsKey(Id)) return;
+            if (ipMapping.containsKey(Id)) return false;
             this.ipMapping.put(Id, ip);
             try {
                 writeMapToFile(this.mappingFile);
+                return true;
             } catch (IOException exception) {
                 exception.printStackTrace();
             }
         }
+        return false;
     }
 
     //location of the file (what node?)
@@ -104,7 +114,7 @@ public class NameServer {
     }
 
     @DeleteMapping("/ns/removeNode")
-    public void removeNode(@RequestParam int Id,@RequestParam String ip){
+    public void removeNode(@RequestParam int Id){
         synchronized (this.ipMapping) {
             if (this.ipMapping.containsKey(Id)) {
                 this.ipMapping.remove(Id);
@@ -160,13 +170,19 @@ public class NameServer {
                     System.out.println("Discovery package received! -> " + receivePacket.getAddress() + ":" + receivePacket.getPort());
                     String data = new String(receivePacket.getData()).trim();
 
-                    int Id = this.nameServer.hash(data); //Todo: assign correct ID;
+                    int Id = this.nameServer.hash(data);
                     String ip = receivePacket.getAddress().getHostAddress();
-                    this.nameServer.addNode(Id,ip);
-
-                    String response = Integer.toString(Id);
+                    String response;
+                    if (this.nameServer.addNode(Id,ip)){
+                        //adding successful
+                        response = Integer.toString(Id);
+                    }else{
+                        //adding unsuccessful
+                        response = "Access Denied";
+                    }
                     DatagramPacket responsePacket = new DatagramPacket(response.getBytes(StandardCharsets.UTF_8), response.length(), receivePacket.getAddress(), receivePacket.getPort());
                     this.socket.send(responsePacket);
+
                 } catch (IOException ignore) {}
             }
         }

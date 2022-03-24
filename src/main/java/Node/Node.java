@@ -1,7 +1,14 @@
 package Node;
 
+import com.mashape.unirest.http.Unirest;
+import com.mashape.unirest.http.exceptions.UnirestException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.net.*;
+import java.net.http.HttpRequest;
+import java.nio.file.AccessDeniedException;
 
 public class Node {
     private String ip;
@@ -11,10 +18,12 @@ public class Node {
     private String NS_port;
 
     public Node(String name) {
+        ch.qos.logback.classic.Logger root = (ch.qos.logback.classic.Logger) org.slf4j.LoggerFactory.getLogger("org.apache.http");
+        root.setLevel(ch.qos.logback.classic.Level.OFF);
         this.name = name;
     }
 
-    // sends broadcasts until the NS answers
+    // Send broadcasts until the NS answers
     public void discoverNameServer() throws IOException {
         InetAddress broadcastIp = InetAddress.getByName("255.255.255.255");
         String message = name;
@@ -40,16 +49,40 @@ public class Node {
                 String responseData = new String(responsePacket.getData()).trim();
                 System.out.println("Response:" + responseData);
 
+                if (responseData.equals("Access Denied")){
+                    throw new AccessDeniedException("Access to network denied by nameserver");
+                }
+
                 this.ip = String.valueOf(socket.getInetAddress());
                 this.id = Integer.parseInt(responseData);
-                this.NS_ip = String.valueOf(responsePacket.getAddress());
+                this.NS_ip = String.valueOf(responsePacket.getAddress().getHostAddress());
                 this.NS_port = String.valueOf(responsePacket.getPort());
+                System.out.println("Node ip:     \t" + this.ip);
+                System.out.println("Node id:     \t" + this.id);
+                System.out.println("Node ns ip:  \t" + this.NS_ip);
+                System.out.println("Node ns port:\t" + this.NS_port);
                 received = true;
             } catch (SocketTimeoutException ignored) {
             }
         }
     }
 
+    public void getFileLocation(String filename) {
+        try {
+            String url = "http://" + this.NS_ip + ":8081/ns/getFile?fileName="+filename;
+            System.out.println(Unirest.get(url).asString().getBody());
+        } catch (UnirestException e) {
+            e.printStackTrace();
+        }
+    }
+    public void terminate(){
+        try {
+            String url = "http://" + this.NS_ip + ":8081/ns/removeNode?Id=" +this.id;
+            System.out.println(Unirest.delete(url).asString().getBody());
+        } catch (UnirestException e) {
+            e.printStackTrace();
+        }
+    }
 
     public static void main(String[] args) throws IOException {
         System.out.println("Starting Node");
@@ -64,9 +97,14 @@ public class Node {
         System.out.println(NetworkInterface.getNetworkInterfaces());
         Node node = new Node(name);
         node.discoverNameServer();
-        System.out.println("ID:\t"+ node.id);
-        System.out.println("Name:\t" + node.name);
-        System.out.println("IP:\t" + node.ip);
-        System.out.println("NamingServer IP:\t" + node.NS_port + ":" + node.NS_port);
+        long startTime = System.currentTimeMillis();
+        for (int i = 0; i < 1000; i++){
+            node.getFileLocation("test1.txt");
+            node.getFileLocation("test2.txt");
+            node.getFileLocation("test3.txt");
+        }
+        long endTime = System.currentTimeMillis();
+        System.out.println(endTime-startTime);
+        node.terminate();
     }
 }
