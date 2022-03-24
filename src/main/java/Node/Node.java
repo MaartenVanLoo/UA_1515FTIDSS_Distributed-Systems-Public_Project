@@ -1,12 +1,9 @@
 package Node;
 
 import com.mashape.unirest.http.Unirest;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.*;
-import java.net.http.HttpRequest;
 import java.nio.file.AccessDeniedException;
 
 public class Node {
