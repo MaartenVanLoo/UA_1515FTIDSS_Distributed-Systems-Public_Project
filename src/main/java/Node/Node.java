@@ -1,7 +1,6 @@
 package Node;
 
 import com.mashape.unirest.http.Unirest;
-import com.mashape.unirest.http.exceptions.UnirestException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,7 +70,7 @@ public class Node {
         try {
             String url = "http://" + this.NS_ip + ":8081/ns/getFile?fileName="+filename;
             System.out.println(Unirest.get(url).asString().getBody());
-        } catch (UnirestException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -79,7 +78,7 @@ public class Node {
         try {
             String url = "http://" + this.NS_ip + ":8081/ns/removeNode?Id=" +this.id;
             System.out.println(Unirest.delete(url).asString().getBody());
-        } catch (UnirestException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
