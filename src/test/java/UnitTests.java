@@ -45,8 +45,20 @@ public class UnitTests {
 
     @Test
     public void testHash() throws IOException {
-        NameServer ns = new NameServer();
-        ns.
+        String n0 = "Node0";
+        String n1 = "Node1";
+        String n2 = "Node2";
+        String n3 = "Node3";
+        String n4 = "Node4";
+        String n5 = "Node5";
+
+        System.out.println(n0 + "=>" + n0.hashCode() +"->" + this.ns.hash(n0));
+        System.out.println(n1 + "=>" + n1.hashCode() +"->" + ns.hash(n1));
+        System.out.println(n2 + "=>" + n2.hashCode() +"->" + ns.hash(n2));
+        System.out.println(n3 + "=>" + n3.hashCode() +"->" + ns.hash(n3));
+        System.out.println(n4 + "=>" + n4.hashCode() +"->" + ns.hash(n4));
+        System.out.println(n5 + "=>" + n5.hashCode() +"->" + ns.hash(n5));
+
     }
 
     @Test
