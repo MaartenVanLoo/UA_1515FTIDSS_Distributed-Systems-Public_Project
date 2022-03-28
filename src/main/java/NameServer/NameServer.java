@@ -23,10 +23,10 @@ public class NameServer {
 
     private final String mappingFile = "nameServerMap.json";
     private final TreeMap<Integer,String> ipMapping = new TreeMap<>(); //id =>ip;//MOET PRIVATE!!!
-
+    DiscoveryHandler discoveryHandler;
     public NameServer() {
         loadMapping();
-        DiscoveryHandler discoveryHandler = new DiscoveryHandler(this);
+        this.discoveryHandler = new DiscoveryHandler(this);
         discoveryHandler.start();
     }
 
