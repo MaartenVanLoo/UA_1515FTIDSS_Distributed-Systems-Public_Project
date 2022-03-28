@@ -1,7 +1,8 @@
 package Node;
 
 import com.mashape.unirest.http.Unirest;
-
+import org.slf4j.LoggerFactory;
+import ch.qos.logback.classic.Logger;
 import java.io.IOException;
 import java.net.*;
 import java.nio.file.AccessDeniedException;
@@ -18,7 +19,7 @@ public class Node {
         root.setLevel(ch.qos.logback.classic.Level.OFF);
         this.name = name;
     }
-
+    
     // Send broadcasts until the NS answers
     public void discoverNameServer() throws IOException {
         InetAddress broadcastIp = InetAddress.getByName("255.255.255.255");
