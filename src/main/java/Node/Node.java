@@ -1,11 +1,12 @@
 package Node;
 
 import com.mashape.unirest.http.Unirest;
-import org.slf4j.LoggerFactory;
-import ch.qos.logback.classic.Logger;
 import java.io.IOException;
 import java.net.*;
 import java.nio.file.AccessDeniedException;
+
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 public class Node {
     private String ip;

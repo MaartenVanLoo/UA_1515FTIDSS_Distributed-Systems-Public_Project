@@ -19,6 +19,7 @@
                     <artifactId>maven-compiler-plugin</artifactId>
                     <version>3.8.1</version>
                 </plugin>
+
             </plugins>
         </pluginManagement>
     </build>
@@ -29,9 +30,6 @@
         <version>2.4.5</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
-
-
-
 
     <dependencies>
         <dependency>
@@ -68,7 +66,7 @@
             <artifactId>unirest-java</artifactId>
             <version>1.4.9</version>
         </dependency>
-        <dependency>
+        <!--<dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
             <version>4.3.3</version>
@@ -87,14 +85,14 @@
             <groupId>org.json</groupId>
             <artifactId>json</artifactId>
             <version>20140107</version>
-        </dependency>
+        </dependency>-->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-            <version>2.0.0-alpha7</version>
+            <version>1.7.30</version>
         </dependency>
-
-
-
     </dependencies>
+
+
+
 </project>
