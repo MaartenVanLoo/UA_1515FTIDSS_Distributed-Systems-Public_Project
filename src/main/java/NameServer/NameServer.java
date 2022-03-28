@@ -88,6 +88,7 @@ public class NameServer {
     }
 
     public boolean addNode(int Id, String ip){
+        System.out.println("Adding node with id: " + Id + " and ip: " + ip);
         synchronized (this.ipMapping) {
             if (ipMapping.containsKey(Id)) return false;
             this.ipMapping.put(Id, ip);
@@ -115,6 +116,7 @@ public class NameServer {
 
     @DeleteMapping("/ns/removeNode")
     public void removeNode(@RequestParam int Id){
+        System.out.println("Removing node with id: " + Id);
         synchronized (this.ipMapping) {
             if (this.ipMapping.containsKey(Id)) {
                 this.ipMapping.remove(Id);
@@ -129,6 +131,7 @@ public class NameServer {
 
     @PutMapping("/ns/updateNode")
     public boolean updateNode(@RequestParam int Id,@RequestParam String ip){
+        System.out.println("Updating node with id: " + Id);
         synchronized (this.ipMapping) {
             if (!this.ipMapping.containsKey(Id)) return false;
             this.ipMapping.put(Id, ip); //

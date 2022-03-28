@@ -55,10 +55,6 @@ public class Node {
                 this.id = Integer.parseInt(responseData);
                 this.NS_ip = String.valueOf(responsePacket.getAddress().getHostAddress());
                 this.NS_port = String.valueOf(responsePacket.getPort());
-                System.out.println("Node ip:     \t" + this.ip);
-                System.out.println("Node id:     \t" + this.id);
-                System.out.println("Node ns ip:  \t" + this.NS_ip);
-                System.out.println("Node ns port:\t" + this.NS_port);
                 received = true;
             } catch (SocketTimeoutException ignored) {
             }
@@ -81,7 +77,22 @@ public class Node {
             e.printStackTrace();
         }
     }
+    public void printStatus(){
+        System.out.println("Node ip:     \t" + this.ip);
+        System.out.println("Node id:     \t" + this.id);
+        System.out.println("Node ns ip:  \t" + this.NS_ip);
+        System.out.println("Node ns port:\t" + this.NS_port);
+    }
 
+    @Override
+    protected void finalize() throws Throwable{
+        try {
+            this.terminate();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        super.finalize();
+    }
     public static void main(String[] args) throws IOException {
         System.out.println("Starting Node");
         String name;
@@ -95,11 +106,12 @@ public class Node {
         System.out.println(NetworkInterface.getNetworkInterfaces());
         Node node = new Node(name);
         node.discoverNameServer();
+        node.printStatus();
         long startTime = System.currentTimeMillis();
         for (int i = 0; i < 1000; i++){
-            node.getFileLocation("test1.txt");
-            node.getFileLocation("test2.txt");
-            node.getFileLocation("test3.txt");
+            //node.getFileLocation("test1.txt");
+            //node.getFileLocation("test2.txt");
+            //node.getFileLocation("test3.txt");
         }
         long endTime = System.currentTimeMillis();
         System.out.println(endTime-startTime);
