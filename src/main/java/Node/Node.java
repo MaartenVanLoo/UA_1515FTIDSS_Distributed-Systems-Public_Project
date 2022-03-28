@@ -51,7 +51,7 @@ public class Node {
                     throw new AccessDeniedException("Access to network denied by nameserver");
                 }
 
-                this.ip = String.valueOf(socket.getInetAddress());
+                this.ip = String.valueOf(responsePacket.getSocketAddress().toString().split("/")[1].split(":")[0]);
                 this.id = Integer.parseInt(responseData);
                 this.NS_ip = String.valueOf(responsePacket.getAddress().getHostAddress());
                 this.NS_port = String.valueOf(responsePacket.getPort());
@@ -84,15 +84,6 @@ public class Node {
         System.out.println("Node ns port:\t" + this.NS_port);
     }
 
-    @Override
-    protected void finalize() throws Throwable{
-        try {
-            this.terminate();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        super.finalize();
-    }
     public static void main(String[] args) throws IOException {
         System.out.println("Starting Node");
         String name;
