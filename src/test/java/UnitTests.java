@@ -1,20 +1,10 @@
-import Node.Node;
-import com.sun.tools.attach.AgentInitializationException;
-import org.junit.*;
+import NameServer.NameServer;
 import org.junit.jupiter.api.*;
-import NameServer.*;
-import org.junit.jupiter.api.Test;
-import org.springframework.boot.autoconfigure.couchbase.CouchbaseProperties;
 
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Random;
-import java.util.Set;
 import java.util.TreeMap;
-
-import static org.junit.Assert.*;
-import static org.junit.Assume.*;
 
 
 
@@ -24,11 +14,7 @@ public class UnitTests {
     @BeforeAll
     static void beforeAll() {
         System.out.println("Before All");
-        try {
-            ns =  new NameServer();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        ns =  new NameServer();
     }
     @BeforeEach
     void setUp() {
@@ -92,7 +78,7 @@ public class UnitTests {
             new Random().nextBytes(array);
             generatedString = new String(array, StandardCharsets.UTF_8);
             hash = ns.hash(generatedString);
-            System.out.println(hash + "\t=>\t" + generatedString);
+            //System.out.println(hash + "\t=>\t" + generatedString);
         }
         Assertions.assertEquals("192.168.2.2", ns.getLocation(generatedString));
         Assertions.assertEquals(ns.getIdMap().get(2000), ns.getLocation(generatedString));
@@ -113,7 +99,7 @@ public class UnitTests {
             new Random().nextBytes(array);
             generatedString = new String(array, StandardCharsets.UTF_8);
             hash = ns.hash(generatedString);
-            System.out.println(hash + "\t=>\t" + generatedString);
+            //System.out.println(hash + "\t=>\t" + generatedString);
         }
         Assertions.assertEquals("192.168.2.5", ns.getLocation(generatedString));
         Assertions.assertEquals(ns.getIdMap().get(5000), ns.getLocation(generatedString));

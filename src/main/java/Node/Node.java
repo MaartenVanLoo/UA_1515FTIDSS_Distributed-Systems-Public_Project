@@ -5,12 +5,9 @@ import java.io.IOException;
 import java.net.*;
 import java.nio.file.AccessDeniedException;
 
-import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
-
 public class Node {
     private String ip;
-    private String name;
+    private final String name;
     private int id;
     private String NS_ip;
     private String NS_port;
@@ -98,14 +95,10 @@ public class Node {
         Node node = new Node(name);
         node.discoverNameServer();
         node.printStatus();
-        long startTime = System.currentTimeMillis();
-        for (int i = 0; i < 1000; i++){
-            //node.getFileLocation("test1.txt");
-            //node.getFileLocation("test2.txt");
-            //node.getFileLocation("test3.txt");
-        }
-        long endTime = System.currentTimeMillis();
-        System.out.println(endTime-startTime);
+        InetAddress ip = InetAddress.getLocalHost();
+        String hostname = ip.getHostName();
+        System.out.println("Your current IP address : " + ip);
+        System.out.println("Your current Hostname : " + hostname);
         node.terminate();
     }
 }

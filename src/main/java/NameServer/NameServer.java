@@ -1,21 +1,20 @@
 package NameServer;
 
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+import org.springframework.web.bind.annotation.*;
+
 import java.io.*;
-import java.lang.reflect.Array;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketException;
-import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
-import java.security.NoSuchAlgorithmException;
-import java.util.*;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.stream.Collectors;
 import java.security.MessageDigest;
-
-import org.json.simple.*;
-import org.json.simple.parser.*;
-import org.springframework.web.bind.annotation.*;
+import java.security.NoSuchAlgorithmException;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 
 @RestController
@@ -24,27 +23,16 @@ public class NameServer {
 
     private final String mappingFile = "nameServerMap.json";
     private final TreeMap<Integer,String> ipMapping = new TreeMap<>(); //id =>ip;//MOET PRIVATE!!!
-    private final DiscoveryHandler discoveryHandler = new DiscoveryHandler(this);
 
-    public NameServer() throws IOException {
-        //Bri'ish init
-        try {
-            readMapFromFile(this.mappingFile);
-        }catch (IOException e){
-            System.out.println("File reading error:" + e.getMessage());
-            System.out.println("Creating new file.");
-            this.ipMapping.clear();
-            writeMapToFile(this.mappingFile);
-            System.out.println("Starting with empty map.");
-        }
-        catch(ParseException e){
-            System.out.println("File parsing error:" + e.getMessage());
-            System.out.println("Creating new file.");
-            this.ipMapping.clear();
-            writeMapToFile(this.mappingFile);
-            System.out.println("Starting with empty map.");
-        }
+    public NameServer() {
+        loadMapping();
+        DiscoveryHandler discoveryHandler = new DiscoveryHandler(this);
         discoveryHandler.start();
+    }
+
+    @RequestMapping(value = "/ns", method = RequestMethod.GET)
+    public String getNameServer() {
+        return "NameServer is running";
     }
 
     public int hash(String string)  {
@@ -52,14 +40,44 @@ public class NameServer {
         try {
             messageDigest = MessageDigest.getInstance("SHA-256");
             messageDigest.update(string.getBytes());
-        } catch (Exception e){return -1;}
+        } catch (NoSuchAlgorithmException e){return -1;}
         String stringHash = new String(messageDigest.digest());
         //System.out.println(javax.xml.bind.DatatypeConverter.printHexBinary(stringHash.getBytes()));
         long max = 2147483647;
         long min = -2147483648;
         return (int)(((long)stringHash.hashCode()+max)*(32768.0/(max+Math.abs(min))));
     }
-    private void writeMapToFile(String filename) throws IOException {
+
+    private void saveMapping(){
+        try {
+            saveMapping(this.mappingFile);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    private void loadMapping() {
+        try {
+            loadMapping(this.mappingFile);
+        }catch (IOException e){
+            System.out.println("File reading error:" + e.getMessage());
+            System.out.println("Creating new file.");
+            this.ipMapping.clear();
+            try {
+                saveMapping(this.mappingFile);
+            } catch (IOException ignored){}
+            System.out.println("Starting with empty map.");
+        }
+        catch(ParseException e){
+            System.out.println("File parsing error:" + e.getMessage());
+            System.out.println("Creating new file.");
+            this.ipMapping.clear();
+            try {
+                saveMapping(this.mappingFile);
+            } catch (IOException ignored){}
+            System.out.println("Starting with empty map.");
+        }
+    }
+    private void saveMapping(String filename) throws IOException {
         JSONObject jsonObject = new JSONObject();
         synchronized (this.ipMapping) {
             for (int key : ipMapping.keySet()) {
@@ -71,9 +89,8 @@ public class NameServer {
         jsonObject.writeJSONString(out);
         out.flush();
         out.close();
-
     }
-    private void readMapFromFile(String filename) throws FileNotFoundException, ParseException {
+    private void loadMapping(String filename) throws FileNotFoundException, ParseException {
 
         BufferedReader reader = new BufferedReader(new FileReader(new File(filename)));
         JSONParser parser = new JSONParser();
@@ -93,7 +110,7 @@ public class NameServer {
             if (ipMapping.containsKey(Id)) return false;
             this.ipMapping.put(Id, ip);
             try {
-                writeMapToFile(this.mappingFile);
+                saveMapping(this.mappingFile);
                 return true;
             } catch (IOException exception) {
                 exception.printStackTrace();
@@ -121,7 +138,7 @@ public class NameServer {
             if (this.ipMapping.containsKey(Id)) {
                 this.ipMapping.remove(Id);
                 try {
-                    writeMapToFile(this.mappingFile);
+                    saveMapping(this.mappingFile);
                 } catch (IOException exception) {
                     exception.printStackTrace();
                 }
@@ -136,7 +153,7 @@ public class NameServer {
             if (!this.ipMapping.containsKey(Id)) return false;
             this.ipMapping.put(Id, ip); //
             try {
-                writeMapToFile(this.mappingFile);
+                saveMapping(this.mappingFile);
             } catch (IOException exception) {
                 exception.printStackTrace();
                 return false;
@@ -149,23 +166,32 @@ public class NameServer {
         return this.ipMapping;
     }
 
+    //Automatic discovery of new nodes
     private class DiscoveryHandler extends Thread{
         NameServer nameServer;
         boolean running = false;
-        DatagramSocket socket = new DatagramSocket(DATAGRAM_PORT);
+        DatagramSocket socket;
 
-        private DiscoveryHandler() throws SocketException {}
-        public DiscoveryHandler(NameServer nameServer) throws SocketException {
+        private DiscoveryHandler(){}
+        public DiscoveryHandler(NameServer nameServer) {
             this.nameServer = nameServer;
-            this.socket.setBroadcast(true);
-            this.socket.setSoTimeout(888);
+            try {
+                this.socket = new DatagramSocket(DATAGRAM_PORT);
+                this.socket.setBroadcast(true);
+                this.socket.setSoTimeout(888);
+            } catch (SocketException e) {
+                this.socket = null;
+                System.out.println("Automatic node discovery disabled");
+                e.printStackTrace();
+            }
         }
 
         @Override
         public void run() {
+            if (this.socket == null) return;
+
             this.running = true;
             byte[] receiveBuffer = new byte[512];
-            byte[] responseBuffer = new byte[512];
             DatagramPacket receivePacket = new DatagramPacket(receiveBuffer, receiveBuffer.length);
             while (this.running) {
                 try {
@@ -194,6 +220,8 @@ public class NameServer {
             this.running = false;
         }
     }
+
+
 
     // main method
     public void run() {
