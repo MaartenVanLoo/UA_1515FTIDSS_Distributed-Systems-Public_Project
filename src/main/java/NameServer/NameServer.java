@@ -3,6 +3,8 @@ package NameServer;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.*;
@@ -19,6 +21,9 @@ import java.util.stream.Collectors;
 
 @RestController
 public class NameServer {
+
+    Logger logger = LoggerFactory.getLogger(NameServer.class);
+
     static final int DATAGRAM_PORT = 8001;
 
     private final String mappingFile = "nameServerMap.json";
@@ -36,6 +41,7 @@ public class NameServer {
     }
 
     public int hash(String string)  {
+        this.logger.info("Hashing: " + string);
         MessageDigest messageDigest;
         try {
             messageDigest = MessageDigest.getInstance("SHA-256");
@@ -106,6 +112,7 @@ public class NameServer {
 
     public boolean addNode(int Id, String ip){
         System.out.println("Adding node with id: " + Id + " and ip: " + ip);
+        this.logger.info("Adding node with id: " + Id + " and ip: " + ip);
         synchronized (this.ipMapping) {
             if (ipMapping.containsKey(Id)) return false;
             this.ipMapping.put(Id, ip);
@@ -122,6 +129,7 @@ public class NameServer {
     //location of the file (what node?)
     @GetMapping("/ns/getFile")
     public String getLocation(@RequestParam String fileName) {
+        this.logger.info("Request for file: " + fileName);
         int hash =hash(fileName);
         Map.Entry<Integer,String> entry;
         entry = this.ipMapping.floorEntry(hash-1); //searches for equal or lower than
@@ -133,7 +141,8 @@ public class NameServer {
 
     @DeleteMapping("/ns/removeNode")
     public void removeNode(@RequestParam int Id){
-        System.out.println("Removing node with id: " + Id);
+        //System.out.println("Removing node with id: " + Id);
+        this.logger.info("Removing node with id: " + Id);
         synchronized (this.ipMapping) {
             if (this.ipMapping.containsKey(Id)) {
                 this.ipMapping.remove(Id);
@@ -149,6 +158,7 @@ public class NameServer {
     @PutMapping("/ns/updateNode")
     public boolean updateNode(@RequestParam int Id,@RequestParam String ip){
         System.out.println("Updating node with id: " + Id);
+        this.logger.info("Updating node with id: " + Id);
         synchronized (this.ipMapping) {
             if (!this.ipMapping.containsKey(Id)) return false;
             this.ipMapping.put(Id, ip); //
