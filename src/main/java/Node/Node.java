@@ -124,28 +124,25 @@ public class Node {
     // exit the network
     public void shutdown(){
         try {
-            /*
-            String ipdatePrev;
-            String ipdateNext;
+            String updatePrev;
+            String updateNext;
 
             // update prev node
-            String ip_prevNode = Unirest.get("http://"+this.NS_ip+":8081/ns/getPrevIP?currentID="+this.id).asString().getBody();
-            ipdatePrev = "{\"nextNodeId\":\""+this.getNextNodeId()+"\"}";
+            updatePrev = "{\"type\":\"Shutdown\",\"nextNodeId\":"+this.getNextNodeId()+"}";
 
-            DatagramPacket prevNodePacket = new DatagramPacket(ipdatePrev.getBytes(), ipdatePrev.length(),
-                    InetAddress.getByName(ip_prevNode), 8001);
+            DatagramPacket prevNodePacket = new DatagramPacket(updatePrev.getBytes(), updatePrev.length(),
+                    InetAddress.getByName(prevNodeIP), 8001);
 
             DatagramSocket socket = new DatagramSocket();
             socket.send(prevNodePacket);
 
             // update next node
-            String ip_nextNode = Unirest.get("http://"+this.NS_ip+":8081/ns/getNextIP?currentID="+this.id).asString().getBody();
-            ipdateNext = "{\"prevNodeId\":\""+this.getPrevNodeId()+"\"}";
-            DatagramPacket nextNodePacket = new DatagramPacket(ipdateNext.getBytes(), ipdateNext.length(),
-                    InetAddress.getByName(ip_nextNode), 8001);
+            updateNext = "{\"type\":\"Shutdown\",\"prevNodeId\":"+this.getPrevNodeId()+"}";
+            DatagramPacket nextNodePacket = new DatagramPacket(updateNext.getBytes(), updateNext.length(),
+                    InetAddress.getByName(nextNodeIP), 8001);
             //send this.nextNodeID to prevNodeID
             socket.send(nextNodePacket);
-            */
+
             // update namingserver
             System.out.println(Unirest.delete("/ns/removeNode?Id=" +this.id).asString().getBody());
         } catch (Exception e) {
