@@ -176,11 +176,11 @@ public class N2NListener extends Thread {
         }
     }
     private void failureHandler(DatagramPacket receivedPacket,JSONObject jsonObject){
-        if (jsonObject.containsKey("nextNodeId")) {
-            this.node.setNextNodeId((long)jsonObject.get("nextNodeId"));
+        if (jsonObject.containsKey("nextNodeId") && jsonObject.get("failed").equals(this.node.getNextNodeId())) {
+            this.node.setNextNodeId((long) jsonObject.get("nextNodeId"));
             this.node.setNextNodeIP(jsonObject.get("nextNodeIP").toString());
         }
-        if (jsonObject.containsKey("prevNodeId")) {
+        if (jsonObject.containsKey("prevNodeId") && jsonObject.get("failed").equals(this.node.getPrevNodeId())) {
             this.node.setPrevNodeId((long)jsonObject.get("prevNodeId"));
             this.node.setPrevNodeIP(jsonObject.get("prevNodeIP").toString());
         }
