@@ -1,6 +1,7 @@
 package NameServer;
 
 import Utils.Hashing;
+import org.hibernate.property.access.internal.PropertyAccessStrategyIndexBackRefImpl;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -9,9 +10,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.*;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.SocketException;
+import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.TreeMap;
@@ -189,6 +188,49 @@ public class NameServer {
         return true;
     }
 
+    @DeleteMapping("/ns/nodeFailure")
+    public void nodeFailure(@RequestParam int Id) {
+        this.logger.info("Node with id: " + Id + " failed");
+
+        //remove existing node from ip mapping
+        this.ipMapLock.writeLock().lock();
+        if (!this.ipMapping.containsKey(Id)) return;
+        this.ipMapping.remove(Id);
+        try {
+            saveMapping(this.mappingFile);
+        } catch (IOException exception) {
+            exception.printStackTrace();
+            this.ipMapLock.writeLock().unlock();
+        }
+        this.ipMapLock.writeLock().unlock();
+
+        try {
+            Integer prevId = ipMapping.lowerKey(Id) != null ? ipMapping.lowerKey(Id) : ipMapping.lastKey();
+            Integer nextId = ipMapping.higherKey(Id) != null ? ipMapping.higherKey(Id) : ipMapping.firstKey();
+            String nextIP = getNextIP(Id);
+            String prevIP = getPrevIP(Id);
+
+            //Update the next node
+            String message = "{\"type\":\"Failure\"," +
+                    "\"failed\":" + Id + "," +
+                    "\"prevNodeId\":\"" + prevId + "\"," +
+                    "\"prevNodeIP\":\"" + prevIP + "\"}";
+            DatagramPacket packet = new DatagramPacket(message.getBytes(StandardCharsets.UTF_8), message.length(), InetAddress.getByName(nextIP), 8001);
+
+                this.discoveryHandler.socket.send(packet);
+
+
+            //update the prev node
+            message = "{\"type\":\"Failure\"," +
+                    "\"failed\":" + Id + "," +
+                    "\"nextNodeId\":\"" + nextId + "\"," +
+                    "\"nextNodeIP\":\"" + nextIP + "\"}";
+            packet = new DatagramPacket(message.getBytes(StandardCharsets.UTF_8), message.length(), InetAddress.getByName(nextIP), 8001);
+            this.discoveryHandler.socket.send(packet);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
     public TreeMap<Integer,String> getIdMap(){
         return this.ipMapping;
     }

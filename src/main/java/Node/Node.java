@@ -180,12 +180,56 @@ public class Node {
         this.nextNodeId = nextNodeId;
     }
 
+    public String getPrevNodeIP() {
+        return prevNodeIP;
+    }
+
+    public String getNS_ip() {
+        return NS_ip;
+    }
+
+    public String getNS_port() {
+        return NS_port;
+    }
+
+
+    public void setPrevNodeIP(String prevNodeIP) {
+        this.prevNodeIP = prevNodeIP;
+    }
+
+    public String getNextNodeIP() {
+        return nextNodeIP;
+    }
+
+    public void setNextNodeIP(String nextNodeIP) {
+        this.nextNodeIP = nextNodeIP;
+    }
+
     public int getId() {
         return id;
     }
 
     public String getName() {
         return name;
+    }
+
+    /**
+     * This algorithm is activated in every exception thrown during communication with other nodes.
+     * This allows distributed detection of node failure.
+     * @param targetId
+     * integer of targetId
+     *
+     */
+    private void failureHandler(int targetId){
+        // update namingserver
+        System.out.println(Unirest.delete("/ns/nodeFailure").queryString("Id", targetId));
+        // TODO: request the prev node and next node params from the NS
+
+        // TODO: update the 'next node' param of the prev node with the info received from the NS
+
+        // TODO: Update the 'previous node' parameter of the next node with the information received from the nameserver
+
+        // TODO: Remove the node from the Naming server
     }
 
     public static void main(String[] args) throws IOException, InterruptedException {
@@ -229,6 +273,4 @@ public class Node {
         Thread.sleep(99999999);
         node.shutdown();
     }
-
-
 }

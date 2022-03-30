@@ -4,5 +4,6 @@ public enum MessageType {
     Discovery,
     NSoffer,
     NBnext,
-    NBprev
+    NBprev,
+    Shutdown
 }
