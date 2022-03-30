@@ -9,19 +9,28 @@ import java.io.IOException;
 import java.net.*;
 import java.nio.file.AccessDeniedException;
 
+import ch.qos.logback.classic.*;
+
 public class Node {
-    private String ip;
-    private final String name;
-    private int id;
-    private String NS_ip;
-    private String NS_port;
-    private long nodeCount;
-    private long prevNodeId;
-    private long nextNodeId;
+    //<editor-fold desc="global variables">
+    private String ip;          // ip address of the node
+    private final String name;  // name of the node
+    private int id;             // id/hash of the node
+    private String NS_ip;       // ip addr of the namingserver
+    private String NS_port;     // port of the namingserver
+    private long nodeCount;     // # nodes in the network  
+    private long prevNodeId;    // id of the previous node in the network
+    private String prevNodeIP;  // ip addr of the previous node in the network
+    private long nextNodeId;    // id of the next node in the network
+    private String nextNodeIP;  // ip addr of the next node in the network
+
+    private N2NListener n2NListener;
+    //</editor-fold>
 
     public Node(String name) {
-        ch.qos.logback.classic.Logger root = (ch.qos.logback.classic.Logger) org.slf4j.LoggerFactory.getLogger("org.apache.http");
-        root.setLevel(ch.qos.logback.classic.Level.OFF);
+        // turn logger off so it doesn't clutter the console
+        Logger root = (Logger) org.slf4j.LoggerFactory.getLogger("org.apache.http");
+        root.setLevel(Level.OFF);
         this.name = name;
         this.n2NListener = new N2NListener(this);
     }
@@ -79,8 +88,11 @@ public class Node {
                 e.printStackTrace();
             }
         }
+
+        //Unirest.config().defaultBaseUrl("http://"+this.NS_ip+"/ns");
     }
 
+    // ask the namingserver for the location of a file
     public void getFileLocation(String filename) {
         try {
             String url = "http://" + this.NS_ip + ":8081/ns/getFile?fileName="+filename;
@@ -89,7 +101,9 @@ public class Node {
             e.printStackTrace();
         }
     }
-    public void terminate(){
+
+    // exit the network
+    public void shutdown(){
         try {
             String url = "http://" + this.NS_ip + ":8081/ns/removeNode?Id=" +this.id;
             System.out.println(Unirest.delete(url).asString().getBody());
@@ -97,7 +111,10 @@ public class Node {
             e.printStackTrace();
         }
     }
+
+    // print the variables of the node to the console
     public void printStatus(){
+        System.out.println("Node name:   \t" + this.name);
         System.out.println("Node ip:     \t" + this.ip);
         System.out.println("Node id:     \t" + this.id);
         System.out.println("Node ns ip:  \t" + this.NS_ip);
@@ -130,6 +147,7 @@ public class Node {
     public static void main(String[] args) throws IOException {
         System.out.println("Starting Node");
         String name;
+        // if the user didn't specify the name of the node, set the name to "default node"
         if (args.length > 0) {
             name = args[0];
         } else {

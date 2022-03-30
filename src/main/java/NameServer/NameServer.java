@@ -138,6 +138,18 @@ public class NameServer {
         return entry.getValue();
     }
 
+    @GetMapping("/ns/getPrevIP")
+    public String getPrevIP(@RequestParam int currendID) {
+        int prevKey = ipMapping.lowerKey(currendID) != null ? ipMapping.lowerKey(currendID) :ipMapping.lastKey();
+        return ipMapping.get(prevKey);
+    }
+
+    @GetMapping("/ns/getNextIP")
+    public String getNextIP(@RequestParam int currendID) {
+        int nextKey = ipMapping.higherKey(currendID) != null ? ipMapping.higherKey(currendID) :ipMapping.firstKey();
+        return ipMapping.get(nextKey);
+    }
+
     @DeleteMapping("/ns/removeNode")
     public void removeNode(@RequestParam int Id){
         //System.out.println("Removing node with id: " + Id);
@@ -177,7 +189,9 @@ public class NameServer {
         return this.ipMapping;
     }
 
-    //Automatic discovery of new nodes
+    /**
+     *  Automatic discovery of new nodes. Listens for broadcast packets.
+     */
     private class DiscoveryHandler extends Thread{
         NameServer nameServer;
         boolean running = false;
