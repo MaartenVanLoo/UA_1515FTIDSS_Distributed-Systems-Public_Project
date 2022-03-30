@@ -248,7 +248,8 @@ public class Node {
      */
     public void failureHandler(int targetId){
         // update namingserver
-        System.out.println(Unirest.delete("/ns/nodeFailure").queryString("Id", targetId).asString().getBody());
+        Unirest.delete("/ns/nodeFailure").queryString("Id", targetId);
+        System.out.println("Node " + targetId + " has failed");
         // TODO: request the prev node and next node params from the NS
 
         // TODO: update the 'next node' param of the prev node with the info received from the NS
