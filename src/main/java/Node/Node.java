@@ -69,7 +69,7 @@ public class Node {
                     throw new AccessDeniedException("Access to network denied by nameserver");
                 }
 
-                this.ip = String.valueOf(responsePacket.getSocketAddress().toString().split("/")[1].split(":")[0]);
+                this.ip = InetAddress.getLocalHost().toString().split("/")[1].split(":")[0];
                 this.NS_ip = String.valueOf(responsePacket.getAddress().getHostAddress());
                 this.NS_port = String.valueOf(responsePacket.getPort());
                 received = true;
