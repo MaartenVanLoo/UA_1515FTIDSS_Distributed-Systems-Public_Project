@@ -31,6 +31,8 @@ public class Node {
 
     private N2NListener n2NListener;
     private DatagramSocket listeningSocket;
+
+    private boolean setUpComplete = false;
     //</editor-fold>
 
     public Node(String name) {
@@ -118,8 +120,8 @@ public class Node {
                 e.printStackTrace();
             }
         }
-
         Unirest.config().defaultBaseUrl("http://"+this.NS_ip +":8081");
+        this.setUpComplete = true;
     }
 
     // ask the namingserver for the location of a file
@@ -300,5 +302,9 @@ public class Node {
             exit(-999); // force non graceful exit
         }
         node.shutdown();
+    }
+
+    public boolean isSetUp() {
+        return this.setUpComplete;
     }
 }
