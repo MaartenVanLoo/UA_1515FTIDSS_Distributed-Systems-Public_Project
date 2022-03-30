@@ -105,6 +105,7 @@ public class Node {
     // exit the network
     public void shutdown(){
         try {
+            /*
             String ipdatePrev;
             String ipdateNext;
 
@@ -125,7 +126,7 @@ public class Node {
                     InetAddress.getByName(ip_nextNode), 8001);
             //send this.nextNodeID to prevNodeID
             socket.send(nextNodePacket);
-
+            */
             // update namingserver
             String url = "http://" + NS_ip + ":8081/ns/removeNode?Id=" +this.id;
             System.out.println(Unirest.delete(url).asString().getBody());
