@@ -9,6 +9,7 @@ import org.json.simple.parser.ParseException;
 import java.io.IOException;
 import java.net.*;
 import java.nio.file.AccessDeniedException;
+import java.util.Objects;
 
 import ch.qos.logback.classic.*;
 
@@ -297,11 +298,8 @@ public class Node {
             });
             t.start();
         }*/
-        Thread.sleep(20000 + 2*(long) ((Math.random()-0.5) * 10000)); // sleep for 20±10 seconds
+        Thread.sleep(30000 + 2*(long) ((Math.random()-0.5) * 30000)); // sleep for 20±30 seconds
 
-        if (name == "Node0"){
-            exit(-999); // force non graceful exit
-        }
         node.shutdown();
     }
 
