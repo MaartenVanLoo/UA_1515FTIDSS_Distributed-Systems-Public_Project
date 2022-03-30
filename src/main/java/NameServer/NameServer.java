@@ -7,10 +7,13 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.*;
 import java.net.*;
+import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.TreeMap;
@@ -189,12 +192,12 @@ public class NameServer {
     }
 
     @DeleteMapping("/ns/nodeFailure")
-    public void nodeFailure(@RequestParam int Id) {
+    public ResponseEntity<String> nodeFailure(@RequestParam int Id) {
         this.logger.info("Node with id: " + Id + " failed");
 
         //remove existing node from ip mapping
         this.ipMapLock.writeLock().lock();
-        if (!this.ipMapping.containsKey(Id)) return;
+        if (!this.ipMapping.containsKey(Id)) return new ResponseEntity<>("Node with id: " + Id + " does not exist", HttpStatus.BAD_REQUEST);
         this.ipMapping.remove(Id);
         try {
             saveMapping(this.mappingFile);
@@ -229,8 +232,10 @@ public class NameServer {
                     "\"nextNodeIP\":\"" + nextIP + "\"}";
             packet = new DatagramPacket(message.getBytes(StandardCharsets.UTF_8), message.length(), InetAddress.getByName(prevIP), 8001);
             this.discoveryHandler.socket.send(packet);
+            return new ResponseEntity<>("Node with id: " + Id + " failed", HttpStatus.OK);
         } catch (IOException e) {
             e.printStackTrace();
+            return new ResponseEntity<>("Node with id: " + Id + " failed", HttpStatus.BAD_REQUEST);
         }
     }
     public TreeMap<Integer,String> getIdMap(){
