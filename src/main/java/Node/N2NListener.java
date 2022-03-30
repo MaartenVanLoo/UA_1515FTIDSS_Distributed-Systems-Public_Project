@@ -72,7 +72,7 @@ public class N2NListener extends Thread {
                         System.out.println("Received ping message from " + sourceIp);
                         pingHandler(receivedPacket);
                         break;
-                    case "PingReplay":
+                    case "PingReply":
                         System.out.println("Received ping replay message from " + sourceIp);
                         pingReplayHandler(jsonObject);
                         break;
@@ -161,7 +161,7 @@ public class N2NListener extends Thread {
 
         }
         if (jsonObject.containsKey("prevNodeId")) {
-            this.node.setPrevNodeId((long)jsonObject.get("prevNodeID"));
+            this.node.setPrevNodeId((long)jsonObject.get("prevNodeId"));
             this.node.setPrevNodeIP(Unirest.get("http://"+this.node.getNS_ip()+":8081/ns/getPrevIP?currentID="+this.node.getId()).asString().getBody());
         }
     }
@@ -179,7 +179,7 @@ public class N2NListener extends Thread {
         //TODO: check if ping is from neighbour, otherwise a neighbour must have failed?
         //echo back a ping replay
         JSONObject jsonObject = new JSONObject();
-        jsonObject.put("type", "ping_replay");
+        jsonObject.put("type", "PingReply");
         jsonObject.put("nodeId", this.node.getId());
         DatagramPacket datagramPacket = new DatagramPacket(jsonObject.toString().getBytes(), jsonObject.toString().getBytes().length, receivedPacket.getAddress(), receivedPacket.getPort());
         try {
