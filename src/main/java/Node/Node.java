@@ -270,7 +270,7 @@ public class Node {
             });
             t.start();
         }*/
-        Thread.sleep(99999999);
+        Thread.sleep(20000);
         node.shutdown();
     }
 }
