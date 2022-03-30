@@ -140,14 +140,20 @@ public class NameServer {
 
     @GetMapping("/ns/getPrevIP")
     public String getPrevIP(@RequestParam int currendID) {
+        ipMapLock.readLock().lock();
         int prevKey = ipMapping.lowerKey(currendID) != null ? ipMapping.lowerKey(currendID) :ipMapping.lastKey();
-        return ipMapping.get(prevKey);
+        String prevIP = ipMapping.get(prevKey);
+        ipMapLock.readLock().unlock();
+        return prevIP;
     }
 
     @GetMapping("/ns/getNextIP")
     public String getNextIP(@RequestParam int currendID) {
+        ipMapLock.readLock().lock();
         int nextKey = ipMapping.higherKey(currendID) != null ? ipMapping.higherKey(currendID) :ipMapping.firstKey();
-        return ipMapping.get(nextKey);
+        String nextIP = ipMapping.get(nextKey);
+        ipMapLock.readLock().unlock();
+        return nextIP;
     }
 
     @DeleteMapping("/ns/removeNode")
