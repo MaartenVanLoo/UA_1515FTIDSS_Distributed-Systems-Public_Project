@@ -57,8 +57,6 @@ public class N2NListener extends Thread {
                     case "Discovery":
                         System.out.println("Received discovery message from " + sourceIp);
                         discoveryHandler(receivedPacket, jsonObject);
-                        //print status update
-                        this.node.printStatus();
                         break;
                     case "Shutdown":
                         System.out.println("Received shutdown message from " + sourceIp);
@@ -160,6 +158,7 @@ public class N2NListener extends Thread {
             System.out.println("Received discovery message from " + receivedPacket.getAddress().getHostAddress() + " but it is not a neighbour");
             //no answer!, never send an empty response!
         }
+        this.node.printStatus();
     }
     private void shutdownHandler(DatagramPacket receivedPacket,JSONObject jsonObject){
         if (jsonObject.containsKey("nextNodeId")) {
