@@ -15,8 +15,7 @@ import java.nio.charset.StandardCharsets;
  * Thread for listening for incoming multicasts from other Nodes.
  */
 public class N2NListener extends Thread {
-    private final int LISTENING_PORT = 8002;
-    private final int ANSWERING_PORT = 8001;
+    private final int LISTENING_PORT = 8001;
     private final Node node;
     boolean running = false;
     private DatagramSocket listeningSocket;
@@ -56,6 +55,7 @@ public class N2NListener extends Thread {
                 String type = (String) jsonObject.get("type");
                 if (type.equals("Discovery")) {
                     //discovery message
+                    System.out.println("Received discovery message from " + sourceIp);
                     String name = (String) jsonObject.get("name");
                     int neighbourId = Hashing.hash(name);
 
@@ -68,7 +68,7 @@ public class N2NListener extends Thread {
                         this.node.setPrevNodeId(neighbourId);
                         response = "{\"currentId\":\"" + this.node.getId() + "\",\"prevNodeId\":\"" + this.node.getPrevNodeId() + "\"}";
                     } else {
-                        response = "";
+                        response = "{}";
                     }
                     DatagramPacket responsePacket = new DatagramPacket(response.getBytes(StandardCharsets.UTF_8), response.length(), receivePacket.getAddress(), receivePacket.getPort());
                     this.listeningSocket.send(responsePacket);

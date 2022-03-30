@@ -33,6 +33,7 @@ public class Node {
         root.setLevel(Level.OFF);
         this.name = name;
         this.n2NListener = new N2NListener(this);
+        this.n2NListener.start();
     }
     
     // Send broadcasts until the NS answers
@@ -105,6 +106,7 @@ public class Node {
     // exit the network
     public void shutdown(){
         try {
+            /*
             String ipdatePrev;
             String ipdateNext;
 
@@ -125,7 +127,7 @@ public class Node {
                     InetAddress.getByName(ip_nextNode), 8001);
             //send this.nextNodeID to prevNodeID
             socket.send(nextNodePacket);
-
+            */
             // update namingserver
             String url = "http://" + NS_ip + ":8081/ns/removeNode?Id=" +this.id;
             System.out.println(Unirest.delete(url).asString().getBody());
@@ -166,7 +168,7 @@ public class Node {
         return id;
     }
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, InterruptedException {
         System.out.println("Starting Node");
         String name;
         // if the user didn't specify the name of the node, set the name to "default node"
@@ -204,6 +206,7 @@ public class Node {
             });
             t.start();
         }*/
+        Thread.sleep(99999999);
         node.shutdown();
     }
 }
