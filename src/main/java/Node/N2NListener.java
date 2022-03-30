@@ -101,6 +101,25 @@ public class N2NListener extends Thread {
                         this.listeningSocket.send(responsePacket);
                         */
         }
+        else if (this.node.getPrevNodeId() == this.node.getNextNodeId()) {
+            //2 nodes in ring
+            if (this.node.getNextNodeId() > this.getId()){
+                //this node has the lowest ID
+                if (neighbourId < this.node.getId()) {
+                    updatePrevNode(neighbourId, receivedPacket);
+                }else{
+                    updateNextNode(neighbourId, receivedPacket);
+                }
+            }
+            else{
+                //this node has the highest ID
+                if (neighbourId > this.node.getId()) {
+                    updateNextNode(neighbourId, receivedPacket);
+                }else{
+                    updatePrevNode(neighbourId, receivedPacket);
+                }
+            }
+        }
         //TODO: check reasoning for this
         else if (neighbourId > this.node.getId() && this.node.getNextNodeId() < this.node.getId()){
             //This node has the highest id and the next node has the lowest id => now new "highest" node.
@@ -116,7 +135,7 @@ public class N2NListener extends Thread {
                         this.listeningSocket.send(responsePacket);
                         */
         }
-        else if (neighbourId < this.node.getId() && this.node.getPrevNodeId() > this.node.getId() ){
+        else if (neighbourId < this.node.getId() && this.node.getPrevNodeId() > this.node.getId()){
             //This node has the lowest id and the next node has the highest id => now new "lowest" node.
             //new node is to the left
             updatePrevNode(neighbourId, receivedPacket);
