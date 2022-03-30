@@ -167,7 +167,7 @@ public class Node {
         return id;
     }
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, InterruptedException {
         System.out.println("Starting Node");
         String name;
         // if the user didn't specify the name of the node, set the name to "default node"
@@ -205,6 +205,7 @@ public class Node {
             });
             t.start();
         }*/
+        Thread.sleep(99999999);
         node.shutdown();
     }
 }
