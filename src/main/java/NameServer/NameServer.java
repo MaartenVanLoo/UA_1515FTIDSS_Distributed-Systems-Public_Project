@@ -157,9 +157,10 @@ public class NameServer {
     }
 
     @DeleteMapping("/ns/removeNode")
-    public void removeNode(@RequestParam int Id){
+    public ResponseEntity<String> removeNode(@RequestParam int Id){
         //System.out.println("Removing node with id: " + Id);
         this.logger.info("Removing node with id: " + Id);
+        ResponseEntity<String> response;
         this.ipMapLock.writeLock().lock();  //note: take write lock to avoid someone else changing the ipmap between changing the lock from read to write
         if (this.ipMapping.containsKey(Id)) {
             this.ipMapping.remove(Id);
@@ -168,8 +169,12 @@ public class NameServer {
             } catch (IOException exception) {
                 exception.printStackTrace();
             }
+            response = new ResponseEntity<>("Node with id: " + Id + " removed", HttpStatus.OK);
+        } else{
+            response = new ResponseEntity<>("Node with id: " + Id + " does not exist", HttpStatus.NOT_FOUND);
         }
         this.ipMapLock.writeLock().unlock();
+        return response;
     }
 
     @PutMapping("/ns/updateNode")
