@@ -37,7 +37,7 @@ public class N2NListener extends Thread {
         if (this.node.getListeningSocket() == null) return;
 
         this.running = true;
-        while (this.running) {
+        while (this.running && !this.isInterrupted()) {
             try {
                 byte[] receiveData = new byte[1024]; //make new buffer every time!
                 DatagramPacket receivedPacket = new DatagramPacket(receiveData, receiveData.length);

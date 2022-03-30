@@ -162,6 +162,7 @@ public class Node {
         } catch (Exception e) {
             e.printStackTrace();
         }
+        this.listeningSocket.close(); //close the listening socket, this will cause the N2N to exit
     }
 
     // print the variables of the node to the console

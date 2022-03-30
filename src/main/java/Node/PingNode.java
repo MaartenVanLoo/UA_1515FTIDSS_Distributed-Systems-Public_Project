@@ -37,7 +37,7 @@ public class PingNode extends Thread{
     }
     public void run(){
         this.running = true;
-        while(this.running){
+        while(this.running && !this.isInterrupted()){
             //sleep 5 seconds
             try{
                 Thread.sleep(delay);
