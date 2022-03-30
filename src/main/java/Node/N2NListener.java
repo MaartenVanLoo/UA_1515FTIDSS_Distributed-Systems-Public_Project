@@ -78,6 +78,7 @@ public class N2NListener extends Thread {
                                 "\"prevNodeId\":\"" + this.node.getPrevNodeId() + "\"" +
                                 "}";
                     } else {
+                        System.out.println("Received discovery message from " + sourceIp + " but it is not a neighbour");
                         continue; //no answer!, never send an empty response!
                     }
                     DatagramPacket responsePacket = new DatagramPacket(response.getBytes(StandardCharsets.UTF_8), response.length(), receivePacket.getAddress(), receivePacket.getPort());
