@@ -1,5 +1,6 @@
 package NameServer;
 
+import Utils.Hashing;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -12,11 +13,8 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
@@ -222,10 +220,10 @@ public class NameServer {
             if (this.socket == null) return;
 
             this.running = true;
-            byte[] receiveBuffer = new byte[512];
-            DatagramPacket receivePacket = new DatagramPacket(receiveBuffer, receiveBuffer.length);
             while (this.running) {
                 try {
+                    byte[] receiveBuffer = new byte[512]; //make a new buffer for every request (to overwrite the old one)
+                    DatagramPacket receivePacket = new DatagramPacket(receiveBuffer, receiveBuffer.length);
                     this.socket.receive(receivePacket);
                     System.out.println("Discovery package received! -> " + receivePacket.getAddress() + ":" + receivePacket.getPort());
                     String data = new String(receivePacket.getData()).trim();
@@ -239,7 +237,7 @@ public class NameServer {
                         this.nameServer.logger.info("Adding node failed");
                         response = "{\"status\":\"Access Denied\"}";
                     }else {
-                        int Id = Hashing.hash(data);
+                        int Id = Hashing.hash(name);
 
                         if (this.nameServer.addNode(Id, ip)) {
                             //adding successful
@@ -249,7 +247,9 @@ public class NameServer {
                             Integer higherId = this.nameServer.getIdMap().higherKey(Id + 1);
                             if (higherId == null) higherId = this.nameServer.getIdMap().firstKey();
 
-                            response = "{\"status\":\"OK\"," +
+                            response = "{" +
+                                    "\"type\":\"NS-offer\"," +
+                                    "\"status\":\"OK\"," +
                                     "\"id\":" + Id + "," +
                                     "\"nodeCount\":" + this.nameServer.getIdMap().size() + "," +
                                     "\"prevNodeId\":" + lowerId + "," +
@@ -259,12 +259,14 @@ public class NameServer {
                         } else {
                             //adding unsuccessful
                             this.nameServer.logger.info("Adding node failed");
-                            response = "{\"status\":\"Access Denied\"}";
+                            response = "{" +
+                                    "\"type\":\"NS-offer\"," +
+                                    "\"status\":\"Access Denied\"" +
+                                    "}";
                         }
                     }
                     DatagramPacket responsePacket = new DatagramPacket(response.getBytes(StandardCharsets.UTF_8), response.length(), receivePacket.getAddress(), receivePacket.getPort());
                     this.socket.send(responsePacket);
-
                 }
                 catch (ParseException | IOException ignored) {}
             }

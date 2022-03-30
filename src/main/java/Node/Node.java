@@ -1,5 +1,6 @@
 package Node;
 
+import Utils.SynchronizedPrint;
 import kong.unirest.Unirest;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -41,6 +42,7 @@ public class Node {
         InetAddress broadcastIp = InetAddress.getByName("255.255.255.255");
         String message = "{\"type\":\"Discovery\",\"name\":\"" + name + "\"}";
         boolean received = false;
+        boolean resend = false;
 
 
         DatagramSocket socket = new DatagramSocket(8000);
@@ -49,9 +51,10 @@ public class Node {
                 broadcastIp, 8001);
         byte[] response = new byte[256];
         DatagramPacket responsePacket = new DatagramPacket(response, response.length);
+
         while (!received) {
             // Discovery request command
-            socket.send(discoveryPacket);
+            if (resend) socket.send(discoveryPacket);
             System.out.println("Discovery package sent!" + discoveryPacket.getAddress() + ":" + discoveryPacket.getPort());
 
             // Discovery response command
@@ -69,22 +72,34 @@ public class Node {
                 //parse response data:
                 JSONParser parser = new JSONParser();
                 Object obj = parser.parse(responseData);
+                String type = ((JSONObject) obj).get("type").toString();
+                if (type.equals("NS-offer")) {
+                    String status = ((JSONObject) obj).get("status").toString();
+                    if (status.equals("OK")) {
+                        this.id = (int) (long) (((JSONObject) obj).get("id"));
+                        this.nodeCount = (long) (((JSONObject) obj).get("nodeCount"));
+                        this.prevNodeId = (long) (((JSONObject) obj).get("prevNodeId"));
+                        this.nextNodeId = (long) (((JSONObject) obj).get("nextNodeId"));
+                    } else if (status.equals("Access Denied")) {
+                        throw new AccessDeniedException("Access to network denied by nameserver");
+                    }
 
-                String status = ((JSONObject)obj).get("status").toString();
-                if (status.equals("OK")){
-                    this.id =   (int) (long)(((JSONObject)obj).get("id"));
-                    this.nodeCount  = (long)(((JSONObject)obj).get("nodeCount"));
-                    this.prevNodeId = (long)(((JSONObject)obj).get("prevNodeId"));
-                    this.nextNodeId = (long)(((JSONObject)obj).get("nextNodeId"));
-                }else if (status.equals("Access Denied")){
-                    throw new AccessDeniedException("Access to network denied by nameserver");
+                    this.ip = InetAddress.getLocalHost().toString().split("/")[1].split(":")[0];
+                    this.NS_ip = String.valueOf(responsePacket.getAddress().getHostAddress());
+                    this.NS_port = String.valueOf(responsePacket.getPort());
+                    received = true; //no need to read the neighbour's messages when all information already obtained from the NS
+                }else if (type.equals("NB-next")) {
+                    this.nextNodeId = (long) (((JSONObject) obj).get("currentId"));
+                    resend = false;
+                }else if (type.equals("NB-prev")) {
+                    this.prevNodeId = (long) (((JSONObject) obj).get("currentId"));
+                    resend = false;
+                }else{
+                    System.out.println("Unknown response type");
+                    resend =true;
                 }
-
-                this.ip = InetAddress.getLocalHost().toString().split("/")[1].split(":")[0];
-                this.NS_ip = String.valueOf(responsePacket.getAddress().getHostAddress());
-                this.NS_port = String.valueOf(responsePacket.getPort());
-                received = true;
             } catch (SocketTimeoutException ignored) {
+                resend = true;
             } catch (ParseException e) {
                 e.printStackTrace();
             }
@@ -137,14 +152,16 @@ public class Node {
 
     // print the variables of the node to the console
     public void printStatus(){
-        System.out.println("Node name:   \t" + this.name);
-        System.out.println("Node ip:     \t" + this.ip);
-        System.out.println("Node id:     \t" + this.id);
-        System.out.println("Node ns ip:  \t" + this.NS_ip);
-        System.out.println("Node ns port:\t" + this.NS_port);
-        System.out.println("Node prev id:\t" + this.prevNodeId);
-        System.out.println("Node next id:\t" + this.nextNodeId);
-        System.out.println("Node nodeCount:\t" + this.nodeCount);
+        synchronized (SynchronizedPrint.lock) {
+            System.out.println("Node name:   \t" + this.name);
+            System.out.println("Node ip:     \t" + this.ip);
+            System.out.println("Node id:     \t" + this.id);
+            System.out.println("Node ns ip:  \t" + this.NS_ip);
+            System.out.println("Node ns port:\t" + this.NS_port);
+            System.out.println("Node prev id:\t" + this.prevNodeId);
+            System.out.println("Node next id:\t" + this.nextNodeId);
+            System.out.println("Node nodeCount:\t" + this.nodeCount);
+        }
     }
 
     public long getPrevNodeId() {
@@ -165,6 +182,10 @@ public class Node {
 
     public int getId() {
         return id;
+    }
+
+    public String getName() {
+        return name;
     }
 
     public static void main(String[] args) throws IOException, InterruptedException {
@@ -208,4 +229,6 @@ public class Node {
         Thread.sleep(99999999);
         node.shutdown();
     }
+
+
 }
