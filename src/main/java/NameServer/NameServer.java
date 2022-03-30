@@ -16,19 +16,23 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 
 
 @RestController
 public class NameServer {
-
     Logger logger = LoggerFactory.getLogger(NameServer.class);
 
     static final int DATAGRAM_PORT = 8001;
 
     private final String mappingFile = "nameServerMap.json";
     private final TreeMap<Integer,String> ipMapping = new TreeMap<>(); //id =>ip;//MOET PRIVATE!!!
+    ReadWriteLock ipMapLock = new ReentrantReadWriteLock();
     DiscoveryHandler discoveryHandler;
+
     public NameServer() {
         loadMapping();
         this.discoveryHandler = new DiscoveryHandler(this);
@@ -67,7 +71,9 @@ public class NameServer {
         }catch (IOException e){
             System.out.println("File reading error:" + e.getMessage());
             System.out.println("Creating new file.");
+            this.ipMapLock.writeLock().lock();
             this.ipMapping.clear();
+            this.ipMapLock.writeLock().unlock();
             try {
                 saveMapping(this.mappingFile);
             } catch (IOException ignored){}
@@ -76,7 +82,9 @@ public class NameServer {
         catch(ParseException e){
             System.out.println("File parsing error:" + e.getMessage());
             System.out.println("Creating new file.");
+            this.ipMapLock.writeLock().lock();
             this.ipMapping.clear();
+            this.ipMapLock.writeLock().unlock();
             try {
                 saveMapping(this.mappingFile);
             } catch (IOException ignored){}
@@ -85,43 +93,46 @@ public class NameServer {
     }
     private void saveMapping(String filename) throws IOException {
         JSONObject jsonObject = new JSONObject();
-        synchronized (this.ipMapping) {
+        ipMapLock.readLock().lock();
             for (int key : ipMapping.keySet()) {
                 //System.out.println(key + "->" + this.ipMapping.get(key));
                 jsonObject.put(key, ipMapping.get(key));
             }
-        }
+        ipMapLock.readLock().unlock();
         PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(filename)));
         jsonObject.writeJSONString(out);
         out.flush();
         out.close();
     }
     private void loadMapping(String filename) throws FileNotFoundException, ParseException {
-
         BufferedReader reader = new BufferedReader(new FileReader(new File(filename)));
         JSONParser parser = new JSONParser();
         JSONObject jsonObject = (JSONObject) parser.parse(reader.lines().collect(Collectors.joining(System.lineSeparator())));
-        synchronized (this.ipMapping) {
-            this.ipMapping.clear();
-            for (Object obj : jsonObject.keySet()) {
-                long key = Long.parseLong((String) obj);
-                this.ipMapping.put((int) key, (String) jsonObject.get(obj));
-            }
+        ipMapLock.writeLock().lock();
+        this.ipMapping.clear();
+        for (Object obj : jsonObject.keySet()) {
+            long key = Long.parseLong((String) obj);
+            this.ipMapping.put((int) key, (String) jsonObject.get(obj));
         }
+        ipMapLock.writeLock().unlock();
     }
 
     public boolean addNode(int Id, String ip){
         System.out.println("Adding node with id: " + Id + " and ip: " + ip);
         this.logger.info("Adding node with id: " + Id + " and ip: " + ip);
-        synchronized (this.ipMapping) {
-            if (ipMapping.containsKey(Id)) return false;
-            this.ipMapping.put(Id, ip);
-            try {
-                saveMapping(this.mappingFile);
-                return true;
-            } catch (IOException exception) {
-                exception.printStackTrace();
-            }
+        ipMapLock.writeLock().lock(); //note: take write lock to avoid someone else changing the ipmap between changing the lock from read to write
+        if (ipMapping.containsKey(Id)){
+            ipMapLock.writeLock().unlock();
+            return false;
+        }
+        this.ipMapping.put(Id, ip);
+        try {
+            saveMapping(this.mappingFile);
+            ipMapLock.writeLock().unlock();
+            return true;
+        } catch (IOException exception) {
+            exception.printStackTrace();
+            ipMapLock.writeLock().unlock();
         }
         return false;
     }
@@ -132,10 +143,12 @@ public class NameServer {
         this.logger.info("Request for file: " + fileName);
         int hash =hash(fileName);
         Map.Entry<Integer,String> entry;
+        this.ipMapLock.readLock().lock();
         entry = this.ipMapping.floorEntry(hash-1); //searches for equal or lower than
         if (entry == null){ //no smaller key
             entry = this.ipMapping.lastEntry();// biggest
         }
+        this.ipMapLock.readLock().unlock();
         return entry.getValue();
     }
 
@@ -143,33 +156,35 @@ public class NameServer {
     public void removeNode(@RequestParam int Id){
         //System.out.println("Removing node with id: " + Id);
         this.logger.info("Removing node with id: " + Id);
-        synchronized (this.ipMapping) {
-            if (this.ipMapping.containsKey(Id)) {
-                this.ipMapping.remove(Id);
-                try {
-                    saveMapping(this.mappingFile);
-                } catch (IOException exception) {
-                    exception.printStackTrace();
-                }
+        this.ipMapLock.writeLock().lock();  //note: take write lock to avoid someone else changing the ipmap between changing the lock from read to write
+        if (this.ipMapping.containsKey(Id)) {
+            this.ipMapping.remove(Id);
+            try {
+                saveMapping(this.mappingFile);
+            } catch (IOException exception) {
+                exception.printStackTrace();
             }
         }
+        this.ipMapLock.writeLock().unlock();
     }
 
     @PutMapping("/ns/updateNode")
     public boolean updateNode(@RequestParam int Id,@RequestParam String ip){
         System.out.println("Updating node with id: " + Id);
         this.logger.info("Updating node with id: " + Id);
-        synchronized (this.ipMapping) {
-            if (!this.ipMapping.containsKey(Id)) return false;
-            this.ipMapping.put(Id, ip); //
-            try {
-                saveMapping(this.mappingFile);
-            } catch (IOException exception) {
-                exception.printStackTrace();
-                return false;
-            }
-            return true;
+        this.ipMapLock.writeLock().lock();
+        if (!this.ipMapping.containsKey(Id)) return false;
+        this.ipMapping.put(Id, ip);
+
+        try {
+            saveMapping(this.mappingFile);
+        } catch (IOException exception) {
+            exception.printStackTrace();
+            this.ipMapLock.writeLock().unlock();
+            return false;
         }
+        this.ipMapLock.writeLock().unlock();
+        return true;
     }
 
     public TreeMap<Integer,String> getIdMap(){

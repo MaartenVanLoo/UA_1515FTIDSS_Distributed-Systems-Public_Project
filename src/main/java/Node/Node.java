@@ -107,7 +107,7 @@ public class Node {
             node.getFileLocation("test4.txt");
         }*/
         for (int i = 0; i < 10;i++) {
-            Thread t = new Thread(() -> {
+            /*Thread t = new Thread(() -> {
                 for (int j = 0; j < 10000; j++) {
                     node.getFileLocation("test.txt");
                     node.getFileLocation("test1.txt");
@@ -117,7 +117,7 @@ public class Node {
 
                 }
             });
-            t.start();
+            t.start();*/
         }
         node.terminate();
     }
