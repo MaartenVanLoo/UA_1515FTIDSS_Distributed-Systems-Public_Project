@@ -215,9 +215,14 @@ public class NameServer {
                     if (this.nameServer.addNode(Id,ip)){
                         //adding successful
                         response = Integer.toString(Id);
+                        response = "{\"status\":\"ok\"," +
+                                    "\"id\":\"" + Id + "\"+" +
+                                    "\"nodeCount\":" + this.nameServer.getIdMap().size() +
+                                    "\"prevNodeId\":" + this.nameServer.getIdMap().lowerKey(Id-1) +
+                                    "\"nextNodeId\":" + this.nameServer.getIdMap().higherKey(Id+1) + "}";
                     }else{
                         //adding unsuccessful
-                        response = "Access Denied";
+                        response = "{\"status\":\"Access Denied\"}";
                     }
                     DatagramPacket responsePacket = new DatagramPacket(response.getBytes(StandardCharsets.UTF_8), response.length(), receivePacket.getAddress(), receivePacket.getPort());
                     this.socket.send(responsePacket);

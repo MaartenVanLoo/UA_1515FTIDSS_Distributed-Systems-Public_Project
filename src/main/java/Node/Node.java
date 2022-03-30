@@ -1,6 +1,10 @@
 package Node;
 
 import com.mashape.unirest.http.Unirest;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+
 import java.io.IOException;
 import java.net.*;
 import java.nio.file.AccessDeniedException;
@@ -48,12 +52,27 @@ public class Node {
                     throw new AccessDeniedException("Access to network denied by nameserver");
                 }
 
+                //parse response data:
+                JSONParser parser = new JSONParser();
+                Object obj = parser.parse(responseData);
+
+                String status = ((JSONObject)obj).get("status").toString();
+                if (status.equals("OK")){
+                    long nodeCount = (long)(((JSONObject)obj).get("nodeCount"));
+                    long prevNodeId = (long)(((JSONObject)obj).get("prevNodeId"));
+                    long nextNodeId = (long)(((JSONObject)obj).get("nextNodeId"));
+                }else if (status.equals("Access Denied")){
+                    throw new AccessDeniedException("Access to network denied by nameserver");
+                }
+
                 this.ip = String.valueOf(responsePacket.getSocketAddress().toString().split("/")[1].split(":")[0]);
                 this.id = Integer.parseInt(responseData);
                 this.NS_ip = String.valueOf(responsePacket.getAddress().getHostAddress());
                 this.NS_port = String.valueOf(responsePacket.getPort());
                 received = true;
             } catch (SocketTimeoutException ignored) {
+            } catch (ParseException e) {
+                e.printStackTrace();
             }
         }
     }
