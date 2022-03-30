@@ -82,7 +82,9 @@ public class N2NListener extends Thread {
                         System.out.println("Unknown message type: " + type);
                         break;
                 }
-            } catch (IOException | ParseException e) {
+            }
+            catch (SocketException ignored){} //thrown when the socket is closed
+            catch (IOException | ParseException e) {
                 e.printStackTrace();
             }
         }

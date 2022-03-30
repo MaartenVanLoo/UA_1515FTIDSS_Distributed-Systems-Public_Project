@@ -12,6 +12,8 @@ import java.nio.file.AccessDeniedException;
 
 import ch.qos.logback.classic.*;
 
+import static java.lang.System.exit;
+
 public class Node {
     //<editor-fold desc="global variables">
     private static final int LISTENING_PORT = 8001;
@@ -292,7 +294,11 @@ public class Node {
             });
             t.start();
         }*/
-        Thread.sleep(20000);
+        Thread.sleep(20000 + 2*(long) ((Math.random()-0.5) * 10000)); // sleep for 20±10 seconds
+
+        if (name == "Node0"){
+            exit(-999); // force non graceful exit
+        }
         node.shutdown();
     }
 }
