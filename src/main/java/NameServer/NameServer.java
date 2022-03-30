@@ -197,13 +197,13 @@ public class NameServer {
 
         //remove existing node from ip mapping
         this.ipMapLock.writeLock().lock();
-        if (!this.ipMapping.containsKey(Id)) return new ResponseEntity<>("Node with id: " + Id + " does not exist", HttpStatus.BAD_REQUEST);
+        if (!this.ipMapping.containsKey(Id)) return new ResponseEntity<>("Node with id: " + Id + " does not exist", HttpStatus.NOT_FOUND);
         this.ipMapping.remove(Id);
+        if (this.ipMapping.isEmpty()) return new ResponseEntity<>("No nodes left", HttpStatus.NOT_FOUND);
         try {
             saveMapping(this.mappingFile);
         } catch (IOException exception) {
             exception.printStackTrace();
-            this.ipMapLock.writeLock().unlock();
         }
         this.ipMapLock.writeLock().unlock();
 
@@ -221,7 +221,6 @@ public class NameServer {
                     "\"prevNodeId\":" + prevId + "," +
                     "\"prevNodeIP\":\"" + prevIP + "\"}";
             DatagramPacket packet = new DatagramPacket(message.getBytes(StandardCharsets.UTF_8), message.length(), InetAddress.getByName(nextIP), 8001);
-
             this.discoveryHandler.socket.send(packet);
 
 
@@ -235,6 +234,8 @@ public class NameServer {
             return new ResponseEntity<>("Node with id: " + Id + " failed", HttpStatus.OK);
         } catch (IOException e) {
             e.printStackTrace();
+            return new ResponseEntity<>("Node with id: " + Id + " failed", HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
             return new ResponseEntity<>("Node with id: " + Id + " failed", HttpStatus.BAD_REQUEST);
         }
     }
