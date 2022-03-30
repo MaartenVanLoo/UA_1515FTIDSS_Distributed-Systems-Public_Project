@@ -41,13 +41,13 @@ public class N2NListener extends Thread {
         this.running = true;
         while (this.running) {
             try {
-                byte[] receiveData = new byte[1024];
+                byte[] receiveData = new byte[1024]; //make new buffer every time!
                 DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
                 this.listeningSocket.receive(receivePacket);
                 String data = new String(receivePacket.getData()).trim();
 
                 String sourceIp = receivePacket.getAddress().getHostAddress();
-                String response;
+                String response ="{}";
 
                 //Multicast new node:
                 JSONParser parser = new JSONParser();
@@ -57,6 +57,7 @@ public class N2NListener extends Thread {
                     //discovery message
                     System.out.println("Received discovery message from " + sourceIp);
                     String name = (String) jsonObject.get("name");
+                    if (name.equals(this.node.getName())) continue; //no answer!
                     int neighbourId = Hashing.hash(name);
 
                     if (neighbourId > this.node.getId() && this.node.getNextNodeId() > neighbourId) {
@@ -68,7 +69,7 @@ public class N2NListener extends Thread {
                         this.node.setPrevNodeId(neighbourId);
                         response = "{\"currentId\":\"" + this.node.getId() + "\",\"prevNodeId\":\"" + this.node.getPrevNodeId() + "\"}";
                     } else {
-                        response = "{}";
+                        if (name.equals(this.node.getName())) continue; //no answer!
                     }
                     DatagramPacket responsePacket = new DatagramPacket(response.getBytes(StandardCharsets.UTF_8), response.length(), receivePacket.getAddress(), receivePacket.getPort());
                     this.listeningSocket.send(responsePacket);

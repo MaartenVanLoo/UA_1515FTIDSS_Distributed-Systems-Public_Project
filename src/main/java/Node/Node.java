@@ -168,6 +168,10 @@ public class Node {
         return id;
     }
 
+    public String getName() {
+        return name;
+    }
+
     public static void main(String[] args) throws IOException, InterruptedException {
         System.out.println("Starting Node");
         String name;
@@ -209,4 +213,6 @@ public class Node {
         Thread.sleep(99999999);
         node.shutdown();
     }
+
+
 }
