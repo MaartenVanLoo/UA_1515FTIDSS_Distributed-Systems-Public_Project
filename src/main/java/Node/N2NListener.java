@@ -16,21 +16,15 @@ import java.nio.charset.StandardCharsets;
  * Thread for listening for incoming multicasts from other Nodes.
  */
 public class N2NListener extends Thread {
-    private final int LISTENING_PORT = 8001;
+    private PingNode pingNode;
     private final Node node;
     boolean running = false;
-    private DatagramSocket listeningSocket;
+
 
     public N2NListener(Node node) {
         this.node = node;
-        try {
-            this.listeningSocket = new DatagramSocket(LISTENING_PORT);
-        } catch (SocketException e) {
-            this.listeningSocket = null;
-            System.out.println("Node 2 Node Listening disabled");
-            e.printStackTrace();
-        }
-        //this.listeningSocket = null; //uncomment this line when runninging on localhost (no 2 sockets listening to the same port)
+        this.pingNode = new PingNode(node);
+        pingNode.start();
     }
 
     @Override
@@ -38,14 +32,14 @@ public class N2NListener extends Thread {
      * Listen for UDP packets
      */
     public void run() {
-        if (this.listeningSocket == null) return;
+        if (this.node.getListeningSocket() == null) return;
 
         this.running = true;
         while (this.running) {
             try {
                 byte[] receiveData = new byte[1024]; //make new buffer every time!
                 DatagramPacket receivedPacket = new DatagramPacket(receiveData, receiveData.length);
-                this.listeningSocket.receive(receivedPacket);
+                this.node.getListeningSocket().receive(receivedPacket);
 
                 String data = new String(receivedPacket.getData()).trim();
                 System.out.println("Received: " + data);
@@ -56,24 +50,35 @@ public class N2NListener extends Thread {
                 JSONParser parser = new JSONParser();
                 JSONObject jsonObject = (JSONObject) parser.parse(data);
                 String type = (String) jsonObject.get("type");
-                DatagramPacket responsePacket = null;
 
-                if (type.equals("Discovery")) {
-                    System.out.println("Received discovery message from " + sourceIp);
-                    discoveryHandler(receivedPacket,jsonObject);
-                    //print status update
-                    this.node.printStatus();
-                } else if (type.equals("Shutdown")) {
-                    System.out.println("Received shutdown message from " + sourceIp);
-                    shutdownHandler(receivedPacket,jsonObject);
-                    this.node.printStatus();
-                }else if (type.equals("Failure")) {
-                    System.out.println("Received failure message from " + sourceIp);
-                    failureHandler(receivedPacket,jsonObject);
-                    this.node.printStatus();
-                }
-                else {
-                    System.out.println("Unknown message type: " + type);
+                switch (type) {
+                    case "Discovery":
+                        System.out.println("Received discovery message from " + sourceIp);
+                        discoveryHandler(receivedPacket, jsonObject);
+                        //print status update
+                        this.node.printStatus();
+                        break;
+                    case "Shutdown":
+                        System.out.println("Received shutdown message from " + sourceIp);
+                        shutdownHandler(receivedPacket, jsonObject);
+                        this.node.printStatus();
+                        break;
+                    case "Failure":
+                        System.out.println("Received failure message from " + sourceIp);
+                        failureHandler(receivedPacket, jsonObject);
+                        this.node.printStatus();
+                        break;
+                    case "Ping":
+                        System.out.println("Received ping message from " + sourceIp);
+                        pingHandler(receivedPacket);
+                        break;
+                    case "PingReplay":
+                        System.out.println("Received ping replay message from " + sourceIp);
+                        pingReplayHandler(jsonObject);
+                        break;
+                    default:
+                        System.out.println("Unknown message type: " + type);
+                        break;
                 }
             } catch (IOException | ParseException e) {
                 e.printStackTrace();
@@ -170,6 +175,26 @@ public class N2NListener extends Thread {
             this.node.setPrevNodeIP(jsonObject.get("prevNodeIP").toString());
         }
     }
+    private void pingHandler(DatagramPacket receivedPacket){
+        //TODO: check if ping is from neighbour, otherwise a neighbour must have failed?
+        //echo back a ping replay
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("type", "ping_replay");
+        jsonObject.put("nodeId", this.node.getId());
+        DatagramPacket datagramPacket = new DatagramPacket(jsonObject.toString().getBytes(), jsonObject.toString().getBytes().length, receivedPacket.getAddress(), receivedPacket.getPort());
+        try {
+            this.node.getListeningSocket().send(datagramPacket);
+        } catch (IOException ignored) {}
+    }
+    private void pingReplayHandler(JSONObject jsonObject){
+        long id = (long)jsonObject.get("nodeId");
+        if (id == this.node.getNextNodeId()){
+            this.pingNode.resetNext();
+        }
+        if (id == this.node.getPrevNodeId()){
+            this.pingNode.resetPrev();
+        }
+    }
     private void updateNextNode(int neighbourId, DatagramPacket receivedPacket) throws IOException {
         this.node.setNextNodeId(neighbourId);
         String response = "{" +
@@ -178,7 +203,7 @@ public class N2NListener extends Thread {
                 "\"nextNodeId\":" + this.node.getNextNodeId() + "" +
                 "}";
         DatagramPacket responsePacket = new DatagramPacket(response.getBytes(StandardCharsets.UTF_8), response.length(), receivedPacket.getAddress(), receivedPacket.getPort());
-        this.listeningSocket.send(responsePacket);
+        this.node.getListeningSocket().send(responsePacket);
         this.node.setNextNodeIP(Unirest.get("http://"+this.node.getNS_ip()+":8081/ns/getNextIP?currentID="+this.node.getId()).asString().getBody());
     }
     private void updatePrevNode(int neighbourId, DatagramPacket receivedPacket) throws IOException {
@@ -189,7 +214,7 @@ public class N2NListener extends Thread {
                 "\"prevNodeId\":" + this.node.getPrevNodeId() + "" +
                 "}";
         DatagramPacket responsePacket = new DatagramPacket(response.getBytes(StandardCharsets.UTF_8), response.length(), receivedPacket.getAddress(), receivedPacket.getPort());
-        this.listeningSocket.send(responsePacket);
+        this.node.getListeningSocket().send(responsePacket);
         this.node.setPrevNodeIP(Unirest.get("http://"+this.node.getNS_ip()+":8081/ns/getPrevIP?currentID="+this.node.getId()).asString().getBody());
     }
 

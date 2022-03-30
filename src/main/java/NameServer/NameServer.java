@@ -205,8 +205,10 @@ public class NameServer {
         this.ipMapLock.writeLock().unlock();
 
         try {
+            this.ipMapLock.readLock().lock();
             Integer prevId = ipMapping.lowerKey(Id) != null ? ipMapping.lowerKey(Id) : ipMapping.lastKey();
             Integer nextId = ipMapping.higherKey(Id) != null ? ipMapping.higherKey(Id) : ipMapping.firstKey();
+            this.ipMapLock.readLock().unlock();
             String nextIP = getNextIP(Id);
             String prevIP = getPrevIP(Id);
 
@@ -217,7 +219,7 @@ public class NameServer {
                     "\"prevNodeIP\":\"" + prevIP + "\"}";
             DatagramPacket packet = new DatagramPacket(message.getBytes(StandardCharsets.UTF_8), message.length(), InetAddress.getByName(nextIP), 8001);
 
-                this.discoveryHandler.socket.send(packet);
+            this.discoveryHandler.socket.send(packet);
 
 
             //update the prev node
@@ -225,7 +227,7 @@ public class NameServer {
                     "\"failed\":" + Id + "," +
                     "\"nextNodeId\":\"" + nextId + "\"," +
                     "\"nextNodeIP\":\"" + nextIP + "\"}";
-            packet = new DatagramPacket(message.getBytes(StandardCharsets.UTF_8), message.length(), InetAddress.getByName(nextIP), 8001);
+            packet = new DatagramPacket(message.getBytes(StandardCharsets.UTF_8), message.length(), InetAddress.getByName(prevIP), 8001);
             this.discoveryHandler.socket.send(packet);
         } catch (IOException e) {
             e.printStackTrace();

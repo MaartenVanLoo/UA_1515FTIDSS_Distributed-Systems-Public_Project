@@ -14,6 +14,8 @@ import ch.qos.logback.classic.*;
 
 public class Node {
     //<editor-fold desc="global variables">
+    private static final int LISTENING_PORT = 8001;
+
     private String ip;          // ip address of the node
     private final String name;  // name of the node
     private int id;             // id/hash of the node
@@ -26,6 +28,7 @@ public class Node {
     private String nextNodeIP;  // ip addr of the next node in the network
 
     private N2NListener n2NListener;
+    private DatagramSocket listeningSocket;
     //</editor-fold>
 
     public Node(String name) {
@@ -33,6 +36,15 @@ public class Node {
         Logger root = (Logger) org.slf4j.LoggerFactory.getLogger("org.apache.http");
         root.setLevel(Level.OFF);
         this.name = name;
+
+        try {
+            this.listeningSocket= new DatagramSocket(LISTENING_PORT);
+        } catch (SocketException e) {
+            this.listeningSocket = null;
+            System.out.println("Node 2 Node Listening disabled");
+            e.printStackTrace();
+        }
+
         this.n2NListener = new N2NListener(this);
         this.n2NListener.start();
     }
@@ -192,6 +204,13 @@ public class Node {
         return NS_port;
     }
 
+    public DatagramSocket getListeningSocket() {
+        return listeningSocket;
+    }
+
+    public void setListeningSocket(DatagramSocket listeningSocket) {
+        this.listeningSocket = listeningSocket;
+    }
 
     public void setPrevNodeIP(String prevNodeIP) {
         this.prevNodeIP = prevNodeIP;
@@ -220,7 +239,7 @@ public class Node {
      * integer of targetId
      *
      */
-    private void failureHandler(int targetId){
+    public void failureHandler(int targetId){
         // update namingserver
         System.out.println(Unirest.delete("/ns/nodeFailure").queryString("Id", targetId));
         // TODO: request the prev node and next node params from the NS
