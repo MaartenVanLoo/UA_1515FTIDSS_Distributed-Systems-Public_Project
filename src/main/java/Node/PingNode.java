@@ -12,8 +12,10 @@ public class PingNode extends Thread{
     private int nextUnanswerd = 0;
     private int prevUnanswerd = 0;
     private int delay = 5000;
+    private boolean running = false;
 
     public PingNode(Node node){
+        this.setDaemon(true); //make sure the thread dies when the main thread dies
         this.node = node;
 
     }
@@ -30,13 +32,18 @@ public class PingNode extends Thread{
     public void resetPrev(){
         this.prevUnanswerd = 0;
     }
+    public void shutdown(){
+        this.running = false;
+    }
     public void run(){
-        while(true){
+        this.running = true;
+        while(this.running){
             //sleep 5 seconds
             try{
                 Thread.sleep(delay);
             }catch(InterruptedException e){
-                e.printStackTrace();
+                this.running = false;
+                return;
             }
 
             InetAddress nextAddress;

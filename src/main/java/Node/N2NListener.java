@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
 
 /**
@@ -18,10 +19,11 @@ import java.nio.charset.StandardCharsets;
 public class N2NListener extends Thread {
     private PingNode pingNode;
     private final Node node;
-    boolean running = false;
+    private boolean running = false;
 
 
     public N2NListener(Node node) {
+        this.setDaemon(true); //make sure the thread dies when the main thread dies
         this.node = node;
         this.pingNode = new PingNode(node);
         pingNode.start();
@@ -86,6 +88,9 @@ public class N2NListener extends Thread {
         }
     }
 
+    public void shutdown(){
+        this.running = false;
+    }
     /**
      * Handles UDP packets received from other nodes when they enter the network.
      * @param receivedPacket

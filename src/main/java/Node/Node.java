@@ -140,7 +140,8 @@ public class Node {
             String updateNext;
 
             // update prev node
-            updatePrev = "{\"type\":\"Shutdown\",\"nextNodeId\":"+this.getNextNodeId()+"}";
+            updatePrev = "{\"type\":\"Shutdown\"," +
+                    "\"nextNodeId\":"+this.getNextNodeId()+"}";
 
             DatagramPacket prevNodePacket = new DatagramPacket(updatePrev.getBytes(), updatePrev.length(),
                     InetAddress.getByName(prevNodeIP), 8001);
@@ -149,7 +150,8 @@ public class Node {
             socket.send(prevNodePacket);
 
             // update next node
-            updateNext = "{\"type\":\"Shutdown\",\"prevNodeId\":"+this.getPrevNodeId()+"}";
+            updateNext = "{\"type\":\"Shutdown\"," +
+                    "\"prevNodeId\":"+this.getPrevNodeId()+"}";
             DatagramPacket nextNodePacket = new DatagramPacket(updateNext.getBytes(), updateNext.length(),
                     InetAddress.getByName(nextNodeIP), 8001);
             //send this.nextNodeID to prevNodeID

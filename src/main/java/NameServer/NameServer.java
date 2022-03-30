@@ -247,6 +247,7 @@ public class NameServer {
 
         private DiscoveryHandler(){}
         public DiscoveryHandler(NameServer nameServer) {
+            this.setDaemon(true); //make sure the thread dies when the main thread dies
             this.nameServer = nameServer;
             try {
                 this.socket = new DatagramSocket(DATAGRAM_PORT);
