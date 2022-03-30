@@ -164,7 +164,7 @@ public class N2NListener extends Thread {
             //no answer!, never send an empty response!
         }
     }
-    private void shutdownHandler(){}
+    private void shutdownHandler(){};
     private void updateNextNode(int neighbourId, DatagramPacket receivedPacket) throws IOException {
         this.node.setNextNodeId(neighbourId);
         String response = "{" +

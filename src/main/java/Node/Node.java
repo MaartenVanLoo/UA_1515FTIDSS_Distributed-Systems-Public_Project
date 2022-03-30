@@ -1,5 +1,6 @@
 package Node;
 
+import Utils.SynchronizedPrint;
 import com.mashape.unirest.http.Unirest;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -152,14 +153,16 @@ public class Node {
 
     // print the variables of the node to the console
     public void printStatus(){
-        System.out.println("Node name:   \t" + this.name);
-        System.out.println("Node ip:     \t" + this.ip);
-        System.out.println("Node id:     \t" + this.id);
-        System.out.println("Node ns ip:  \t" + this.NS_ip);
-        System.out.println("Node ns port:\t" + this.NS_port);
-        System.out.println("Node prev id:\t" + this.prevNodeId);
-        System.out.println("Node next id:\t" + this.nextNodeId);
-        System.out.println("Node nodeCount:\t" + this.nodeCount);
+        synchronized (SynchronizedPrint.lock) {
+            System.out.println("Node name:   \t" + this.name);
+            System.out.println("Node ip:     \t" + this.ip);
+            System.out.println("Node id:     \t" + this.id);
+            System.out.println("Node ns ip:  \t" + this.NS_ip);
+            System.out.println("Node ns port:\t" + this.NS_port);
+            System.out.println("Node prev id:\t" + this.prevNodeId);
+            System.out.println("Node next id:\t" + this.nextNodeId);
+            System.out.println("Node nodeCount:\t" + this.nodeCount);
+        }
     }
 
     public long getPrevNodeId() {
