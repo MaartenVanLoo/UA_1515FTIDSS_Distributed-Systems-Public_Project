@@ -53,7 +53,7 @@ public class N2NListener extends Thread {
                 JSONParser parser = new JSONParser();
                 JSONObject jsonObject = (JSONObject) parser.parse(data);
                 String type = (String) jsonObject.get("type");
-
+                DatagramPacket responsePacket = null;
                 if (type.equals("Discovery")) {
                     //discovery message
                     System.out.println("Received discovery message from " + sourceIp);
@@ -61,8 +61,26 @@ public class N2NListener extends Thread {
                     if (name.equals(this.node.getName())) continue; //no answer!
                     int neighbourId = Hashing.hash(name);
 
-                    if (neighbourId > this.node.getId() && this.node.getNextNodeId() > neighbourId
-                            || this.node.getId() == this.node.getNextNodeId()) {
+                    if (this.node.getId() == this.node.getPrevNodeId() && this.node.getId() == this.node.getNextNodeId()) {
+                        //this is the first node in the ring
+                        this.node.setNextNodeId(neighbourId);
+                        this.node.setPrevNodeId(neighbourId);
+                        response = "{" +
+                                "\"type\":\"NB-next\"," +
+                                "\"currentId\":\"" + this.node.getId() + "\"," +
+                                "\"nextNodeId\":\"" + this.node.getNextNodeId() + "\"" +
+                                "}";
+                        responsePacket = new DatagramPacket(response.getBytes(StandardCharsets.UTF_8), response.length(), receivePacket.getAddress(), receivePacket.getPort());
+                        this.listeningSocket.send(responsePacket);
+                        response = "{" +
+                                "\"type\":\"NB-prev\"," +
+                                "\"currentId\":\"" + this.node.getId() + "\"," +
+                                "\"prevNodeId\":\"" + this.node.getPrevNodeId() + "\"" +
+                                "}";
+                        responsePacket = new DatagramPacket(response.getBytes(StandardCharsets.UTF_8), response.length(), receivePacket.getAddress(), receivePacket.getPort());
+                        this.listeningSocket.send(responsePacket);
+                    }
+                    else if (neighbourId > this.node.getId() && this.node.getNextNodeId() > neighbourId) {
                         //new node is to the right
                         this.node.setNextNodeId(neighbourId);
                         response = "{" +
@@ -70,9 +88,10 @@ public class N2NListener extends Thread {
                                 "\"currentId\":\"" + this.node.getId() + "\"," +
                                 "\"nextNodeId\":\"" + this.node.getNextNodeId() + "\"" +
                                 "}";
+                        responsePacket = new DatagramPacket(response.getBytes(StandardCharsets.UTF_8), response.length(), receivePacket.getAddress(), receivePacket.getPort());
+                        this.listeningSocket.send(responsePacket);
                     }
-                    if (neighbourId < this.node.getId() && this.node.getPrevNodeId() < neighbourId
-                            || this.node.getId() == this.node.getPrevNodeId()) {
+                    else if (neighbourId < this.node.getId() && this.node.getPrevNodeId() < neighbourId) {
                         //new node is to the left
                         this.node.setPrevNodeId(neighbourId);
                         response = "{" +
@@ -80,12 +99,12 @@ public class N2NListener extends Thread {
                                 "\"currentId\":\"" + this.node.getId() + "\"," +
                                 "\"prevNodeId\":\"" + this.node.getPrevNodeId() + "\"" +
                                 "}";
+                        responsePacket = new DatagramPacket(response.getBytes(StandardCharsets.UTF_8), response.length(), receivePacket.getAddress(), receivePacket.getPort());
+                        this.listeningSocket.send(responsePacket);
                     } else {
                         System.out.println("Received discovery message from " + sourceIp + " but it is not a neighbour");
                         continue; //no answer!, never send an empty response!
                     }
-                    DatagramPacket responsePacket = new DatagramPacket(response.getBytes(StandardCharsets.UTF_8), response.length(), receivePacket.getAddress(), receivePacket.getPort());
-                    this.listeningSocket.send(responsePacket);
 
                     //print status update
                     this.node.printStatus();
