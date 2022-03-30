@@ -169,8 +169,8 @@ public class N2NListener extends Thread {
         this.node.setNextNodeId(neighbourId);
         String response = "{" +
                 "\"type\":\"NB-next\"," +
-                "\"currentId\":\"" + this.node.getId() + "\"," +
-                "\"nextNodeId\":\"" + this.node.getNextNodeId() + "\"" +
+                "\"currentId\":" + this.node.getId() + "," +
+                "\"nextNodeId\":" + this.node.getNextNodeId() + "" +
                 "}";
         DatagramPacket responsePacket = new DatagramPacket(response.getBytes(StandardCharsets.UTF_8), response.length(), receivedPacket.getAddress(), receivedPacket.getPort());
         this.listeningSocket.send(responsePacket);
@@ -179,8 +179,8 @@ public class N2NListener extends Thread {
         this.node.setPrevNodeId(neighbourId);
         String response = "{" +
                 "\"type\":\"NB-prev\"," +
-                "\"currentId\":\"" + this.node.getId() + "\"," +
-                "\"prevNodeId\":\"" + this.node.getPrevNodeId() + "\"" +
+                "\"currentId\":" + this.node.getId() + "," +
+                "\"prevNodeId\":" + this.node.getPrevNodeId() + "" +
                 "}";
         DatagramPacket responsePacket = new DatagramPacket(response.getBytes(StandardCharsets.UTF_8), response.length(), receivedPacket.getAddress(), receivedPacket.getPort());
         this.listeningSocket.send(responsePacket);
