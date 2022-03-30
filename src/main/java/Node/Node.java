@@ -1,7 +1,7 @@
 package Node;
 
 import Utils.SynchronizedPrint;
-import com.mashape.unirest.http.Unirest;
+import kong.unirest.Unirest;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -105,7 +105,7 @@ public class Node {
             }
         }
 
-
+        Unirest.config().defaultBaseUrl("http://"+this.NS_ip+"/ns");
     }
 
     // ask the namingserver for the location of a file
@@ -144,8 +144,7 @@ public class Node {
             socket.send(nextNodePacket);
             */
             // update namingserver
-            String url = "http://" + NS_ip + ":8081/ns/removeNode?Id=" +this.id;
-            System.out.println(Unirest.delete(url).asString().getBody());
+            System.out.println(Unirest.delete("/removeNode?Id=" +this.id).asString().getBody());
         } catch (Exception e) {
             e.printStackTrace();
         }
