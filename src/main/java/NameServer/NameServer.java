@@ -136,18 +136,18 @@ public class NameServer {
     }
 
     @GetMapping("/ns/getPrevIP")
-    public String getPrevIP(@RequestParam int currendID) {
+    public String getPrevIP(@RequestParam int currentID) {
         ipMapLock.readLock().lock();
-        int prevKey = ipMapping.lowerKey(currendID) != null ? ipMapping.lowerKey(currendID) :ipMapping.lastKey();
+        int prevKey = ipMapping.lowerKey(currentID) != null ? ipMapping.lowerKey(currentID) :ipMapping.lastKey();
         String prevIP = ipMapping.get(prevKey);
         ipMapLock.readLock().unlock();
         return prevIP;
     }
 
     @GetMapping("/ns/getNextIP")
-    public String getNextIP(@RequestParam int currendID) {
+    public String getNextIP(@RequestParam int currentID) {
         ipMapLock.readLock().lock();
-        int nextKey = ipMapping.higherKey(currendID) != null ? ipMapping.higherKey(currendID) :ipMapping.firstKey();
+        int nextKey = ipMapping.higherKey(currentID) != null ? ipMapping.higherKey(currentID) :ipMapping.firstKey();
         String nextIP = ipMapping.get(nextKey);
         ipMapLock.readLock().unlock();
         return nextIP;
