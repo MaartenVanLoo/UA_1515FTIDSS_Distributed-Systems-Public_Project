@@ -157,12 +157,14 @@ public class N2NListener extends Thread {
     private void shutdownHandler(DatagramPacket receivedPacket,JSONObject jsonObject){
         if (jsonObject.containsKey("nextNodeId")) {
             this.node.setNextNodeId((long)jsonObject.get("nextNodeId"));
-            this.node.setNextNodeIP(Unirest.get("http://"+this.node.getNS_ip()+":8081/ns/getNextIP?currentID="+this.node.getId()).asString().getBody());
+            //this.node.setNextNodeIP(Unirest.get("http://"+this.node.getNS_ip()+":8081/ns/getNextIP?currentID="+this.node.getId()).asString().getBody());
+            this.node.setNextNodeIP(Unirest.get("/ns/getNextIP").queryString("currentID",this.node.getId()).asString().getBody());
 
         }
         if (jsonObject.containsKey("prevNodeId")) {
             this.node.setPrevNodeId((long)jsonObject.get("prevNodeId"));
-            this.node.setPrevNodeIP(Unirest.get("http://"+this.node.getNS_ip()+":8081/ns/getPrevIP?currentID="+this.node.getId()).asString().getBody());
+            //this.node.setPrevNodeIP(Unirest.get("http://"+this.node.getNS_ip()+":8081/ns/getPrevIP?currentID="+this.node.getId()).asString().getBody());
+            this.node.setNextNodeIP(Unirest.get("/ns/getNextIP").queryString("currentID",this.node.getId()).asString().getBody());
         }
     }
     private void failureHandler(DatagramPacket receivedPacket,JSONObject jsonObject){
