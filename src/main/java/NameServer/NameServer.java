@@ -229,14 +229,21 @@ public class NameServer {
                     String response;
                     if (this.nameServer.addNode(Id,ip)){
                         //adding successful
-                        response = Integer.toString(Id);
-                        response = "{\"status\":\"ok\"," +
-                                    "\"id\":\"" + Id + "\"+" +
-                                    "\"nodeCount\":" + this.nameServer.getIdMap().size() +
-                                    "\"prevNodeId\":" + this.nameServer.getIdMap().lowerKey(Id-1) +
-                                    "\"nextNodeId\":" + this.nameServer.getIdMap().higherKey(Id+1) + "}";
+                        this.nameServer.ipMapLock.readLock().lock();
+                        Integer lowerId = this.nameServer.getIdMap().lowerKey(Id-1);
+                        if (lowerId == null) lowerId = this.nameServer.getIdMap().lastKey();
+                        Integer higherId = this.nameServer.getIdMap().higherKey(Id+1);
+                        if (higherId == null) higherId = this.nameServer.getIdMap().firstKey();
+
+                        response = "{\"status\":\"OK\"," +
+                                    "\"id\":" + Id + "," +
+                                    "\"nodeCount\":" + this.nameServer.getIdMap().size() + "," +
+                                    "\"prevNodeId\":" + lowerId+ "," +
+                                    "\"nextNodeId\":" + higherId + "}";
+                        this.nameServer.ipMapLock.readLock().unlock();
                     }else{
                         //adding unsuccessful
+                        this.nameServer.logger.info("Adding node failed");
                         response = "{\"status\":\"Access Denied\"}";
                     }
                     DatagramPacket responsePacket = new DatagramPacket(response.getBytes(StandardCharsets.UTF_8), response.length(), receivePacket.getAddress(), receivePacket.getPort());
