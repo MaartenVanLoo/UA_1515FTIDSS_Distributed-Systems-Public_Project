@@ -45,7 +45,7 @@ public class N2NListener extends Thread {
                 DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
                 this.listeningSocket.receive(receivePacket);
                 String data = new String(receivePacket.getData()).trim();
-
+                System.out.println("Received: " + data);
                 String sourceIp = receivePacket.getAddress().getHostAddress();
                 String response ="{}";
 
