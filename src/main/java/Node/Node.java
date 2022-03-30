@@ -33,6 +33,7 @@ public class Node {
         root.setLevel(Level.OFF);
         this.name = name;
         this.n2NListener = new N2NListener(this);
+        this.n2NListener.start();
     }
     
     // Send broadcasts until the NS answers
