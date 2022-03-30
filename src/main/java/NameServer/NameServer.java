@@ -240,9 +240,10 @@ public class NameServer {
             return new ResponseEntity<>("Node with id: " + Id + " failed", HttpStatus.OK);
         } catch (IOException e) {
             e.printStackTrace();
-            return new ResponseEntity<>("Node with id: " + Id + " failed", HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>("IO Exception thrown", HttpStatus.BAD_REQUEST);
         } catch (Exception e) {
-            return new ResponseEntity<>("Node with id: " + Id + " failed", HttpStatus.BAD_REQUEST);
+            e.printStackTrace();
+            return new ResponseEntity<>("Unknown exception thrown", HttpStatus.BAD_REQUEST);
         }
     }
     public TreeMap<Integer,String> getIdMap(){
