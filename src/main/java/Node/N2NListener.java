@@ -43,6 +43,8 @@ public class N2NListener extends Thread {
                 DatagramPacket receivedPacket = new DatagramPacket(receiveData, receiveData.length);
                 this.node.getListeningSocket().receive(receivedPacket);
 
+                if (!this.node.isSetUp()) continue; //Do not answer packets till the node is set up
+
                 String data = new String(receivedPacket.getData()).trim();
                 System.out.println("Received: " + data);
                 String sourceIp = receivedPacket.getAddress().getHostAddress();
@@ -59,24 +61,20 @@ public class N2NListener extends Thread {
                         discoveryHandler(receivedPacket, jsonObject);
                         break;
                     case "Shutdown":
-                        if (!this.node.isSetUp()) continue;
                         System.out.println("Received shutdown message from " + sourceIp);
                         shutdownHandler(receivedPacket, jsonObject);
                         this.node.printStatus();
                         break;
                     case "Failure":
-                        if (!this.node.isSetUp()) continue;
                         System.out.println("Received failure message from " + sourceIp);
                         failureHandler(receivedPacket, jsonObject);
                         this.node.printStatus();
                         break;
                     case "Ping":
-                        if (!this.node.isSetUp()) continue;
                         System.out.println("Received ping message from " + sourceIp);
                         pingHandler(receivedPacket);
                         break;
                     case "PingReply":
-                        if (!this.node.isSetUp()) continue;
                         System.out.println("Received ping replay message from " + sourceIp);
                         pingReplayHandler(jsonObject);
                         break;

@@ -45,7 +45,7 @@ public class PingNode extends Thread{
                 this.running = false;
                 return;
             }
-            if (!this.node.isSetUp()) continue; // wait till node is setup
+            if (!this.node.isSetUp()) continue; // wait till node is set up
             InetAddress nextAddress;
             InetAddress prevAddress;
             try {
