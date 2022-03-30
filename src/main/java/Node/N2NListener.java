@@ -49,10 +49,11 @@ public class N2NListener extends Thread {
                 String sourceIp = receivePacket.getAddress().getHostAddress();
                 String response ="{}";
 
-                //Multicast new node:
+                //what type is the received packet?
                 JSONParser parser = new JSONParser();
                 JSONObject jsonObject = (JSONObject) parser.parse(data);
                 String type = (String) jsonObject.get("type");
+
                 if (type.equals("Discovery")) {
                     //discovery message
                     System.out.println("Received discovery message from " + sourceIp);
@@ -69,7 +70,7 @@ public class N2NListener extends Thread {
                         this.node.setPrevNodeId(neighbourId);
                         response = "{\"currentId\":\"" + this.node.getId() + "\",\"prevNodeId\":\"" + this.node.getPrevNodeId() + "\"}";
                     } else {
-                        if (name.equals(this.node.getName())) continue; //no answer!
+                        continue; //no answer!, never send an empty response!
                     }
                     DatagramPacket responsePacket = new DatagramPacket(response.getBytes(StandardCharsets.UTF_8), response.length(), receivePacket.getAddress(), receivePacket.getPort());
                     this.listeningSocket.send(responsePacket);
