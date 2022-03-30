@@ -105,7 +105,7 @@ public class NameServer {
         out.close();
     }
     private void loadMapping(String filename) throws FileNotFoundException, ParseException {
-        BufferedReader reader = new BufferedReader(new FileReader(new File(filename)));
+        BufferedReader reader = new BufferedReader(new FileReader(filename));//new file(filename)
         JSONParser parser = new JSONParser();
         JSONObject jsonObject = (JSONObject) parser.parse(reader.lines().collect(Collectors.joining(System.lineSeparator())));
         ipMapLock.writeLock().lock();
