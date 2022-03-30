@@ -125,7 +125,12 @@ public class Node {
         String hostname = ip.getHostName();
         System.out.println("Your current IP address : " + ip);
         System.out.println("Your current Hostname : " + hostname);
-        for (int i = 0; i < 10;i++) {
+        node.getFileLocation("test.txt");
+        node.getFileLocation("test1.txt");
+        node.getFileLocation("test2.txt");
+        node.getFileLocation("test3.txt");
+        node.getFileLocation("test4.txt");
+        /*for (int i = 0; i < 10;i++) {
             Thread t = new Thread(() -> {
                 for (int j = 0; j < 10000; j++) {
                     node.getFileLocation("test.txt");
@@ -137,7 +142,7 @@ public class Node {
                 }
             });
             t.start();
-        }
+        }*/
         node.terminate();
     }
 }
