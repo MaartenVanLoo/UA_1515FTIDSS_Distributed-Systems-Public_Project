@@ -261,7 +261,10 @@ public class NameServer {
                         } else {
                             //adding unsuccessful
                             this.nameServer.logger.info("Adding node failed");
-                            response = "{\"status\":\"Access Denied\"}";
+                            response = "{" +
+                                    "\"type\":\"NS-offer\"," +
+                                    "\"status\":\"Access Denied\"" +
+                                    "}";
                         }
                     }
                     DatagramPacket responsePacket = new DatagramPacket(response.getBytes(StandardCharsets.UTF_8), response.length(), receivePacket.getAddress(), receivePacket.getPort());
