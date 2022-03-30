@@ -181,7 +181,7 @@ public class N2NListener extends Thread {
             this.node.setNextNodeIP(jsonObject.get("nextNodeIP").toString());
         }
         if (jsonObject.containsKey("prevNodeId")) {
-            this.node.setPrevNodeId((long)jsonObject.get("prevNodeID"));
+            this.node.setPrevNodeId((long)jsonObject.get("prevNodeId"));
             this.node.setPrevNodeIP(jsonObject.get("prevNodeIP").toString());
         }
     }
