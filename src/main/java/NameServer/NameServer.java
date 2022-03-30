@@ -44,20 +44,6 @@ public class NameServer {
         return "NameServer is running";
     }
 
-    public int hash(String string)  {
-        this.logger.info("Hashing: " + string);
-        MessageDigest messageDigest;
-        try {
-            messageDigest = MessageDigest.getInstance("SHA-256");
-            messageDigest.update(string.getBytes());
-        } catch (NoSuchAlgorithmException e){return -1;}
-        String stringHash = new String(messageDigest.digest());
-        //System.out.println(javax.xml.bind.DatatypeConverter.printHexBinary(stringHash.getBytes()));
-        long max = 2147483647;
-        long min = -2147483648;
-        return (int)(((long)stringHash.hashCode()+max)*(32768.0/(max+Math.abs(min))));
-    }
-
     private void saveMapping(){
         try {
             saveMapping(this.mappingFile);
@@ -141,7 +127,7 @@ public class NameServer {
     @GetMapping("/ns/getFile")
     public String getLocation(@RequestParam String fileName) {
         this.logger.info("Request for file: " + fileName);
-        int hash =hash(fileName);
+        int hash = Hashing.hash(fileName);
         Map.Entry<Integer,String> entry;
         this.ipMapLock.readLock().lock();
         entry = this.ipMapping.floorEntry(hash-1); //searches for equal or lower than
@@ -223,33 +209,44 @@ public class NameServer {
                     this.socket.receive(receivePacket);
                     System.out.println("Discovery package received! -> " + receivePacket.getAddress() + ":" + receivePacket.getPort());
                     String data = new String(receivePacket.getData()).trim();
-
-                    int Id = this.nameServer.hash(data);
                     String ip = receivePacket.getAddress().getHostAddress();
                     String response;
-                    if (this.nameServer.addNode(Id,ip)){
-                        //adding successful
-                        this.nameServer.ipMapLock.readLock().lock();
-                        Integer lowerId = this.nameServer.getIdMap().lowerKey(Id-1);
-                        if (lowerId == null) lowerId = this.nameServer.getIdMap().lastKey();
-                        Integer higherId = this.nameServer.getIdMap().higherKey(Id+1);
-                        if (higherId == null) higherId = this.nameServer.getIdMap().firstKey();
 
-                        response = "{\"status\":\"OK\"," +
-                                    "\"id\":" + Id + "," +
-                                    "\"nodeCount\":" + this.nameServer.getIdMap().size() + "," +
-                                    "\"prevNodeId\":" + lowerId+ "," +
-                                    "\"nextNodeId\":" + higherId + "}";
-                        this.nameServer.ipMapLock.readLock().unlock();
-                    }else{
-                        //adding unsuccessful
+                    JSONParser parser = new JSONParser();
+                    JSONObject jsonObject = (JSONObject) parser.parse(data);
+                    String name = (String) jsonObject.get("name");
+                    if (name == null) {
                         this.nameServer.logger.info("Adding node failed");
                         response = "{\"status\":\"Access Denied\"}";
+                    }else {
+                        int Id = Hashing.hash(data);
+
+                        if (this.nameServer.addNode(Id, ip)) {
+                            //adding successful
+                            this.nameServer.ipMapLock.readLock().lock();
+                            Integer lowerId = this.nameServer.getIdMap().lowerKey(Id - 1);
+                            if (lowerId == null) lowerId = this.nameServer.getIdMap().lastKey();
+                            Integer higherId = this.nameServer.getIdMap().higherKey(Id + 1);
+                            if (higherId == null) higherId = this.nameServer.getIdMap().firstKey();
+
+                            response = "{\"status\":\"OK\"," +
+                                    "\"id\":" + Id + "," +
+                                    "\"nodeCount\":" + this.nameServer.getIdMap().size() + "," +
+                                    "\"prevNodeId\":" + lowerId + "," +
+                                    "\"nextNodeId\":" + higherId + "}";
+                            this.nameServer.ipMapLock.readLock().unlock();
+
+                        } else {
+                            //adding unsuccessful
+                            this.nameServer.logger.info("Adding node failed");
+                            response = "{\"status\":\"Access Denied\"}";
+                        }
                     }
                     DatagramPacket responsePacket = new DatagramPacket(response.getBytes(StandardCharsets.UTF_8), response.length(), receivePacket.getAddress(), receivePacket.getPort());
                     this.socket.send(responsePacket);
 
-                } catch (IOException ignore) {}
+                }
+                catch (ParseException | IOException ignored) {}
             }
         }
 

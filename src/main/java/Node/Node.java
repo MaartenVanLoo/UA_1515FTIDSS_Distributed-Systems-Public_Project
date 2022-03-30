@@ -23,12 +23,13 @@ public class Node {
         ch.qos.logback.classic.Logger root = (ch.qos.logback.classic.Logger) org.slf4j.LoggerFactory.getLogger("org.apache.http");
         root.setLevel(ch.qos.logback.classic.Level.OFF);
         this.name = name;
+        this.n2NListener = new N2NListener(this);
     }
     
     // Send broadcasts until the NS answers
     public void discoverNameServer() throws IOException {
         InetAddress broadcastIp = InetAddress.getByName("255.255.255.255");
-        String message = name;
+        String message = "{\"type\":\"Discovery\",\"name\":\"" + name + "\"}";
         boolean received = false;
 
 
@@ -104,6 +105,26 @@ public class Node {
         System.out.println("Node prev id:\t" + this.prevNodeId);
         System.out.println("Node next id:\t" + this.nextNodeId);
         System.out.println("Node nodeCount:\t" + this.nodeCount);
+    }
+
+    public long getPrevNodeId() {
+        return prevNodeId;
+    }
+
+    public void setPrevNodeId(long prevNodeId) {
+        this.prevNodeId = prevNodeId;
+    }
+
+    public long getNextNodeId() {
+        return nextNodeId;
+    }
+
+    public void setNextNodeId(long nextNodeId) {
+        this.nextNodeId = nextNodeId;
+    }
+
+    public int getId() {
+        return id;
     }
 
     public static void main(String[] args) throws IOException {

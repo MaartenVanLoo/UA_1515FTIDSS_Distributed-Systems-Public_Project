@@ -1,4 +1,5 @@
 import NameServer.NameServer;
+import NameServer.Hashing;
 import org.junit.jupiter.api.*;
 
 import java.io.IOException;
@@ -38,12 +39,12 @@ public class UnitTests {
         String n4 = "Node4";
         String n5 = "Node5";
 
-        System.out.println(n0 + "=>" + n0.hashCode() +"->" + this.ns.hash(n0));
-        System.out.println(n1 + "=>" + n1.hashCode() +"->" + ns.hash(n1));
-        System.out.println(n2 + "=>" + n2.hashCode() +"->" + ns.hash(n2));
-        System.out.println(n3 + "=>" + n3.hashCode() +"->" + ns.hash(n3));
-        System.out.println(n4 + "=>" + n4.hashCode() +"->" + ns.hash(n4));
-        System.out.println(n5 + "=>" + n5.hashCode() +"->" + ns.hash(n5));
+        System.out.println(n0 + "=>" + n0.hashCode() +"->" + Hashing.hash(n0));
+        System.out.println(n1 + "=>" + n1.hashCode() +"->" + Hashing.hash(n1));
+        System.out.println(n2 + "=>" + n2.hashCode() +"->" + Hashing.hash(n2));
+        System.out.println(n3 + "=>" + n3.hashCode() +"->" + Hashing.hash(n3));
+        System.out.println(n4 + "=>" + n4.hashCode() +"->" + Hashing.hash(n4));
+        System.out.println(n5 + "=>" + n5.hashCode() +"->" + Hashing.hash(n5));
 
     }
 
@@ -77,7 +78,7 @@ public class UnitTests {
             byte[] array = new byte[7];
             new Random().nextBytes(array);
             generatedString = new String(array, StandardCharsets.UTF_8);
-            hash = ns.hash(generatedString);
+            hash = Hashing.hash(generatedString);
             //System.out.println(hash + "\t=>\t" + generatedString);
         }
         Assertions.assertEquals("192.168.2.2", ns.getLocation(generatedString));
@@ -98,7 +99,7 @@ public class UnitTests {
             byte[] array = new byte[7];
             new Random().nextBytes(array);
             generatedString = new String(array, StandardCharsets.UTF_8);
-            hash = ns.hash(generatedString);
+            hash = Hashing.hash(generatedString);
             //System.out.println(hash + "\t=>\t" + generatedString);
         }
         Assertions.assertEquals("192.168.2.5", ns.getLocation(generatedString));
