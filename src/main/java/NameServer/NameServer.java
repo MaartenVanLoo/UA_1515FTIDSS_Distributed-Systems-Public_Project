@@ -156,6 +156,14 @@ public class NameServer {
         return nextIP;
     }
 
+    @GetMapping("/ns/getNodeIP")
+    public String getIP(@RequestParam int id){
+        ipMapLock.readLock().lock();
+        if (!ipMapping.containsKey(id)) return null;
+        String ip = ipMapping.get(id);
+        ipMapLock.readLock().unlock();
+        return ip;
+    }
     @DeleteMapping("/ns/removeNode")
     public ResponseEntity<String> removeNode(@RequestParam int Id){
         //System.out.println("Removing node with id: " + Id);
