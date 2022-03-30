@@ -298,7 +298,7 @@ public class Node {
             });
             t.start();
         }*/
-        Thread.sleep(30000 + 2*(long) ((Math.random()-0.5) * 30000)); // sleep for 20±30 seconds
+        Thread.sleep(60000 + 2*(long) ((Math.random()-0.5) * 30000)); // sleep for 60±30 seconds
 
         node.shutdown();
     }
