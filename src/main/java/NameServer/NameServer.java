@@ -263,7 +263,7 @@ public class NameServer {
                         }
                     }
                     DatagramPacket responsePacket = new DatagramPacket(response.getBytes(StandardCharsets.UTF_8), response.length(), receivePacket.getAddress(), receivePacket.getPort());
-                    this.socket.send(responsePacket);
+                    if (this.nameServer.getIdMap().size() <2) this.socket.send(responsePacket);
 
                 }
                 catch (ParseException | IOException ignored) {}
