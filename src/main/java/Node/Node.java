@@ -105,7 +105,7 @@ public class Node {
             }
         }
 
-        Unirest.config().defaultBaseUrl("http://"+this.NS_ip);
+        Unirest.config().defaultBaseUrl("http://"+this.NS_ip +":8081");
     }
 
     // ask the namingserver for the location of a file
