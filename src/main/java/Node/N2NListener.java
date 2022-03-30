@@ -64,11 +64,19 @@ public class N2NListener extends Thread {
                     if (neighbourId > this.node.getId() && this.node.getNextNodeId() > neighbourId) {
                         //new node is to the right
                         this.node.setNextNodeId(neighbourId);
-                        response = "{\"currentId\":\"" + this.node.getId() + "\",\"nextNodeId\":\"" + this.node.getNextNodeId() + "\"}";
+                        response = "{" +
+                                "\"type\":\"NB-next\"," +
+                                "\"currentId\":\"" + this.node.getId() + "\"," +
+                                "\"nextNodeId\":\"" + this.node.getNextNodeId() + "\"" +
+                                "}";
                     } else if (neighbourId < this.node.getId() && this.node.getPrevNodeId() < neighbourId) {
                         //new node is to the left
                         this.node.setPrevNodeId(neighbourId);
-                        response = "{\"currentId\":\"" + this.node.getId() + "\",\"prevNodeId\":\"" + this.node.getPrevNodeId() + "\"}";
+                        response = "{" +
+                                "\"type\":\"NB-prev\"," +
+                                "\"currentId\":\"" + this.node.getId() + "\"," +
+                                "\"prevNodeId\":\"" + this.node.getPrevNodeId() + "\"" +
+                                "}";
                     } else {
                         continue; //no answer!, never send an empty response!
                     }

@@ -222,10 +222,10 @@ public class NameServer {
             if (this.socket == null) return;
 
             this.running = true;
-            byte[] receiveBuffer = new byte[512];
-            DatagramPacket receivePacket = new DatagramPacket(receiveBuffer, receiveBuffer.length);
             while (this.running) {
                 try {
+                    byte[] receiveBuffer = new byte[512]; //make a new buffer for every request (to overwrite the old one)
+                    DatagramPacket receivePacket = new DatagramPacket(receiveBuffer, receiveBuffer.length);
                     this.socket.receive(receivePacket);
                     System.out.println("Discovery package received! -> " + receivePacket.getAddress() + ":" + receivePacket.getPort());
                     String data = new String(receivePacket.getData()).trim();
@@ -249,7 +249,9 @@ public class NameServer {
                             Integer higherId = this.nameServer.getIdMap().higherKey(Id + 1);
                             if (higherId == null) higherId = this.nameServer.getIdMap().firstKey();
 
-                            response = "{\"status\":\"OK\"," +
+                            response = "{" +
+                                    "\"type\":\"NS-offer\"," +
+                                    "\"status\":\"OK\"," +
                                     "\"id\":" + Id + "," +
                                     "\"nodeCount\":" + this.nameServer.getIdMap().size() + "," +
                                     "\"prevNodeId\":" + lowerId + "," +
@@ -263,8 +265,7 @@ public class NameServer {
                         }
                     }
                     DatagramPacket responsePacket = new DatagramPacket(response.getBytes(StandardCharsets.UTF_8), response.length(), receivePacket.getAddress(), receivePacket.getPort());
-                    if (this.nameServer.getIdMap().size() <2) this.socket.send(responsePacket);
-
+                    this.socket.send(responsePacket);
                 }
                 catch (ParseException | IOException ignored) {}
             }

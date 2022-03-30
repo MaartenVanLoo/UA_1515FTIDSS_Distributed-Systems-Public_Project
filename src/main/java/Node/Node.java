@@ -69,21 +69,29 @@ public class Node {
                 //parse response data:
                 JSONParser parser = new JSONParser();
                 Object obj = parser.parse(responseData);
+                String type = ((JSONObject) obj).get("type").toString();
+                if (type.equals("NS-offer")) {
+                    String status = ((JSONObject) obj).get("status").toString();
+                    if (status.equals("OK")) {
+                        this.id = (int) (long) (((JSONObject) obj).get("id"));
+                        this.nodeCount = (long) (((JSONObject) obj).get("nodeCount"));
+                        this.prevNodeId = (long) (((JSONObject) obj).get("prevNodeId"));
+                        this.nextNodeId = (long) (((JSONObject) obj).get("nextNodeId"));
+                    } else if (status.equals("Access Denied")) {
+                        throw new AccessDeniedException("Access to network denied by nameserver");
+                    }
 
-                String status = ((JSONObject)obj).get("status").toString();
-                if (status.equals("OK")){
-                    this.id =   (int) (long)(((JSONObject)obj).get("id"));
-                    this.nodeCount  = (long)(((JSONObject)obj).get("nodeCount"));
-                    this.prevNodeId = (long)(((JSONObject)obj).get("prevNodeId"));
-                    this.nextNodeId = (long)(((JSONObject)obj).get("nextNodeId"));
-                }else if (status.equals("Access Denied")){
-                    throw new AccessDeniedException("Access to network denied by nameserver");
+                    this.ip = InetAddress.getLocalHost().toString().split("/")[1].split(":")[0];
+                    this.NS_ip = String.valueOf(responsePacket.getAddress().getHostAddress());
+                    this.NS_port = String.valueOf(responsePacket.getPort());
+                    received = true; //no need to read the neighbour's messages when all information already obtained from the NS
+                }else if (type.equals("NB-next")) {
+                    this.nextNodeId = (long) (((JSONObject) obj).get("currentId"));
+                }else if (type.equals("NB-prev")) {
+                    this.prevNodeId = (long) (((JSONObject) obj).get("currentId"));
+                }else{
+                    System.out.println("Unknown response type");
                 }
-
-                this.ip = InetAddress.getLocalHost().toString().split("/")[1].split(":")[0];
-                this.NS_ip = String.valueOf(responsePacket.getAddress().getHostAddress());
-                this.NS_port = String.valueOf(responsePacket.getPort());
-                received = true;
             } catch (SocketTimeoutException ignored) {
             } catch (ParseException e) {
                 e.printStackTrace();
