@@ -29,7 +29,7 @@ public class N2NListener extends Thread {
             System.out.println("Node 2 Node Listening disabled");
             e.printStackTrace();
         }
-        this.listeningSocket = null;
+        //this.listeningSocket = null; //uncomment this line when runninging on localhost (no 2 sockets listening to the same port)
     }
 
     @Override
