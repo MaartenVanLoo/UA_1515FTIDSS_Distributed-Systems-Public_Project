@@ -116,7 +116,7 @@ public class N2NListener extends Thread {
                         this.listeningSocket.send(responsePacket);
                         */
         }
-        else if (neighbourId < this.node.getNextNodeId() && this.node.getId() < this.node.getPrevNodeId()){
+        else if (neighbourId < this.node.getId() && this.node.getPrevNodeId() > this.node.getId() ){
             //This node has the lowest id and the next node has the highest id => now new "lowest" node.
             //new node is to the left
             updatePrevNode(neighbourId, receivedPacket);
