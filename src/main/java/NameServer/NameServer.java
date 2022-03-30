@@ -215,7 +215,7 @@ public class NameServer {
             //Update the next node
             String message = "{\"type\":\"Failure\"," +
                     "\"failed\":" + Id + "," +
-                    "\"prevNodeId\":\"" + prevId + "\"," +
+                    "\"prevNodeId\":" + prevId + "," +
                     "\"prevNodeIP\":\"" + prevIP + "\"}";
             DatagramPacket packet = new DatagramPacket(message.getBytes(StandardCharsets.UTF_8), message.length(), InetAddress.getByName(nextIP), 8001);
 
@@ -225,7 +225,7 @@ public class NameServer {
             //update the prev node
             message = "{\"type\":\"Failure\"," +
                     "\"failed\":" + Id + "," +
-                    "\"nextNodeId\":\"" + nextId + "\"," +
+                    "\"nextNodeId\":" + nextId + "," +
                     "\"nextNodeIP\":\"" + nextIP + "\"}";
             packet = new DatagramPacket(message.getBytes(StandardCharsets.UTF_8), message.length(), InetAddress.getByName(prevIP), 8001);
             this.discoveryHandler.socket.send(packet);
