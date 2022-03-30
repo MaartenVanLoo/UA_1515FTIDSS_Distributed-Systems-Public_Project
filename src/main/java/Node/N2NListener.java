@@ -59,6 +59,7 @@ public class N2NListener extends Thread {
                     System.out.println("Received discovery message from " + sourceIp);
                     String name = (String) jsonObject.get("name");
                     if (name.equals(this.node.getName())) continue; //no answer!
+                    System.out.println("Name: " + name);
                     int neighbourId = Hashing.hash(name);
 
                     if (this.node.getId() == this.node.getPrevNodeId() && this.node.getId() == this.node.getNextNodeId()) {
