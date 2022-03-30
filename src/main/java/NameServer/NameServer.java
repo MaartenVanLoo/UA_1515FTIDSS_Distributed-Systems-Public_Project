@@ -205,6 +205,7 @@ public class NameServer {
         } catch (IOException exception) {
             exception.printStackTrace();
         }
+        this.logger.info(this.ipMapping.size() + " nodes left");
         this.ipMapLock.writeLock().unlock();
 
         try {
