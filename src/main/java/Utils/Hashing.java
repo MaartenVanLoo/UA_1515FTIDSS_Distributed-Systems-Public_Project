@@ -1,4 +1,4 @@
-package NameServer;
+package Utils;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;

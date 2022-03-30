@@ -1,8 +1,5 @@
 package Client;
-import NameServer.Hashing;
-
-import java.io.*;
-import java.net.*;
+import Utils.Hashing;
 
 public class Client {
     public static void main(String[] args) {

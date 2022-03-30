@@ -1,5 +1,6 @@
 package NameServer;
 
+import Utils.Hashing;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -12,11 +13,8 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
@@ -239,7 +237,7 @@ public class NameServer {
                         this.nameServer.logger.info("Adding node failed");
                         response = "{\"status\":\"Access Denied\"}";
                     }else {
-                        int Id = Hashing.hash(data);
+                        int Id = Hashing.hash(name);
 
                         if (this.nameServer.addNode(Id, ip)) {
                             //adding successful

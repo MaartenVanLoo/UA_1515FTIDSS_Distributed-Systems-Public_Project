@@ -1,5 +1,5 @@
 import NameServer.NameServer;
-import NameServer.Hashing;
+import Utils.Hashing;
 import org.junit.jupiter.api.*;
 
 import java.io.IOException;

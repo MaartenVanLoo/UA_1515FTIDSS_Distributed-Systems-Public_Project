@@ -1,6 +1,6 @@
 package Node;
 
-import NameServer.Hashing;
+import Utils.Hashing;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -29,6 +29,7 @@ public class N2NListener extends Thread {
             System.out.println("Node 2 Node Listening disabled");
             e.printStackTrace();
         }
+        this.listeningSocket = null;
     }
 
     @Override
@@ -81,6 +82,13 @@ public class N2NListener extends Thread {
                         responsePacket = new DatagramPacket(response.getBytes(StandardCharsets.UTF_8), response.length(), receivePacket.getAddress(), receivePacket.getPort());
                         this.listeningSocket.send(responsePacket);
                     }
+                    //TODO: check reasoning for this
+                    /*else if (neighbourId > this.node.getId() && this.node.getNextNodeId() < this.node.getId()){
+                        //This node has the highest id and the next node has the lowest id => now new "highest" node.
+                    }
+                    else if (neighbourId < this.node.getNextNodeId() && this.node.getId() < this.node.getPrevNodeId()){
+                        //This node has the lowest id and the next node has the highest id => now new "lowest" node.
+                    }*/
                     else if (neighbourId > this.node.getId() && this.node.getNextNodeId() > neighbourId) {
                         //new node is to the right
                         this.node.setNextNodeId(neighbourId);
