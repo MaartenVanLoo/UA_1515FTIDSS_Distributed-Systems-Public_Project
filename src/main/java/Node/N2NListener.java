@@ -35,7 +35,7 @@ public class N2NListener extends Thread {
 
     @Override
     /**
-     * Listen for UDP multicasts
+     * Listen for UDP packets
      */
     public void run() {
         if (this.listeningSocket == null) return;
@@ -46,6 +46,7 @@ public class N2NListener extends Thread {
                 byte[] receiveData = new byte[1024]; //make new buffer every time!
                 DatagramPacket receivedPacket = new DatagramPacket(receiveData, receiveData.length);
                 this.listeningSocket.receive(receivedPacket);
+
                 String data = new String(receivedPacket.getData()).trim();
                 System.out.println("Received: " + data);
                 String sourceIp = receivedPacket.getAddress().getHostAddress();
@@ -56,6 +57,7 @@ public class N2NListener extends Thread {
                 JSONObject jsonObject = (JSONObject) parser.parse(data);
                 String type = (String) jsonObject.get("type");
                 DatagramPacket responsePacket = null;
+
                 if (type.equals("Discovery")) {
                     System.out.println("Received discovery message from " + sourceIp);
                     discoveryHandler(receivedPacket,jsonObject);
@@ -79,6 +81,12 @@ public class N2NListener extends Thread {
         }
     }
 
+    /**
+     * Handles UDP packets received from other nodes when they enter the network.
+     * @param receivedPacket
+     * @param jsonObject
+     * @throws IOException
+     */
     private void discoveryHandler(DatagramPacket receivedPacket,JSONObject jsonObject) throws IOException {
         //discovery message
         String name = (String) jsonObject.get("name");
@@ -86,11 +94,14 @@ public class N2NListener extends Thread {
         System.out.println("Name: " + name);
         int neighbourId = Hashing.hash(name);
 
+        // if the old prevId and NextId are equal to the currentId, then the new node is the second node in the
+        // network, and the prevId and nextId should be updated to the new node's Id
         if (this.node.getId() == this.node.getPrevNodeId() && this.node.getId() == this.node.getNextNodeId()) {
             //this is the first node in the ring
             updateNextNode(neighbourId, receivedPacket);
             updatePrevNode(neighbourId, receivedPacket);
         }
+        // if both the old prevId and nextId are the same, then there were 2 nodes and the new node is the 3rd
         else if (this.node.getPrevNodeId() == this.node.getNextNodeId()) {
             //2 nodes in ring
             if (this.node.getNextNodeId() > this.getId()){
@@ -113,19 +124,23 @@ public class N2NListener extends Thread {
             }
         }
         //TODO: check reasoning for this
+        // nextID < currentID < neigbourID
         else if (neighbourId > this.node.getId() && this.node.getNextNodeId() < this.node.getId()){
             //This node has the highest id and the next node has the lowest id => now new "highest" node.
             updateNextNode(neighbourId, receivedPacket);
         }
+        // neighbourID < currentID < prevID
         else if (neighbourId < this.node.getId() && this.node.getPrevNodeId() > this.node.getId()){
             //This node has the lowest id and the next node has the highest id => now new "lowest" node.
             //new node is to the left
             updatePrevNode(neighbourId, receivedPacket);
         }
+        // currentID < neighbourID < nextID
         else if (neighbourId > this.node.getId() && this.node.getNextNodeId() > neighbourId) {
             //new node is to the right
             updateNextNode(neighbourId, receivedPacket);
         }
+        // prevID < neighbourID < currentID
         else if (neighbourId < this.node.getId() && this.node.getPrevNodeId() < neighbourId) {
             //new node is to the left
             updatePrevNode(neighbourId, receivedPacket);

@@ -1,7 +1,7 @@
 package Node;
 
 import Utils.SynchronizedPrint;
-import kong.unirest.Unirest;
+import kong.unirest.Unirest;        // https://kong.github.io/unirest-java/
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -105,14 +105,17 @@ public class Node {
             }
         }
 
-        Unirest.config().defaultBaseUrl("http://"+this.NS_ip+"/ns");
+        Unirest.config().defaultBaseUrl("http://"+this.NS_ip);
     }
 
     // ask the namingserver for the location of a file
     public void getFileLocation(String filename) {
         try {
-            String url = "http://" + this.NS_ip + ":8081/ns/getFile?fileName="+filename;
-            System.out.println(Unirest.get(url).asString().getBody());
+            //String url = "http://" + this.NS_ip + ":8081/ns/getFile?fileName="+filename;
+            System.out.println(Unirest.get("/ns/getFile")
+                    .queryString("fileName", filename)
+                    .asString()
+                    .getBody());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -144,7 +147,7 @@ public class Node {
             socket.send(nextNodePacket);
             */
             // update namingserver
-            System.out.println(Unirest.delete("/removeNode?Id=" +this.id).asString().getBody());
+            System.out.println(Unirest.delete("/ns/removeNode?Id=" +this.id).asString().getBody());
         } catch (Exception e) {
             e.printStackTrace();
         }
