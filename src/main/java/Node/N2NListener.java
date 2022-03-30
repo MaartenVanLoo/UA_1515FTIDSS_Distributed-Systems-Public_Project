@@ -1,6 +1,7 @@
 package Node;
 
 import Utils.Hashing;
+import kong.unirest.Unirest;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -163,6 +164,7 @@ public class N2NListener extends Thread {
                 "}";
         DatagramPacket responsePacket = new DatagramPacket(response.getBytes(StandardCharsets.UTF_8), response.length(), receivedPacket.getAddress(), receivedPacket.getPort());
         this.listeningSocket.send(responsePacket);
+        this.node.setNextNodeIP(Unirest.get("http://"+this.node.getNS_ip()+":8081/ns/getNextIP?currentID="+this.node.getId()).asString().getBody());
     }
     private void updatePrevNode(int neighbourId, DatagramPacket receivedPacket) throws IOException {
         this.node.setPrevNodeId(neighbourId);
@@ -175,4 +177,6 @@ public class N2NListener extends Thread {
         this.listeningSocket.send(responsePacket);
         this.node.setPrevNodeIP(Unirest.get("http://"+this.node.getNS_ip()+":8081/ns/getPrevIP?currentID="+this.node.getId()).asString().getBody());
     }
+
+
 }
