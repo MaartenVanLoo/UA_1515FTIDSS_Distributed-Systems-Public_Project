@@ -82,6 +82,9 @@ public class N2NListener extends Thread {
                     }
                     DatagramPacket responsePacket = new DatagramPacket(response.getBytes(StandardCharsets.UTF_8), response.length(), receivePacket.getAddress(), receivePacket.getPort());
                     this.listeningSocket.send(responsePacket);
+
+                    //print status update
+                    this.node.printStatus();
                 } else if (type.equals("Shutdown")) {
 
                 } else {
