@@ -17,7 +17,6 @@ public class PingNode extends Thread{
     public PingNode(Node node){
         this.setDaemon(true); //make sure the thread dies when the main thread dies
         this.node = node;
-
     }
 
     public void nextAnswered() {

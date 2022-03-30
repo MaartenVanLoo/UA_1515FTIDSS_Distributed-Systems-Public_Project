@@ -182,7 +182,9 @@ public class Node {
             System.out.println("Node ns ip:  \t" + this.NS_ip);
             System.out.println("Node ns port:\t" + this.NS_port);
             System.out.println("Node prev id:\t" + this.prevNodeId);
+            System.out.println("Node prev ip:\t" + this.prevNodeIP);
             System.out.println("Node next id:\t" + this.nextNodeId);
+            System.out.println("Node next ip:\t" + this.nextNodeIP);
             System.out.println("Node nodeCount:\t" + this.nodeCount);
         }
     }
