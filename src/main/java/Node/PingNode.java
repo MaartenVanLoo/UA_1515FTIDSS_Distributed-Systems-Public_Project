@@ -50,9 +50,9 @@ public class PingNode extends Thread{
             InetAddress prevAddress;
             try {
                 nextAddress = InetAddress.getByName(this.node.getNextNodeIP());
-                System.out.println("PingNode: next address: " + nextAddress.getHostAddress());
+                System.out.println("PingNode: next address: " + this.node.getNextNodeIP());
                 prevAddress = InetAddress.getByName(this.node.getPrevNodeIP());
-                System.out.println("PingNode: prev address: " + prevAddress.getHostAddress());
+                System.out.println("PingNode: prev address: " + this.node.getPrevNodeIP());
             } catch (UnknownHostException e) {
                 System.out.println("Unable to find neighbor ips");
                 this.node.printStatus();
