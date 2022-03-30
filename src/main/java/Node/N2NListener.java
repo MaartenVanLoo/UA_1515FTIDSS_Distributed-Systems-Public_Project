@@ -61,7 +61,8 @@ public class N2NListener extends Thread {
                     if (name.equals(this.node.getName())) continue; //no answer!
                     int neighbourId = Hashing.hash(name);
 
-                    if (neighbourId > this.node.getId() && this.node.getNextNodeId() > neighbourId) {
+                    if (neighbourId > this.node.getId() && this.node.getNextNodeId() > neighbourId
+                            || this.node.getId() == this.node.getNextNodeId()) {
                         //new node is to the right
                         this.node.setNextNodeId(neighbourId);
                         response = "{" +
@@ -69,7 +70,9 @@ public class N2NListener extends Thread {
                                 "\"currentId\":\"" + this.node.getId() + "\"," +
                                 "\"nextNodeId\":\"" + this.node.getNextNodeId() + "\"" +
                                 "}";
-                    } else if (neighbourId < this.node.getId() && this.node.getPrevNodeId() < neighbourId) {
+                    }
+                    if (neighbourId < this.node.getId() && this.node.getPrevNodeId() < neighbourId
+                            || this.node.getId() == this.node.getPrevNodeId()) {
                         //new node is to the left
                         this.node.setPrevNodeId(neighbourId);
                         response = "{" +

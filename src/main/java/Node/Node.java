@@ -41,6 +41,7 @@ public class Node {
         InetAddress broadcastIp = InetAddress.getByName("255.255.255.255");
         String message = "{\"type\":\"Discovery\",\"name\":\"" + name + "\"}";
         boolean received = false;
+        boolean resend = false;
 
 
         DatagramSocket socket = new DatagramSocket(8000);
@@ -49,9 +50,10 @@ public class Node {
                 broadcastIp, 8001);
         byte[] response = new byte[256];
         DatagramPacket responsePacket = new DatagramPacket(response, response.length);
+
         while (!received) {
             // Discovery request command
-            socket.send(discoveryPacket);
+            if (resend) socket.send(discoveryPacket);
             System.out.println("Discovery package sent!" + discoveryPacket.getAddress() + ":" + discoveryPacket.getPort());
 
             // Discovery response command
@@ -87,12 +89,16 @@ public class Node {
                     received = true; //no need to read the neighbour's messages when all information already obtained from the NS
                 }else if (type.equals("NB-next")) {
                     this.nextNodeId = (long) (((JSONObject) obj).get("currentId"));
+                    resend = false;
                 }else if (type.equals("NB-prev")) {
                     this.prevNodeId = (long) (((JSONObject) obj).get("currentId"));
+                    resend = false;
                 }else{
                     System.out.println("Unknown response type");
+                    resend =true;
                 }
             } catch (SocketTimeoutException ignored) {
+                resend = true;
             } catch (ParseException e) {
                 e.printStackTrace();
             }
