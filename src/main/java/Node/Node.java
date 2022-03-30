@@ -105,7 +105,29 @@ public class Node {
     // exit the network
     public void shutdown(){
         try {
-            String url = "http://" + this.NS_ip + ":8081/ns/removeNode?Id=" +this.id;
+            String ipdatePrev;
+            String ipdateNext;
+
+            // update prev node
+            String ip_prevNode = Unirest.get("http://"+this.NS_ip+":8081/ns/getPrevIP?currentID="+this.id).asString().getBody();
+            ipdatePrev = "{\"nextNodeId\":\""+this.getNextNodeId()+"\"}";
+
+            DatagramPacket prevNodePacket = new DatagramPacket(ipdatePrev.getBytes(), ipdatePrev.length(),
+                    InetAddress.getByName(ip_prevNode), 8001);
+
+            DatagramSocket socket = new DatagramSocket();
+            socket.send(prevNodePacket);
+
+            // update next node
+            String ip_nextNode = Unirest.get("http://"+this.NS_ip+":8081/ns/getNextIP?currentID="+this.id).asString().getBody();
+            ipdateNext = "{\"prevNodeId\":\""+this.getPrevNodeId()+"\"}";
+            DatagramPacket nextNodePacket = new DatagramPacket(ipdateNext.getBytes(), ipdateNext.length(),
+                    InetAddress.getByName(ip_nextNode), 8001);
+            //send this.nextNodeID to prevNodeID
+            socket.send(nextNodePacket);
+
+            // update namingserver
+            String url = "http://" + NS_ip + ":8081/ns/removeNode?Id=" +this.id;
             System.out.println(Unirest.delete(url).asString().getBody());
         } catch (Exception e) {
             e.printStackTrace();
@@ -182,6 +204,6 @@ public class Node {
             });
             t.start();
         }*/
-        node.terminate();
+        node.shutdown();
     }
 }
