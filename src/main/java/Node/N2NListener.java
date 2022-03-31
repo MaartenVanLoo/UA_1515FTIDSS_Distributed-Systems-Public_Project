@@ -189,7 +189,7 @@ public class N2NListener extends Thread {
             this.node.setPrevNodeId((long)jsonObject.get("prevNodeId"));
             //this.node.setPrevNodeIP(Unirest.get("http://"+this.node.getNS_ip()+":8081/ns/getPrevIP?currentID="+this.node.getId()).asString().getBody());
             //note: you can't trust that the nameserver already updated the shutdown of the node. => ask for ip with ID
-            this.node.setPrevNodeIP(Unirest.get("/ns/getNodeIP").queryString("id",this.node.getPrevNodeIP()).asString().getBody());
+            this.node.setPrevNodeIP(Unirest.get("/ns/getNodeIP").queryString("id",this.node.getPrevNodeId()).asString().getBody());
         }
     }
     private void failureHandler(DatagramPacket receivedPacket,JSONObject jsonObject){
