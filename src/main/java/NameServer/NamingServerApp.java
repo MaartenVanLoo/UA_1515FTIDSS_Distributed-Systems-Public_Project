@@ -2,10 +2,12 @@ package NameServer;
 
 import org.springframework.boot.*;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 import java.util.Properties;
 
 @SpringBootApplication
+@EnableScheduling
 public class NamingServerApp {
     public static void main(String[]  args) {
         SpringApplication app = new SpringApplication(NamingServerApp.class);
