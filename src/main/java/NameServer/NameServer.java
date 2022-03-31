@@ -159,6 +159,7 @@ public class NameServer {
     @GetMapping("/ns/getNodeIP")
     public String getIP(@RequestParam int id){
         ipMapLock.readLock().lock();
+        this.logger.info("Request ip for node with id: " + id);
         if (!ipMapping.containsKey(id)) return null;
         String ip = ipMapping.get(id);
         ipMapLock.readLock().unlock();
