@@ -225,7 +225,7 @@ public class N2NListener extends Thread {
                 "}";
         DatagramPacket responsePacket = new DatagramPacket(response.getBytes(StandardCharsets.UTF_8), response.length(), receivedPacket.getAddress(), receivedPacket.getPort());
         this.node.getListeningSocket().send(responsePacket);
-        this.node.setPrevNodeIP(Unirest.get("ns/getPrevIP?currentID="+this.node.getId()).asString().getBody());
+        this.node.setPrevNodeIP(Unirest.get("/ns/getPrevIP?currentID="+this.node.getId()).asString().getBody());
     }
 
 
