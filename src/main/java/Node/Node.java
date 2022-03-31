@@ -123,8 +123,8 @@ public class Node {
         }
         Unirest.config().defaultBaseUrl("http://"+this.NS_ip +":8081");
         //request neighbour ip from the nameserver
-        this.nextNodeIP = Unirest.get("/getNodeIP").queryString("id",this.nextNodeId).asString().getBody();
-        this.prevNodeIP = Unirest.get("/getNodeIP").queryString("id",this.prevNodeId).asString().getBody();
+        this.nextNodeIP = Unirest.get("/ns/getNodeIP").queryString("id",this.nextNodeId).asString().getBody();
+        this.prevNodeIP = Unirest.get("/ns/getNodeIP").queryString("id",this.prevNodeId).asString().getBody();
         this.setUpComplete = true;
     }
 
