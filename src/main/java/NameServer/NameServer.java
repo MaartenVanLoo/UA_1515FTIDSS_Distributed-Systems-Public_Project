@@ -142,6 +142,7 @@ public class NameServer {
     @GetMapping("/ns/getPrevIP")
     public String getPrevIP(@RequestParam int currentID) {
         ipMapLock.readLock().lock();
+        this.logger.info("Request ip for previous node with id: " + currentID);
         int prevKey = ipMapping.lowerKey(currentID) != null ? ipMapping.lowerKey(currentID) :ipMapping.lastKey();
         String prevIP = ipMapping.get(prevKey);
         ipMapLock.readLock().unlock();
@@ -151,6 +152,7 @@ public class NameServer {
     @GetMapping("/ns/getNextIP")
     public String getNextIP(@RequestParam int currentID) {
         ipMapLock.readLock().lock();
+        this.logger.info("Request uo for next node with id: " + currentID);
         int nextKey = ipMapping.higherKey(currentID) != null ? ipMapping.higherKey(currentID) :ipMapping.firstKey();
         String nextIP = ipMapping.get(nextKey);
         ipMapLock.readLock().unlock();
