@@ -303,6 +303,7 @@ public class Node {
         Node node = new Node(name);
         node.discoverNameServer();
         node.printStatus();
+        node.validateNode();
 
         InetAddress ip = InetAddress.getLocalHost();
         String hostname = ip.getHostName();
