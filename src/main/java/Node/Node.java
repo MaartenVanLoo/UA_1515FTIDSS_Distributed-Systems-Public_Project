@@ -275,9 +275,9 @@ public class Node {
             JSONParser parser = new JSONParser();
             JSONObject json = (JSONObject) parser.parse(response);
             if (this.prevNodeId != (long)  json.get("prevNodeId")) {System.out.println("prevNodeId is not valid"); flag = true;}
-            if (this.prevNodeIP != (String)json.get("prevNodeIP")) {System.out.println("prevNodeIP is not valid"); flag = true;}
+            if (!Objects.equals(this.prevNodeIP, (String) json.get("prevNodeIP"))) {System.out.println("prevNodeIP is not valid"); flag = true;}
             if (this.nextNodeId != (long)  json.get("nextNodeId")) {System.out.println("nextNodeId is not valid"); flag = true;}
-            if (this.nextNodeIP != (String)json.get("nextNodeIP")) {System.out.println("nextNodeIP is not valid"); flag = true;}
+            if (!Objects.equals(this.nextNodeIP, (String) json.get("nextNodeIP"))) {System.out.println("nextNodeIP is not valid"); flag = true;}
         } catch (Exception e) {
             e.printStackTrace();
         }
