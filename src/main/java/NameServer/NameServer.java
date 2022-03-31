@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.*;
@@ -257,6 +258,16 @@ public class NameServer {
     }
     public TreeMap<Integer,String> getIdMap(){
         return this.ipMapping;
+    }
+
+    @Scheduled(fixedRate = 10000)
+    public void printMapping() {
+        ipMapLock.readLock().lock();
+        this.logger.info("Current mapping: " + this.ipMapping);
+        for (Map.Entry<Integer, String> entry : this.ipMapping.entrySet()) {
+            System.out.println("Key: " + entry.getKey() + " Value: " + entry.getValue());
+        }
+        ipMapLock.readLock().unlock();
     }
 
     /**
