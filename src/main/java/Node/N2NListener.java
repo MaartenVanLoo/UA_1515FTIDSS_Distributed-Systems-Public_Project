@@ -118,7 +118,7 @@ public class N2NListener extends Thread {
             //2 nodes in ring
             if (this.node.getNextNodeId() > this.node.getId()){
                 //this node has the lowest ID
-                if (neighbourId < this.node.getId() && neighbourId > this.node.getNextNodeId()) {
+                if (neighbourId > this.node.getId() && neighbourId < this.node.getNextNodeId()) {
                     //Node in between
                     updateNextNode(neighbourId, receivedPacket);
                 }else{
