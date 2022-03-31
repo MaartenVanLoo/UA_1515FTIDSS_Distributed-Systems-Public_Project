@@ -262,6 +262,23 @@ public class NameServer {
         return this.ipMapping;
     }
 
+    @GetMapping("/ns/validateNode")
+    public String validationData(@RequestParam int Id){
+        this.logger.info("Node with id: " + Id + " is validating");
+        this.ipMapLock.readLock().lock();
+        String thisIp = this.ipMapping.get(Id);
+        String nextIp = getNextIP(Id);
+        String prevIp = getPrevIP(Id);
+        Integer nextId = ipMapping.higherKey(Id) != null ? ipMapping.higherKey(Id) :ipMapping.firstKey();
+        Integer prevId = ipMapping.lowerKey(Id) != null ? ipMapping.lowerKey(Id) :ipMapping.lastKey();
+        this.ipMapLock.readLock().unlock();
+        return "{\"type\":\"Validate\"," +
+                "\"id\":" + Id + "," +
+                "\"nextNodeIP\":\"" + nextIp + "\"," +
+                "\"prevNodeIP\":\"" + prevIp + "\"," +
+                "\"nextNodeId\":" + nextId + "," +
+                "\"prevNodeId\":" + prevId + "}";
+    }
     @Scheduled(fixedRate = 10000)
     public void printMapping() {
         ipMapLock.readLock().lock();

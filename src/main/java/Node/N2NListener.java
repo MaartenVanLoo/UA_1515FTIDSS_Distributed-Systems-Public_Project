@@ -64,11 +64,13 @@ public class N2NListener extends Thread {
                         System.out.println("Received shutdown message from " + sourceIp);
                         shutdownHandler(receivedPacket, jsonObject);
                         this.node.printStatus();
+                        this.node.validateNode();
                         break;
                     case "Failure":
                         System.out.println("Received failure message from " + sourceIp);
                         failureHandler(receivedPacket, jsonObject);
                         this.node.printStatus();
+                        this.node.validateNode();
                         break;
                     case "Ping":
                         System.out.println("Received ping message from " + sourceIp);
@@ -100,6 +102,11 @@ public class N2NListener extends Thread {
      * @throws IOException
      */
     private void discoveryHandler(DatagramPacket receivedPacket,JSONObject jsonObject) throws IOException {
+        //TODO: still error when the lowest node gets a new "highest" node neighbor. The lowest node doesn't detect that the new node is actually a new neighbor ands sends a "not a neighbor" message.
+        // Easy solution => ask nameserver what my neighbors are
+        // Hard solution => work out the logic by hand....?
+
+
         //discovery message
         String name = (String) jsonObject.get("name");
         if (name.equals(this.node.getName())) return; //no answer!
@@ -135,16 +142,23 @@ public class N2NListener extends Thread {
                 }
             }
         }
-        //TODO: check reasoning for this
         // nextID < currentID < neigbourID
         else if (neighbourId > this.node.getId() && this.node.getNextNodeId() < this.node.getId()){
             //This node has the highest id and the next node has the lowest id => now new "highest" node.
+            updateNextNode(neighbourId, receivedPacket);
+        }
+        else if (neighbourId <this.node.getNextNodeId() && this.node.getNextNodeId() < this.node.getId()) {
+            //This node has the highest id and the next node has the lowest id => update next node
             updateNextNode(neighbourId, receivedPacket);
         }
         // neighbourID < currentID < prevID
         else if (neighbourId < this.node.getId() && this.node.getPrevNodeId() > this.node.getId()){
             //This node has the lowest id and the next node has the highest id => now new "lowest" node.
             //new node is to the left
+            updatePrevNode(neighbourId, receivedPacket);
+        }
+        else if (neighbourId > this.node.getPrevNodeId() && this.node.getPrevNodeId() > this.node.getId()){
+            //This node has the lowest id and the next node has the highest id =>update prev node
             updatePrevNode(neighbourId, receivedPacket);
         }
         // currentID < neighbourID < nextID
@@ -161,6 +175,7 @@ public class N2NListener extends Thread {
             //no answer!, never send an empty response!
         }
         this.node.printStatus();
+        this.node.validateNode();
     }
     private void shutdownHandler(DatagramPacket receivedPacket,JSONObject jsonObject){
         if (jsonObject.containsKey("nextNodeId")) {

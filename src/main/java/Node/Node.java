@@ -265,6 +265,29 @@ public class Node {
         // TODO: Remove the node from the Naming server
     }
 
+    /**
+     * Helper function to validate the current node's parameters by asking the nameserver
+     */
+    public void validateNode(){
+        boolean flag = false;
+        try {
+            String response = Unirest.get("/ns/validateNode?Id=" + this.id).asString().getBody();
+            JSONParser parser = new JSONParser();
+            JSONObject json = (JSONObject) parser.parse(response);
+            if (this.prevNodeId != (long)  json.get("prevNodeId")) {System.out.println("prevNodeId is not valid"); flag = true;}
+            if (this.prevNodeIP != (String)json.get("prevNodeIP")) {System.out.println("prevNodeIP is not valid"); flag = true;}
+            if (this.nextNodeId != (long)  json.get("nextNodeId")) {System.out.println("nextNodeId is not valid"); flag = true;}
+            if (this.nextNodeIP != (String)json.get("nextNodeIP")) {System.out.println("nextNodeIP is not valid"); flag = true;}
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        if (flag) {
+            System.out.println("Node " + this.id + " is not valid");
+        }else{
+            System.out.println("Node " + this.id + " is OK");
+        }
+    }
+
     public static void main(String[] args) throws IOException, InterruptedException {
         System.out.println("Starting Node");
         String name;
