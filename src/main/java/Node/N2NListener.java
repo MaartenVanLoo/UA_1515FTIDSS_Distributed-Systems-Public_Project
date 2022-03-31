@@ -182,14 +182,14 @@ public class N2NListener extends Thread {
             this.node.setNextNodeId((long)jsonObject.get("nextNodeId"));
             //this.node.setNextNodeIP(Unirest.get("http://"+this.node.getNS_ip()+":8081/ns/getNextIP?currentID="+this.node.getId()).asString().getBody());
             //note: you can't trust that the nameserver already updated the shutdown of the node. => ask for ip with ID
-            this.node.setNextNodeIP(Unirest.get("/ns/getNodeIP").queryString("currentID",this.node.getNextNodeId()).asString().getBody());
+            this.node.setNextNodeIP(Unirest.get("/ns/getNodeIP").queryString("id",this.node.getNextNodeId()).asString().getBody());
 
         }
         if (jsonObject.containsKey("prevNodeId")) {
             this.node.setPrevNodeId((long)jsonObject.get("prevNodeId"));
             //this.node.setPrevNodeIP(Unirest.get("http://"+this.node.getNS_ip()+":8081/ns/getPrevIP?currentID="+this.node.getId()).asString().getBody());
             //note: you can't trust that the nameserver already updated the shutdown of the node. => ask for ip with ID
-            this.node.setPrevNodeIP(Unirest.get("/ns/getNodeIP").queryString("currentID",this.node.getPrevNodeIP()).asString().getBody());
+            this.node.setPrevNodeIP(Unirest.get("/ns/getNodeIP").queryString("id",this.node.getPrevNodeIP()).asString().getBody());
         }
     }
     private void failureHandler(DatagramPacket receivedPacket,JSONObject jsonObject){
