@@ -126,7 +126,7 @@ public class Node {
         this.setUpComplete = true;
     }
 
-    // ask the namingserver for the location of a file
+    // ask the naming server for the location of a file
     public void getFileLocation(String filename) {
         try {
             //String url = "http://" + this.NS_ip + ":8081/ns/getFile?fileName="+filename;
@@ -147,7 +147,8 @@ public class Node {
 
             // update prev node
             updatePrev = "{\"type\":\"Shutdown\"," +
-                    "\"nextNodeId\":"+this.getNextNodeId()+"}";
+                           "\"nextNodeId\":"+this.getNextNodeId() + "," +
+                           "\"nextNodeIP\":"+this.getNextNodeIP() +"}";
 
             DatagramPacket prevNodePacket = new DatagramPacket(updatePrev.getBytes(), updatePrev.length(),
                     InetAddress.getByName(prevNodeIP), 8001);
@@ -157,7 +158,8 @@ public class Node {
 
             // update next node
             updateNext = "{\"type\":\"Shutdown\"," +
-                    "\"prevNodeId\":"+this.getPrevNodeId()+"}";
+                          "\"prevNodeId\":"+this.getPrevNodeId() + "," +
+                          "\"prevNodeIP\":"+this.getPrevNodeIP() +"}";
             DatagramPacket nextNodePacket = new DatagramPacket(updateNext.getBytes(), updateNext.length(),
                     InetAddress.getByName(nextNodeIP), 8001);
             //send this.nextNodeID to prevNodeID

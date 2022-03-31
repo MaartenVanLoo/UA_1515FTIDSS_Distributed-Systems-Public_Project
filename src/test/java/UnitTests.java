@@ -1,4 +1,4 @@
-import NameServer.NameServer;
+import NameServer.NameServerController;
 import Utils.Hashing;
 import org.junit.jupiter.api.*;
 
@@ -10,12 +10,12 @@ import java.util.TreeMap;
 
 
 public class UnitTests {
-    protected static NameServer ns;
+    protected static NameServerController ns;
 
     @BeforeAll
     static void beforeAll() {
         System.out.println("Before All");
-        ns =  new NameServer();
+        ns =  new NameServerController();
     }
     @BeforeEach
     void setUp() {
