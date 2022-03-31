@@ -1,7 +1,6 @@
 package NameServer;
 
 import Utils.Hashing;
-import org.hibernate.property.access.internal.PropertyAccessStrategyIndexBackRefImpl;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -13,8 +12,10 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.*;
-import java.net.*;
-import java.net.http.HttpResponse;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.TreeMap;

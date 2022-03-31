@@ -1,7 +1,9 @@
 package Node;
 
 import Utils.SynchronizedPrint;
-import kong.unirest.Unirest;        // https://kong.github.io/unirest-java/
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import kong.unirest.Unirest;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -10,10 +12,6 @@ import java.io.IOException;
 import java.net.*;
 import java.nio.file.AccessDeniedException;
 import java.util.Objects;
-
-import ch.qos.logback.classic.*;
-
-import static java.lang.System.exit;
 
 public class Node {
     //<editor-fold desc="global variables">

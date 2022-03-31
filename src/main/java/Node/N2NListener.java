@@ -8,9 +8,7 @@ import org.json.simple.parser.ParseException;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
-import java.net.DatagramSocket;
 import java.net.SocketException;
-import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
 
 /**
@@ -178,6 +176,10 @@ public class N2NListener extends Thread {
         this.node.validateNode();
     }
     private void shutdownHandler(DatagramPacket receivedPacket,JSONObject jsonObject){
+        if (this.node.getNextNodeId() == this.node .getId() && this.node.getPrevNodeId() == this.node.getId()){
+            //this is the only node in the ring and receiving its own shutdown message
+            return;
+        }
         if (jsonObject.containsKey("nextNodeId")) {
             this.node.setNextNodeId((long)jsonObject.get("nextNodeId"));
             //this.node.setNextNodeIP(Unirest.get("http://"+this.node.getNS_ip()+":8081/ns/getNextIP?currentID="+this.node.getId()).asString().getBody());
