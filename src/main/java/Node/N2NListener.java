@@ -181,13 +181,15 @@ public class N2NListener extends Thread {
         if (jsonObject.containsKey("nextNodeId")) {
             this.node.setNextNodeId((long)jsonObject.get("nextNodeId"));
             //this.node.setNextNodeIP(Unirest.get("http://"+this.node.getNS_ip()+":8081/ns/getNextIP?currentID="+this.node.getId()).asString().getBody());
-            this.node.setNextNodeIP(Unirest.get("/ns/getNextIP").queryString("currentID",this.node.getId()).asString().getBody());
+            //note: you can't trust that the nameserver already updated the shutdown of the node. => ask for ip with ID
+            this.node.setNextNodeIP(Unirest.get("/ns/getNodeIP").queryString("currentID",this.node.getNextNodeId()).asString().getBody());
 
         }
         if (jsonObject.containsKey("prevNodeId")) {
             this.node.setPrevNodeId((long)jsonObject.get("prevNodeId"));
             //this.node.setPrevNodeIP(Unirest.get("http://"+this.node.getNS_ip()+":8081/ns/getPrevIP?currentID="+this.node.getId()).asString().getBody());
-            this.node.setPrevNodeIP(Unirest.get("/ns/getPrevIP").queryString("currentID",this.node.getId()).asString().getBody());
+            //note: you can't trust that the nameserver already updated the shutdown of the node. => ask for ip with ID
+            this.node.setPrevNodeIP(Unirest.get("/ns/getNodeIP").queryString("currentID",this.node.getPrevNodeIP()).asString().getBody());
         }
     }
     private void failureHandler(DatagramPacket receivedPacket,JSONObject jsonObject){
@@ -229,6 +231,7 @@ public class N2NListener extends Thread {
                 "}";
         DatagramPacket responsePacket = new DatagramPacket(response.getBytes(StandardCharsets.UTF_8), response.length(), receivedPacket.getAddress(), receivedPacket.getPort());
         this.node.getListeningSocket().send(responsePacket);
+        //TODO:: Can you trust that the nameserver already updated the shutdown of the node?
         this.node.setNextNodeIP(Unirest.get("/ns/getNextIP?currentID="+this.node.getId()).asString().getBody());
     }
     private void updatePrevNode(int neighbourId, DatagramPacket receivedPacket) throws IOException {
@@ -240,6 +243,7 @@ public class N2NListener extends Thread {
                 "}";
         DatagramPacket responsePacket = new DatagramPacket(response.getBytes(StandardCharsets.UTF_8), response.length(), receivedPacket.getAddress(), receivedPacket.getPort());
         this.node.getListeningSocket().send(responsePacket);
+        //TODO:: Can you trust that the nameserver already updated the shutdown of the node?
         this.node.setPrevNodeIP(Unirest.get("/ns/getPrevIP?currentID="+this.node.getId()).asString().getBody());
     }
 
