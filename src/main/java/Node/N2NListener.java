@@ -116,7 +116,7 @@ public class N2NListener extends Thread {
         // if both the old prevId and nextId are the same, then there were 2 nodes and the new node is the 3rd
         else if (this.node.getPrevNodeId() == this.node.getNextNodeId()) {
             //2 nodes in ring
-            if (this.node.getNextNodeId() > this.getId()){
+            if (this.node.getNextNodeId() > this.node.getId()){
                 //this node has the lowest ID
                 if (neighbourId < this.node.getId() && neighbourId > this.node.getNextNodeId()) {
                     //Node in between
