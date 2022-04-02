@@ -12,6 +12,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 
+//TODO: Add write to file on updates
 /**
  * NameServer for managing the active nodes in the network.
  * All methods are thread-safe.
@@ -44,14 +45,13 @@ public class NameServer {
      * Load the mapping from the default file.
      */
     private void loadMapping() {
+        this.ipMapLock.writeLock().lock();
         try {
             loadMapping(this.mappingFile);
         }catch (IOException e){
             System.out.println("File reading error:" + e.getMessage());
             System.out.println("Creating new file.");
-            this.ipMapLock.writeLock().lock();
             this.ipMapping.clear();
-            this.ipMapLock.writeLock().unlock();
             try {
                 saveMapping(this.mappingFile);
             } catch (IOException ignored){}
@@ -60,14 +60,13 @@ public class NameServer {
         catch(ParseException e){
             System.out.println("File parsing error:" + e.getMessage());
             System.out.println("Creating new file.");
-            this.ipMapLock.writeLock().lock();
             this.ipMapping.clear();
-            this.ipMapLock.writeLock().unlock();
             try {
                 saveMapping(this.mappingFile);
             } catch (IOException ignored){}
             System.out.println("Starting with empty map.");
         }
+        this.ipMapLock.writeLock().unlock();
     }
 
     /**
@@ -128,9 +127,9 @@ public class NameServer {
      * @param ip ip address of the node.
      * @return True when the node was registered, false when the node was already registered
      */
-    public boolean setNode(int id, String ip){
+    public boolean addNode(int id, String ip){
         ipMapLock.writeLock().lock();
-        if (ipMapping.containsKey(id)) return false;
+        if (ipMapping.containsKey(id)) { ipMapLock.writeLock().unlock(); return false; }
         ipMapping.put(id, ip);
         ipMapLock.writeLock().unlock();
         return true;
@@ -145,7 +144,7 @@ public class NameServer {
      */
     public boolean updateNode(int id, String ip){
         ipMapLock.writeLock().lock();
-        if (!ipMapping.containsKey(id)) return false;
+        if (!ipMapping.containsKey(id)) { ipMapLock.writeLock().unlock(); return false;}
         ipMapping.put(id, ip);
         ipMapLock.writeLock().unlock();
         return true;
@@ -156,16 +155,16 @@ public class NameServer {
      * @param id Node id.
      * @return True when the node was removed, false when the node was not registered
      */
-    public boolean removeNode(int id){
+    public boolean deleteNode(int id){
         ipMapLock.writeLock().lock();
-        if (!ipMapping.containsKey(id)) return false;
+        if (!ipMapping.containsKey(id)) { ipMapLock.writeLock().unlock(); return false;}
         ipMapping.remove(id);
         ipMapLock.writeLock().unlock();
         return true;
     }
 
     /**
-     * Get the id of a node with an Id stricly higher than the given id. Unless the given id is the highest registered id.
+     * Get the id of a node with an Id strictly higher than the given id. Unless the given id is the highest registered id.
      * Then the id of the node with the lowest id is returned.
      * @param id Node id.
      * @return Id of the next node.
@@ -178,7 +177,20 @@ public class NameServer {
     }
 
     /**
-     * Get the id of a node with an Id stricly lower than the given id. Unless the given id is the lowest registered id.
+     * Get the IP of a node with an Id strictly higher than the given id. Unless the given id is the highest registered id.
+     * Then the IP of the node with the lowest id is returned.
+     * @param id Node id.
+     * @return IP of the next node.
+     */
+    public String getNextNodeIP(int id){
+        ipMapLock.readLock().lock();
+        String next = ipMapping.higherKey(id) != null ? ipMapping.get(ipMapping.higherKey(id)) : ipMapping.get(ipMapping.firstKey());
+        ipMapLock.readLock().unlock();
+        return next;
+    }
+
+    /**
+     * Get the id of a node with an Id strictly lower than the given id. Unless the given id is the lowest registered id.
      * Then the id of the node with the highest id is returned.
      * @param id Node id.
      * @return Id of the previous node.
@@ -186,6 +198,19 @@ public class NameServer {
     public int getPrevNode(int id){
         ipMapLock.readLock().lock();
         int prev = ipMapping.lowerKey(id) != null ? ipMapping.lowerKey(id) : ipMapping.lastKey();
+        ipMapLock.readLock().unlock();
+        return prev;
+    }
+
+    /**
+     * Get the IP of a node with an Id lower higher than the given id. Unless the given id is the lowest registered id.
+     * Then the IP of the node with the highest id is returned.
+     * @param id Node id.
+     * @return IP of the next node.
+     */
+    public String getPrevNodeIP(int id){
+        ipMapLock.readLock().lock();
+        String prev = ipMapping.lowerKey(id) != null ? ipMapping.get(ipMapping.lowerKey(id)) : ipMapping.get(ipMapping.lastKey());
         ipMapLock.readLock().unlock();
         return prev;
     }
@@ -199,9 +224,9 @@ public class NameServer {
     public String nodeToJson(int id){
         ipMapLock.readLock().lock();
         String json = "{" +
-                "\"node:\"{" + nodeToString(id) + "}," +
-                "\"next:\"{" + nodeToString(getNextNode(id)) + "}," +
-                "\"prev:\"{" + nodeToString(getPrevNode(id)) + "}" +
+                "\"node\":{" + nodeToString(id) + "}," +
+                "\"next\":{" + nodeToString(getNextNode(id)) + "}," +
+                "\"prev\":{" + nodeToString(getPrevNode(id)) + "}" +
                 "}";
         ipMapLock.readLock().unlock();
         return json;
@@ -214,13 +239,16 @@ public class NameServer {
      */
     public String nodeToString(int id){
         ipMapLock.readLock().lock();
-        return "\"id\": " + id + ", " +
-                "\"ip\": \"" + getNode(id) + "\"";
+        String json = "\"id\": " + id + ", " +
+                      "\"ip\": \"" + getNode(id) + "\"";
+        ipMapLock.readLock().unlock();
+        return json;
     }
     //</editor-fold>
 
-    //<editor-fold desc="getters & setters">
 
+
+    //<editor-fold desc="getters & setters">
     /**
      * Get the mapped ip's
      * @return Mapped ip's

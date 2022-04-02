@@ -20,12 +20,12 @@ public class UnitTests {
     @BeforeEach
     void setUp() {
         System.out.println("before Each");
-        ns.getIdMap().clear();
+        ns.getNameServer().getIpMapping().clear();
     }
     @AfterEach
     void tearDown() {
         System.out.println("teardown");
-        ns.getIdMap().clear();
+        ns.getNameServer().getIpMapping().clear();
     }
 
 
@@ -50,27 +50,27 @@ public class UnitTests {
 
     @Test
     public void addNodeUnique() throws Exception {
-        TreeMap<Integer,String> idMap = ns.getIdMap();
-        ns.addNode(1, "192.168.3.55");
+        TreeMap<Integer,String> idMap = ns.getNameServer().getIpMapping();
+        ns.getNameServer().addNode(1, "192.168.3.55");
         System.out.println("nodes: "+idMap.toString());
-        ns.addNode(2, "192.168.3.55");
+        ns.getNameServer().addNode(2, "192.168.3.55");
         System.out.println("nodes: "+idMap.toString());
     }
 
 
     @Test
     public void addNodeExisting() throws Exception{
-        Assumptions.assumeTrue(ns.addNode(2, "192.168.2.2"));
-        Assumptions.assumeFalse(ns.addNode(2, "192.168.2.2"));
-        Assertions.assertEquals(1, ns.getIdMap().size());
+        Assumptions.assumeTrue(ns.getNameServer().addNode(2, "192.168.2.2"));
+        Assumptions.assumeFalse(ns.getNameServer().addNode(2, "192.168.2.2"));
+        Assertions.assertEquals(1, ns.getNameServer().getIpMapping().size());
     }
     @Test
     public void sendFileNameIP() throws Exception{
-        ns.addNode(1000, "192.168.2.1");
-        ns.addNode(2000, "192.168.2.2");
-        ns.addNode(3000, "192.168.2.3");
-        ns.addNode(4000, "192.168.2.4");
-        ns.addNode(5000, "192.168.2.5");
+        ns.getNameServer().addNode(1000, "192.168.2.1");
+        ns.getNameServer().addNode(2000, "192.168.2.2");
+        ns.getNameServer().addNode(3000, "192.168.2.3");
+        ns.getNameServer().addNode(4000, "192.168.2.4");
+        ns.getNameServer().addNode(5000, "192.168.2.5");
 
         int hash = -1;
         String generatedString = "";
@@ -81,17 +81,17 @@ public class UnitTests {
             hash = Hashing.hash(generatedString);
             //System.out.println(hash + "\t=>\t" + generatedString);
         }
-        Assertions.assertEquals("192.168.2.2", ns.getLocation(generatedString));
-        Assertions.assertEquals(ns.getIdMap().get(2000), ns.getLocation(generatedString));
+        Assertions.assertEquals("192.168.2.2", ns.getFile(generatedString));
+        Assertions.assertEquals(ns.getNameServer().getIpMapping().get(2000), ns.getFile(generatedString));
 
     }
     @Test
     public void sendFileNameLower() throws Exception{
-        ns.addNode(1000, "192.168.2.1");
-        ns.addNode(2000, "192.168.2.2");
-        ns.addNode(3000, "192.168.2.3");
-        ns.addNode(4000, "192.168.2.4");
-        ns.addNode(5000, "192.168.2.5");
+        ns.getNameServer().addNode(1000, "192.168.2.1");
+        ns.getNameServer().addNode(2000, "192.168.2.2");
+        ns.getNameServer().addNode(3000, "192.168.2.3");
+        ns.getNameServer().addNode(4000, "192.168.2.4");
+        ns.getNameServer().addNode(5000, "192.168.2.5");
 
         int hash = 65536;
         String generatedString = "";
@@ -102,14 +102,14 @@ public class UnitTests {
             hash = Hashing.hash(generatedString);
             //System.out.println(hash + "\t=>\t" + generatedString);
         }
-        Assertions.assertEquals("192.168.2.5", ns.getLocation(generatedString));
-        Assertions.assertEquals(ns.getIdMap().get(5000), ns.getLocation(generatedString));
+        Assertions.assertEquals("192.168.2.5", ns.getFile(generatedString));
+        Assertions.assertEquals(ns.getNameServer().getIpMapping().get(5000), ns.getFile(generatedString));
     }
     @Test
     public void sendFileNameRemove() throws Exception{
-        ns.addNode(5, "192.168.5.5");
+        ns.getNameServer().addNode(5, "192.168.5.5");
         //test5.sendFile();
-        ns.removeNode(5);
+        ns.getNameServer().deleteNode(5);
 
     }
     @Test
