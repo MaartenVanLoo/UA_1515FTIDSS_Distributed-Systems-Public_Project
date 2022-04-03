@@ -146,6 +146,7 @@ public class Node {
     // exit the network
     public void shutdown(){
         try {
+            System.out.println("Shutting down...");
             String updatePrev;
             String updateNext;
 
@@ -175,6 +176,7 @@ public class Node {
             e.printStackTrace();
         }
         this.listeningSocket.close(); //close the listening socket, this will cause the N2N to exit
+        System.out.println("Shutdown complete");
     }
 
     // print the variables of the node to the console
