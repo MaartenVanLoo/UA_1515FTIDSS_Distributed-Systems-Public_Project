@@ -13,6 +13,8 @@ import java.net.*;
 import java.nio.file.AccessDeniedException;
 import java.util.Objects;
 
+import static java.lang.System.exit;
+
 public class Node {
     //<editor-fold desc="global variables">
     private static final int LISTENING_PORT = 8001;
@@ -30,6 +32,7 @@ public class Node {
 
     private final JSONParser parser = new JSONParser();
     private final N2NListener n2NListener;
+    private final NodeAPI nodeAPI;
     private DatagramSocket listeningSocket;
 
     private boolean setUpComplete = false;
@@ -51,11 +54,13 @@ public class Node {
 
         this.n2NListener = new N2NListener(this);
         this.n2NListener.start();
+        this.nodeAPI = new NodeAPI(this);
+        this.nodeAPI.start();
     }
     
     // Send broadcasts until the NS answers
     public void discoverNameServer() throws IOException {
-        InetAddress broadcastIp = InetAddress.getByName("255.255.255.255");
+        InetAddress broadcastIp = InetAddress.getByName("192.168.0.255");
         String message = "{\"type\":\"Discovery\",\"name\":\"" + name + "\"}";
         boolean received = false;
         boolean resend = false;
@@ -87,15 +92,18 @@ public class Node {
 
                 //parse response data:
                 JSONParser parser = new JSONParser();
-                Object obj = parser.parse(responseData);
-                String type = ((JSONObject) obj).get("type").toString();
+                JSONObject obj = (JSONObject)parser.parse(responseData);
+                String type = obj.get("type").toString();
                 if (type.equals("NS-offer")) {
-                    String status = ((JSONObject) obj).get("status").toString();
+                    String status = obj.get("status").toString();
                     if (status.equals("OK")) {
-                        this.id = (int) (long) (((JSONObject) obj).get("id"));
-                        this.nodeCount = (long) (((JSONObject) obj).get("nodeCount"));
-                        this.prevNodeId = (long) (((JSONObject) obj).get("prevNodeId"));
-                        this.nextNodeId = (long) (((JSONObject) obj).get("nextNodeId"));
+                        JSONObject node = (JSONObject) obj.get("node");
+                        this.id = (int)   (long) ((JSONObject)node.get("node")).get("id");
+                        this.prevNodeId = (long)   ((JSONObject)node.get("prev")).get("id");
+                        this.prevNodeIP = (String) ((JSONObject)node.get("prev")).get("ip");
+                        this.nextNodeId = (long)   ((JSONObject)node.get("next")).get("id");
+                        this.nextNodeIP = (String) ((JSONObject)node.get("next")).get("ip");
+                        this.nodeCount  = (long)   obj.get("nodeCount");
                     } else if (status.equals("Access Denied")) {
                         throw new AccessDeniedException("Access to network denied by nameserver");
                     }
@@ -121,17 +129,6 @@ public class Node {
             }
         }
         Unirest.config().defaultBaseUrl("http://"+this.NS_ip +":8081");
-        //request neighbour ip from the nameserver
-        String config = Unirest.get("/ns/{id}").routeParam("id", String.valueOf(this.id)).asString().getBody();
-        JSONObject object = new JSONObject();
-        try {
-            object = (JSONObject) this.parser.parse(config);
-        } catch (ParseException ignored){}
-        System.out.println(config);
-        System.out.println(((JSONObject)(object.get("next"))).get("ip"));
-        System.out.println(((JSONObject)(object.get("prev"))).get("ip"));//TODO: set correct neighbour ip;
-        this.nextNodeIP = Unirest.get("/ns/getNodeIP").queryString("id",this.nextNodeId).asString().getBody();
-        this.prevNodeIP = Unirest.get("/ns/getNodeIP").queryString("id",this.prevNodeId).asString().getBody();
         this.setUpComplete = true;
     }
 
@@ -155,7 +152,7 @@ public class Node {
             // update prev node
             updatePrev = "{\"type\":\"Shutdown\"," +
                            "\"nextNodeId\":"+this.getNextNodeId() + "," +
-                           "\"nextNodeIP\":"+this.getNextNodeIP() +"}";
+                           "\"nextNodeIP\":\""+this.getNextNodeIP() +"\"}";
 
             DatagramPacket prevNodePacket = new DatagramPacket(updatePrev.getBytes(), updatePrev.length(),
                     InetAddress.getByName(prevNodeIP), 8001);
@@ -166,7 +163,7 @@ public class Node {
             // update next node
             updateNext = "{\"type\":\"Shutdown\"," +
                           "\"prevNodeId\":"+this.getPrevNodeId() + "," +
-                          "\"prevNodeIP\":"+this.getPrevNodeIP() +"}";
+                          "\"prevNodeIP\":\""+this.getPrevNodeIP() +"\"}";
             DatagramPacket nextNodePacket = new DatagramPacket(updateNext.getBytes(), updateNext.length(),
                     InetAddress.getByName(nextNodeIP), 8001);
             //send this.nextNodeID to prevNodeID
@@ -248,6 +245,10 @@ public class Node {
         return id;
     }
 
+    public String getIP() {
+        return ip;
+    }
+
     public String getName() {
         return name;
     }
@@ -285,7 +286,7 @@ public class Node {
             JSONObject nextNode = (JSONObject) json.get("next");
             if (this.prevNodeId != (long)  prevNode.get("id")) {System.out.println("prevNodeId is not valid"); flag = true;}
             if (!Objects.equals(this.prevNodeIP, prevNode.get("ip"))) {System.out.println("prevNodeIP is not valid"); flag = true;}
-            if (this.nextNodeId != (long)  nextNode.get("next")) {System.out.println("nextNodeId is not valid"); flag = true;}
+            if (this.nextNodeId != (long)  nextNode.get("id")) {System.out.println("nextNodeId is not valid"); flag = true;}
             if (!Objects.equals(this.nextNodeIP, nextNode.get("ip"))) {System.out.println("nextNodeIP is not valid"); flag = true;}
         } catch (Exception e) {
             e.printStackTrace();
@@ -310,7 +311,11 @@ public class Node {
         System.out.println("Network interfaces:");
         System.out.println(NetworkInterface.getNetworkInterfaces());
         Node node = new Node(name);
-        node.discoverNameServer();
+        try{
+            node.discoverNameServer();
+        } catch (AccessDeniedException e){
+            exit(-1);
+        }
         node.printStatus();
         node.validateNode();
 

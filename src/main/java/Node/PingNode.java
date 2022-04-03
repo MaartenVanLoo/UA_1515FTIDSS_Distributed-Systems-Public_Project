@@ -70,6 +70,10 @@ public class PingNode extends Thread{
                 this.prevUnanswerd++;
             } catch (IOException e) {
                 //TODO: failure detection?
+                if (this.node.getListeningSocket() != null && this.node.getListeningSocket().isClosed()){
+                    //socket closed => node is dead
+                    this.running = false;
+                }
                 e.printStackTrace();
             }
             if (this.nextUnanswerd >3) {
