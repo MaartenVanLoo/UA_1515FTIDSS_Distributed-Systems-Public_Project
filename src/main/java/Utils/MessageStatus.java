@@ -2,5 +2,11 @@ package Utils;
 
 public enum MessageStatus {
     AccessDenied,
-    OK
+    OK;
+
+
+    @Override
+    public String toString() {
+        return super.toString();
+    }
 }

@@ -5,5 +5,11 @@ public enum MessageType {
     NSoffer,
     NBnext,
     NBprev,
-    Shutdown
+    Shutdown;
+
+
+    @Override
+    public String toString() {
+        return super.toString();
+    }
 }
