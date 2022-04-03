@@ -170,7 +170,7 @@ public class Node {
             socket.send(nextNodePacket);
 
             // update namingserver
-            System.out.println(Unirest.delete("/ns/{nodeID}").routeParam("nodeID", String.valueOf(this.id)).asString().getBody());
+            System.out.println(Unirest.delete("/ns/nodes/{nodeID}").routeParam("nodeID", String.valueOf(this.id)).asString().getBody());
         } catch (Exception e) {
             e.printStackTrace();
         }
