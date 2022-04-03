@@ -1,23 +1,27 @@
 let ipNS = "localhost";
+let nameServerData = {};
 let nodeData = {};
 let nodeLastPing = {};
+let selectedNode = null;
 let nameServerUpdateInterval = 2000;
 let nodeUpdateInterval = 5000;
-setInterval(update, nameServerUpdateInterval);
-setInterval(updateNodes, nodeUpdateInterval);
+setInterval(updateNameServerData, nameServerUpdateInterval);
+setInterval(updateNodeData, nodeUpdateInterval);
 
 //init
-addRowHandlers();
 statusTableTimeout();
 nodesTableTimeout();
+clearDetails();
+addRowHandlers();
 
-
-async function update(){
+async function updateNameServerData(){
     //fetch data from name server at localhost port 8081
     try {
         response = await GetData("http://"+ ipNS+":8081/ns");
         //log to console
         console.log(response);
+        //update name server data
+        nameServerData = response;
 
         statusTableUpdate(response);
         nodesTableUpdate(response);
@@ -46,18 +50,18 @@ async function GetData(url = '') {
     }
     catch(e){
         //console.log(e);
-        return "";
+        return undefined;
     }
 }
 const getNodeData = async ({ips}) =>{
     const nodes = ips.map(async ip =>{
         if (ip == "Unknown") return undefined;
-        const {data} = await GetData("http://"+ ip +":8081/node");
+        const data = await GetData("http://"+ ip +":8081/node");
         return data;
     })
     return Promise.all(nodes);
 }
-async function updateNodes(){
+async function updateNodeData(){
     // get node ip's from table
     let nodes = document.getElementById("nodesTable").rows;
     let nodeIDs = [];
@@ -71,10 +75,11 @@ async function updateNodes(){
     //fetch data from nodes
     const data =  await getNodeData({ips : nodeIPs});
     for (let i = 0; i < data.length; i++){
-        nodeData[nodeIDs[i]] = data[i];
         if (data[i] !== undefined && data[i] != null){
+            nodeData[nodeIDs[i]] = data[i];
             nodeLastPing[nodeIDs[i]] = Date.now();
         }else if (!(nodeIDs[i] in nodeLastPing)){
+            nodeData[nodeIDs[i]] = data[i];
             nodeLastPing[nodeIDs[i]] = Date.now();
         }
     }
@@ -93,8 +98,8 @@ async function updateNodes(){
         if (age > 2* nodeUpdateInterval){
             //look for index of node in table
             let index = nodeIDs.indexOf(key);
-            //set warniing flag in Node table
-            if (index > 0 && index < nodes.length-2){
+            //set warning flag in Node table
+            if (index >= 0 && index < nodes.length-2){
                 if (nodeIPs[index] !== "Unknown"){
                     nodes[index+2].cells[3].innerHTML = "ONLINE <img src='images/WARNING.png' alt='OK' height='15' width='15'>";
                 }
@@ -102,6 +107,7 @@ async function updateNodes(){
 
         }
     }
+    updateDetails()
 }
 
 function statusTableUpdate(jsonData){
@@ -150,9 +156,18 @@ function nodesTableUpdate(jsonData){
     for (var i = 2; i < nodesTable.rows.length; i++) {
         if (i-2 < map.length) {
             entry = map[i - 2];
+            if (entry["id"] in nodeData){
+                if (nodeData[entry["id"]] !== undefined && nodeData[entry["id"]] != null) {
+                    nodesTable.rows[i].cells[0].innerHTML = nodeData[entry["id"]]["node"]["name"];
+                }else{
+                    nodesTable.rows[i].cells[0].innerHTML = "&lt;&lt;name&gt;&gt;";
+                }
+            }else{
+                nodesTable.rows[i].cells[0].innerHTML = "&lt;&lt;name&gt;&gt;";
+            }
             nodesTable.rows[i].cells[1].innerHTML = entry["id"];
             nodesTable.rows[i].cells[2].innerHTML = entry["ip"];
-            if (nodeLastPing[entry["id"]] > 2 * nodeUpdateInterval){
+            if (Date.now() - nodeLastPing[entry["id"]] > 2 * nodeUpdateInterval){
                 nodesTable.rows[i].cells[3].innerHTML = "ONLINE <img src='images/WARNING.png' alt='OK' height='15' width='15'>";
             }else{
                 nodesTable.rows[i].cells[3].innerHTML = "ONLINE <img src='images/OK.png' alt='OK' height='15' width='15'>";
@@ -165,6 +180,7 @@ function nodesTableUpdate(jsonData){
             }
             else{
                 nodesTable.deleteRow(i);
+                addRowHandlers()
                 i--;
             }
         }
@@ -209,15 +225,63 @@ function nodesTableTimeout(){
     nodesTable.rows[2].cells[2].innerHTML = "Unknown";
     nodesTable.rows[2].cells[3].innerHTML = "Offline" + "<img src='images/ERROR.png' alt='NOK' height='15' width='15'>";
 }
-function updateDetails(row,index){
+function clearDetails(){
+    //clear table
+    detailsTable.rows[1].cells[1].innerHTML = "N/A";
+    detailsTable.rows[2].cells[1].innerHTML = "N/A";
+    detailsTable.rows[3].cells[1].innerHTML = "N/A";
+    detailsTable.rows[4].cells[1].innerHTML = "N/A";
+    detailsTable.rows[5].cells[1].innerHTML = "N/A";
+    detailsTable.rows[5].cells[2].innerHTML = "N/A";
+    detailsTable.rows[6].cells[1].innerHTML = "N/A";
+    detailsTable.rows[6].cells[2].innerHTML = "N/A";
+}
+function updateDetails(){
+    //get table
+    let detailsTable = document.getElementById("detailsTable");
+    let nodeTable = document.getElementById("nodesTable");
+    //look for the node index
+    let index = -1;
+    for (var i = 2; i < nodesTable.rows.length; i++){
+        if (nodesTable.rows[i].cells[1].innerHTML === selectedNode){
+            index = i;
+            break;
+        }
+    }
+    if (index === -1 || nodeData[selectedNode] === undefined ||nodeData[selectedNode] === null){
+        clearDetails();
+        return;
+    }
+    //update details table
+    detailsTable.rows[1].cells[1].innerHTML = nodeData[selectedNode]["node"]["name"];
+    detailsTable.rows[2].cells[1].innerHTML = nodesTable.rows[index].cells[3].innerHTML;
+    detailsTable.rows[3].cells[1].innerHTML = nodeData[selectedNode]["node"]["id"];
+    detailsTable.rows[4].cells[1].innerHTML = nodeData[selectedNode]["node"]["ip"];
+    detailsTable.rows[5].cells[1].innerHTML = nodeData[selectedNode]["next"]["id"];
+    detailsTable.rows[5].cells[2].innerHTML = nodeData[selectedNode]["next"]["ip"];
+    detailsTable.rows[6].cells[1].innerHTML = nodeData[selectedNode]["prev"]["id"];
+    detailsTable.rows[6].cells[2].innerHTML = nodeData[selectedNode]["prev"]["ip"];
+}
+function updateDetailsEvent(row,index){
     console.log(index)
     //get node id
-    let nodeId = row.cells[1].innerHTML;//get node data
+    selectedNode = row.cells[1].innerHTML; //get node id
     //get details table
     let detailsTable = document.getElementById("detailsTable");
-    //update details table
-    detailsTable.rows[1].cells[1].innerHTML = nodeData[nodeId]["id"];
-    detailsTable.rows[2].cells[1].innerHTML = nodeData[nodeId]["ip"];
+    let nodesTable = document.getElementById("nodesTable");
+    if (!selectedNode in nodeData || nodeData[selectedNode] === undefined || nodeData[selectedNode] == null){
+        clearDetails();
+    }else {
+        //update details table
+        detailsTable.rows[1].cells[1].innerHTML = nodeData[selectedNode]["node"]["name"];
+        detailsTable.rows[2].cells[1].innerHTML = nodesTable.rows[index + 2].cells[3].innerHTML;
+        detailsTable.rows[3].cells[1].innerHTML = nodeData[selectedNode]["node"]["id"];
+        detailsTable.rows[4].cells[1].innerHTML = nodeData[selectedNode]["node"]["ip"];
+        detailsTable.rows[5].cells[1].innerHTML = nodeData[selectedNode]["next"]["id"];
+        detailsTable.rows[5].cells[2].innerHTML = nodeData[selectedNode]["next"]["ip"];
+        detailsTable.rows[6].cells[1].innerHTML = nodeData[selectedNode]["prev"]["id"];
+        detailsTable.rows[6].cells[2].innerHTML = nodeData[selectedNode]["prev"]["ip"];
+    }
 }
 
 function askIPofNameserver(){
@@ -254,11 +318,11 @@ function askIPofNameserver(){
 function addRowHandlers() {
     var table = document.getElementById("nodesTable");
     var rows = table.getElementsByTagName("tr");
-    for (i = 3; i < rows.length; i++) {
+    for (i = 2; i < rows.length; i++) {
         var currentRow = table.rows[i];
         var createClickHandler = function(row, index) {
             return function() {
-               updateDetails(row,index);
+                updateDetailsEvent(row,index);
             };
         };
         currentRow.onclick = createClickHandler(currentRow,i-2);
