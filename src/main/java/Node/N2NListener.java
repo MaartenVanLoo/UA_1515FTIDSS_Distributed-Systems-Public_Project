@@ -83,7 +83,12 @@ public class N2NListener extends Thread {
                         break;
                 }
             }
-            catch (SocketException ignored){} //thrown when the socket is closed
+            catch (SocketException e){
+                if (this.node.getListeningSocket() == null || this.node.getListeningSocket().isClosed()) {
+                    this.running = false;
+                };
+                e.printStackTrace();
+            } //thrown when the socket is closed
             catch (IOException | ParseException e) {
                 e.printStackTrace();
             }
