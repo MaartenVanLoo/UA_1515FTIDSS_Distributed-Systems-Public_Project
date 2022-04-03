@@ -28,7 +28,8 @@ public class Node {
     private long nextNodeId;    // id of the next node in the network
     private String nextNodeIP;  // ip addr of the next node in the network
 
-    private N2NListener n2NListener;
+    private final JSONParser parser = new JSONParser();
+    private final N2NListener n2NListener;
     private DatagramSocket listeningSocket;
 
     private boolean setUpComplete = false;
@@ -121,6 +122,14 @@ public class Node {
         }
         Unirest.config().defaultBaseUrl("http://"+this.NS_ip +":8081");
         //request neighbour ip from the nameserver
+        String config = Unirest.get("/ns/{id}").routeParam("id", String.valueOf(this.id)).asString().getBody();
+        JSONObject object = new JSONObject();
+        try {
+            object = (JSONObject) this.parser.parse(config);
+        } catch (ParseException ignored){}
+        System.out.println(config);
+        System.out.println(((JSONObject)(object.get("next"))).get("ip"));
+        System.out.println(((JSONObject)(object.get("prev"))).get("ip"));//TODO: set correct neighbour ip;
         this.nextNodeIP = Unirest.get("/ns/getNodeIP").queryString("id",this.nextNodeId).asString().getBody();
         this.prevNodeIP = Unirest.get("/ns/getNodeIP").queryString("id",this.prevNodeId).asString().getBody();
         this.setUpComplete = true;
@@ -130,10 +139,8 @@ public class Node {
     public void getFileLocation(String filename) {
         try {
             //String url = "http://" + this.NS_ip + ":8081/ns/getFile?fileName="+filename;
-            System.out.println(Unirest.get("/ns/getFile")
-                    .queryString("fileName", filename)
-                    .asString()
-                    .getBody());
+            System.out.println(Unirest.get("/ns/files/{fileName}").routeParam("fileName", filename)
+                    .asString().getBody());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -166,7 +173,7 @@ public class Node {
             socket.send(nextNodePacket);
 
             // update namingserver
-            System.out.println(Unirest.delete("/ns/removeNode?Id=" +this.id).asString().getBody());
+            System.out.println(Unirest.delete("/ns/{nodeID}").routeParam("nodeID", String.valueOf(this.id)).asString().getBody());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -254,7 +261,7 @@ public class Node {
      */
     public void failureHandler(int targetId){
         // update namingserver
-        System.out.println(Unirest.delete("/ns/nodeFailure").queryString("Id", targetId).asString().getBody());
+        System.out.println(Unirest.delete("/ns/nodes/{nodeID}/fail").routeParam("nodeID", String.valueOf(targetId)).asString().getBody());
         System.out.println("Node " + targetId + " has failed");
         // TODO: request the prev node and next node params from the NS
 
@@ -271,13 +278,15 @@ public class Node {
     public void validateNode(){
         boolean flag = false;
         try {
-            String response = Unirest.get("/ns/validateNode?Id=" + this.id).asString().getBody();
+            String response = Unirest.get("/ns/nodes/{nodeId}").routeParam("nodeId", String.valueOf(this.id)).asString().getBody();
             JSONParser parser = new JSONParser();
             JSONObject json = (JSONObject) parser.parse(response);
-            if (this.prevNodeId != (long)  json.get("prevNodeId")) {System.out.println("prevNodeId is not valid"); flag = true;}
-            if (!Objects.equals(this.prevNodeIP, (String) json.get("prevNodeIP"))) {System.out.println("prevNodeIP is not valid"); flag = true;}
-            if (this.nextNodeId != (long)  json.get("nextNodeId")) {System.out.println("nextNodeId is not valid"); flag = true;}
-            if (!Objects.equals(this.nextNodeIP, (String) json.get("nextNodeIP"))) {System.out.println("nextNodeIP is not valid"); flag = true;}
+            JSONObject prevNode = (JSONObject) json.get("prev");
+            JSONObject nextNode = (JSONObject) json.get("next");
+            if (this.prevNodeId != (long)  prevNode.get("id")) {System.out.println("prevNodeId is not valid"); flag = true;}
+            if (!Objects.equals(this.prevNodeIP, prevNode.get("ip"))) {System.out.println("prevNodeIP is not valid"); flag = true;}
+            if (this.nextNodeId != (long)  nextNode.get("next")) {System.out.println("nextNodeId is not valid"); flag = true;}
+            if (!Objects.equals(this.nextNodeIP, nextNode.get("ip"))) {System.out.println("nextNodeIP is not valid"); flag = true;}
         } catch (Exception e) {
             e.printStackTrace();
         }

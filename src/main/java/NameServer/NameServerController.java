@@ -76,6 +76,7 @@ public class NameServerController {
         return this.nameServer;
     }
 
+    @CrossOrigin(origins = "*") //Use to allow access from any origin
     @ResponseStatus(HttpStatus.OK) //200
     @GetMapping(value = "/ns", produces = "application/json")
     public String getNameServerStatus() {
@@ -84,7 +85,7 @@ public class NameServerController {
                 "\"Utilities\":{" +
                     "\"Discovery\":\"Discovery is "+ (this.socket == null?"disabled":"enabled")+"\"" +
                 "}," +
-                "\"Nodes\":\"" + this.nameServer.getIpMapping().size() + " nodes in network\"," +
+                "\"Nodes\":" + this.nameServer.getIpMapping().size() +"," +
                 "\"Mapping\":[" +
                 this.nameServer.getIpMapping().keySet().stream().map(s -> "{" + this.nameServer.nodeToString(s) + "}").collect(Collectors.joining(","))+
                 "]}";
@@ -116,7 +117,7 @@ public class NameServerController {
         try {
             JSONObject node = (JSONObject) this.jsonParser.parse(nodeJson);
             ip = node.get("ip")!=null?(String) node.get("ip"):null;
-            if (ip == null) throw new ParseException(0,"No ip specified"); //TODO: return "HttpStatus.BAD_REQUEST" 400
+            if (ip == null)  throw new JSONInvalidFormatException("No ip specified"); //return "HttpStatus.BAD_REQUEST" 400
         } catch (ParseException e) {
             logger.warn("Invalid JSON format for node update");
             return; //TODO: return: "HttpStatus.NOT_FOUND"; 404

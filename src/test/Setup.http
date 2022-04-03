@@ -68,3 +68,89 @@ Content-Type: application/json
         client.global.set("node4", response.body.link);
     });
 %}
+
+### Create Node5 [POST]
+POST http://localhost:8081/ns/nodes
+Content-Type: application/json
+
+{
+  "name": "Node5",
+  "ip": "192.168.0.15"
+}
+> {%
+    client.test("Created successfully", function() {
+        client.assert(response.status === 201, "Response status is not 201\nExpected: 201\nActual: " + response.status + "\n");
+        client.global.set("node5", response.body.link);
+    });
+%}
+### Create Node6 [POST]
+POST http://localhost:8081/ns/nodes
+Content-Type: application/json
+
+{
+  "name": "Node6",
+  "ip": "192.168.0.16"
+}
+> {%
+    client.test("Created successfully", function() {
+        client.assert(response.status === 201, "Response status is not 201\nExpected: 201\nActual: " + response.status + "\n");
+        client.global.set("node6", response.body.link);
+    });
+%}
+### Create Node7 [POST]
+POST http://localhost:8081/ns/nodes
+Content-Type: application/json
+
+{
+  "name": "Node7",
+  "ip": "192.168.0.17"
+}
+> {%
+    client.test("Created successfully", function() {
+        client.assert(response.status === 201, "Response status is not 201\nExpected: 201\nActual: " + response.status + "\n");
+        client.global.set("node7", response.body.link);
+    });
+%}
+### Create Node8 [POST]
+POST http://localhost:8081/ns/nodes
+Content-Type: application/json
+
+{
+  "name": "Node8",
+  "ip": "192.168.0.18"
+}
+> {%
+    client.test("Created successfully", function() {
+        client.assert(response.status === 201, "Response status is not 201\nExpected: 201\nActual: " + response.status + "\n");
+        client.global.set("node8", response.body.link);
+    });
+%}
+### Create Node9 [POST]
+POST http://localhost:8081/ns/nodes
+Content-Type: application/json
+
+{
+  "name": "Node9",
+  "ip": "192.168.0.19"
+}
+> {%
+    client.test("Created successfully", function() {
+        client.assert(response.status === 201, "Response status is not 201\nExpected: 201\nActual: " + response.status + "\n");
+        client.global.set("node9", response.body.link);
+    });
+%}
+### Create Node10 [POST]
+POST http://localhost:8081/ns/nodes
+Content-Type: application/json
+
+{
+  "name": "Node10",
+  "ip": "192.168.0.20"
+}
+> {%
+    client.test("Created successfully", function() {
+        client.assert(response.status === 201, "Response status is not 201\nExpected: 201\nActual: " + response.status + "\n");
+        client.global.set("node10", response.body.link);
+    });
+%}
+
