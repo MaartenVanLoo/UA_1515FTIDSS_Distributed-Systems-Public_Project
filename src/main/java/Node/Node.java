@@ -106,7 +106,7 @@ public class Node {
         System.out.println("Node nodeCount:\t" + this.nodeCount);
     }
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, InterruptedException {
         System.out.println("Starting Node");
         String name;
         if (args.length > 0) {
@@ -126,23 +126,10 @@ public class Node {
         System.out.println("Your current IP address : " + ip);
         System.out.println("Your current Hostname : " + hostname);
         node.getFileLocation("test.txt");
-        node.getFileLocation("test1.txt");
-        node.getFileLocation("test2.txt");
-        node.getFileLocation("test3.txt");
-        node.getFileLocation("test4.txt");
-        /*for (int i = 0; i < 10;i++) {
-            Thread t = new Thread(() -> {
-                for (int j = 0; j < 10000; j++) {
-                    node.getFileLocation("test.txt");
-                    node.getFileLocation("test1.txt");
-                    node.getFileLocation("test2.txt");
-                    node.getFileLocation("test3.txt");
-                    node.getFileLocation("test4.txt");
 
-                }
-            });
-            t.start();
-        }*/
+        Thread.sleep(120000);
+
         node.terminate();
+
     }
 }

@@ -13,17 +13,17 @@ public class UnitTests {
 
     @BeforeAll
     static void beforeAll() {
-        System.out.println("Before All");
+        //System.out.println("Before All");
         ns =  new NameServer();
     }
     @BeforeEach
     void setUp() {
-        System.out.println("before Each");
+        //System.out.println("before Each");
         ns.getIdMap().clear();
     }
     @AfterEach
     void tearDown() {
-        System.out.println("teardown");
+        //System.out.println("teardown");
         ns.getIdMap().clear();
     }
 
@@ -38,7 +38,7 @@ public class UnitTests {
         String n4 = "Node4";
         String n5 = "Node5";
 
-        System.out.println(n0 + "=>" + n0.hashCode() +"->" + this.ns.hash(n0));
+        System.out.println(n0 + "=>" + n0.hashCode() +"->" + ns.hash(n0));
         System.out.println(n1 + "=>" + n1.hashCode() +"->" + ns.hash(n1));
         System.out.println(n2 + "=>" + n2.hashCode() +"->" + ns.hash(n2));
         System.out.println(n3 + "=>" + n3.hashCode() +"->" + ns.hash(n3));
@@ -73,6 +73,7 @@ public class UnitTests {
 
         int hash = -1;
         String generatedString = "";
+        //make sure hash in between existing nodes
         while (hash<= 2000 || hash >=3000){
             byte[] array = new byte[7];
             new Random().nextBytes(array);
@@ -83,6 +84,7 @@ public class UnitTests {
         Assertions.assertEquals("192.168.2.2", ns.getLocation(generatedString));
         Assertions.assertEquals(ns.getIdMap().get(2000), ns.getLocation(generatedString));
 
+        System.out.println(ns.getLocation(generatedString));
     }
     @Test
     public void sendFileNameLower() throws Exception{
@@ -105,12 +107,18 @@ public class UnitTests {
         Assertions.assertEquals(ns.getIdMap().get(5000), ns.getLocation(generatedString));
     }
     @Test
-    public void sendFileNameRemove() throws Exception{
-        ns.addNode(5, "192.168.5.5");
-        //test5.sendFile();
-        ns.removeNode(5);
+    public void removeNode() throws Exception{
+        TreeMap<Integer,String> idMap = ns.getIdMap();
+        ns.addNode(1, "192.168.3.55");
+        System.out.println("nodes: "+idMap.toString());
+        ns.addNode(2, "192.168.3.55");
+        System.out.println("nodes: "+idMap.toString());
 
+        ns.removeNode(1);
+        System.out.println("nodes: "+idMap.toString());
     }
+
+
     @Test
     public void askTwoPCs() throws Exception{
 
