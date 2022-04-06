@@ -174,6 +174,7 @@ function nodesTableUpdate(jsonData){
             }
         }else{
             if (nodesTable.rows.length <= 3){
+                nodesTable.rows[i].cells[0].innerHTML = "&lt;&lt;name&gt;&gt;";
                 nodesTable.rows[i].cells[1].innerHTML = "&lt;&lt;Id&gt;&gt;";
                 nodesTable.rows[i].cells[2].innerHTML = "Unknown";
                 nodesTable.rows[i].cells[3].innerHTML = "Offline" + "<img src='images/ERROR.png' alt='NOK' height='15' width='15'>";

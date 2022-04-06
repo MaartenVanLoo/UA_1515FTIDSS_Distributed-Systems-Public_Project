@@ -60,7 +60,7 @@ public class Node {
     
     // Send broadcasts until the NS answers
     public void discoverNameServer() throws IOException {
-        InetAddress broadcastIp = InetAddress.getByName("255.255.255.255");
+        InetAddress broadcastIp = InetAddress.getByName("192.168.0.255");
         String message = "{\"type\":\"Discovery\",\"name\":\"" + name + "\"}";
         boolean received = false;
         boolean resend = false;
@@ -176,6 +176,7 @@ public class Node {
             e.printStackTrace();
         }
         this.listeningSocket.close(); //close the listening socket, this will cause the N2N to exit
+        this.nodeAPI.stop();
         System.out.println("Shutdown complete");
     }
 
