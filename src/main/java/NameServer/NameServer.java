@@ -246,7 +246,8 @@ public class NameServer {
                         this.nameServer.logger.info("Adding node failed");
                         response = "{\"status\":\"Access Denied\"}";
                     }
-                    DatagramPacket responsePacket = new DatagramPacket(response.getBytes(StandardCharsets.UTF_8), response.length(), receivePacket.getAddress(), receivePacket.getPort());
+                    DatagramPacket responsePacket = new DatagramPacket(response.getBytes(StandardCharsets.UTF_8),
+                            response.length(), receivePacket.getAddress(), receivePacket.getPort());
                     this.socket.send(responsePacket);
 
                 } catch (IOException ignore) {}
