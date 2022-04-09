@@ -49,6 +49,7 @@ import java.util.stream.Collectors;
 //https://www.restapitutorial.com/lessons/httpmethods.html#:~:text=The%20primary%20or%20most%2Dcommonly,but%20are%20utilized%20less%20frequently.
 //https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/GET
 //https://stackoverflow.com/questions/39835648/how-do-i-get-the-json-in-a-response-body-with-spring-annotaion
+@CrossOrigin(origins = "*") //Use to allow access from any origin
 @RestController
 public class NameServerController {
     Logger logger = LoggerFactory.getLogger(NameServerController.class);
@@ -76,7 +77,6 @@ public class NameServerController {
         return this.nameServer;
     }
 
-    @CrossOrigin(origins = "*") //Use to allow access from any origin
     @ResponseStatus(HttpStatus.OK) //200
     @GetMapping(value = "/ns", produces = "application/json")
     public String getNameServerStatus() {

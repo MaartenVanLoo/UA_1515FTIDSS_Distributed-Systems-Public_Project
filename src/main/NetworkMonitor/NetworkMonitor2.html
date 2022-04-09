@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="stylesheet" href="NetworkMonitor2.css">
+
+  <script src="utils.js"></script>
+  <title>Network monitor</title>
+
+</head>
+<body class = "bg-gray">
+<div class="dashboard-main-wrapper">
+<div class="dashboard-header">
+  <nav class="navbar fixed-top bg-white">
+    <img class="navbar-brand" src="images/logo.png" alt="">
+    <a class="navbar-brand" href="#">Network Monitor</a>
+    <div class="navbar-content">
+    <ul class ="navbar-nav ml-auto navbar-right-top">
+      <li class="nav-item dropdown">
+        <div class="nav-options ">
+          <a class="nav-link" href="#" role="button" onclick=toggle_options()>
+            <img src="images/options.png" alt="options" width="40px" height="40px">
+          </a>
+          <ul class="dropdown-menu dropdown-menu-right connection-dropdown" id="dropdown-options">
+            <li class="connection-list">
+              <div class="row" style="padding-top:5px">
+                <div class="col-4">
+                  <label>Name server ip</label>
+                </div>
+                <div class="col-6">
+                  <input type="text" placeholder="localhost">
+                </div>
+              </div>
+              <div class="row" style="padding-top:5px">
+                <div class="col-4">
+                  <label>Port</label>
+                </div>
+                <div class="col-6">
+                  <input type="text" placeholder="8081">
+                </div>
+              </div>
+              <div class="row" style="padding-top:5px">
+                <div class="col-4">
+                  <label>Refresh rate NS</label>
+                </div>
+                <div class="col-3">
+                  <input type="range" min="100" max="10000" value="1000" class="slider" id="nsRefreshRate">
+                </div>
+                <div class="col-col-col-auto">
+                  <label id="nsRefreshRateLabel">1 000 ms</label>
+                </div>
+              </div>
+              <div class="row" style="padding-top:5px">
+                <div class="col-4">
+                  <label>Refresh rate node</label>
+                </div>
+                <div class="col-3">
+                  <input type="range" min="100" max="10000" value="1000" class="slider" id="nodeRefreshRate">
+                </div>
+                <div class="col-col-auto">
+                  <label id="nodeRefreshRateLabel">1 000 ms</label>
+                </div>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </li>
+    </ul>
+    </div>
+  </nav>
+</div>
+<div class="dashboard-wrapper">
+  <div class="dashboard-content">
+    <div class="row">
+      <div class="col-6">
+        <div class="card">
+          <h class="card-header">header1</h>
+        </div>
+      </div>
+      <div class="col-6">
+        <div class="card">
+          <h class="card-header">header2</h>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-12">
+        <div class="card">
+          <h class="card-header">header3</h>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+  document.getElementById("nsRefreshRate").oninput = function() {
+    document.getElementById("nsRefreshRateLabel").innerHTML = numberWithSpaces(this.value) +" ms";
+  }
+  document.getElementById("nodeRefreshRate").oninput = function() {
+    document.getElementById("nodeRefreshRateLabel").innerHTML = numberWithSpaces(this.value) + " ms";
+  }
+</script>
+</body>
+</html>
