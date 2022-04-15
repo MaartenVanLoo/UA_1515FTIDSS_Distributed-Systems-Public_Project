@@ -1,5 +1,4 @@
 let selectedID = null;
-setDataRefreshRate(1000);
 setScreenRefreshRate(1000);
 
 

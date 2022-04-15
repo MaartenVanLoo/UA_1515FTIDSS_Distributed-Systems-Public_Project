@@ -15,7 +15,9 @@ setDataRefreshRate(1000)
 function setDataRefreshRate(interval){
     setInterval(updateData,interval);
 }
-
+function setNameServerIp(ip){
+    ipNS = ip;
+}
 async function GetData(url = '') {
     // Default options are marked with *
     try {
@@ -52,6 +54,11 @@ const getNameserverData = async (ip) =>{
 }
 
 async function updateData(){
+    updateNS();
+    updateNodes();
+}
+
+async function updateNS(){
     //async function => no awaiting, just continues!
     getNameserverData(ipNS)
         .then(data => {
@@ -80,7 +87,8 @@ async function updateData(){
             }
         })
         .catch((error) => {});
-
+}
+async function updateNodes(){
     if (nameServerData["Mapping"] === undefined || nameServerData["Mapping"] == null) return;
 
     let ips = nameServerData["Mapping"].map((e) => {return e["ip"]});

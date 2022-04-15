@@ -6,6 +6,8 @@
   <link rel="stylesheet" href="NetworkMonitor2.css">
 
   <script src="utils.js"></script>
+  <script src="RefreshTables.js"></script>
+  <script src="GetData.js"></script>
   <title>Network monitor</title>
 
 </head>
@@ -29,7 +31,7 @@
                   <label>Name server ip</label>
                 </div>
                 <div class="col-6">
-                  <input type="text" placeholder="localhost">
+                  <input type="text" id = "ns-ip" placeholder="localhost">
                 </div>
               </div>
               <div class="row" style="padding-top:5px">
@@ -37,7 +39,7 @@
                   <label>Port</label>
                 </div>
                 <div class="col-6">
-                  <input type="text" placeholder="8081">
+                  <input type="text" id = "network-port" placeholder="8081">
                 </div>
               </div>
               <div class="row" style="padding-top:5px">
@@ -70,22 +72,40 @@
     </div>
   </nav>
 </div>
+<div class="nav-left-sidebar sidebar-dark">
+  <div class="slimScrollDiv" style="position:relative; overflow: hidden: width:auto; height:100%;">
+    <div class="menu-list" style="overflow:hidden; width:auto; height:100%;">
+      <nav class="navbar navbar-expand-lg navbar-light">
+        <a class="d-xl-none d-lg-none" href="#">Dashboard</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation"></button>
+        <div class="navbar-collapse collapse show" id="navbarNav">
+          <ul class="navbar-nav flex-column">
+            <li class="nav-divider">Menu</li>
+            <li class="nav-item">
+            </li>
+            <li class="nav-item">
+            </li>
+          </ul>
+      </nav>s
+    </div>
+  </div>
+</div>
 <div class="dashboard-wrapper">
   <div class="dashboard-content">
     <div class="row">
-      <div class="col-6">
+      <div class="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
         <div class="card">
           <h class="card-header">header1</h>
         </div>
       </div>
-      <div class="col-6">
+      <div class="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
         <div class="card">
           <h class="card-header">header2</h>
         </div>
       </div>
     </div>
     <div class="row">
-      <div class="col-12">
+      <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
         <div class="card">
           <h class="card-header">header3</h>
         </div>
@@ -98,9 +118,27 @@
 <script>
   document.getElementById("nsRefreshRate").oninput = function() {
     document.getElementById("nsRefreshRateLabel").innerHTML = numberWithSpaces(this.value) +" ms";
+    try{
+        setDataRefreshRate(this.value);
+    }catch(err){
+      console.log(err);
+    }
+
   }
   document.getElementById("nodeRefreshRate").oninput = function() {
     document.getElementById("nodeRefreshRateLabel").innerHTML = numberWithSpaces(this.value) + " ms";
+     try{
+        setScreenRefreshRate(this.value);
+    }catch(err){
+      console.log(err);
+    }
+  }
+  document.getElementById("ns-ip").oninput=function(){
+    try{
+      setNameServerIp(this.value);
+    }catch(err){
+      console.log(err);
+    }
   }
 </script>
 </body>
