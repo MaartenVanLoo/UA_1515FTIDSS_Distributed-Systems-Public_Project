@@ -7,10 +7,11 @@ let nameserverRequests = 0;
 let nameServerData = {};    //nameserver data, including node mapping
 let nodeData = {};          //node data, fetched from the nodes
 let nodeLastPing = {};      //last answer from the nodes
-
+let newDataAvailable = false;
 let ipNS = "localhost" 
 
 setDataRefreshRate(1000)
+
 
 function setDataRefreshRate(interval){
     setInterval(updateData,interval);
@@ -18,6 +19,7 @@ function setDataRefreshRate(interval){
 function setNameServerIp(ip){
     ipNS = ip;
 }
+
 async function GetData(url = '') {
     // Default options are marked with *
     try {
@@ -26,6 +28,32 @@ async function GetData(url = '') {
         })
         let body = await response.json(); // parses JSON response into native JavaScript object
         return body;
+    }
+    catch(e){
+        //console.log(e);
+        return undefined;
+    }
+}
+async function DeleteData(url = '') {
+    // Default options are marked with *
+    try {
+        const response = await fetch(url, {
+            method: 'DELETE', // *GET, POST, PUT, DELETE, etc.
+        })
+        return await response.json(); // parses JSON response into native JavaScript object
+    }
+    catch(e){
+        //console.log(e);
+        return undefined;
+    }
+}
+async function DeleteData(url = '') {
+    // Default options are marked with *
+    try {
+        const response = await fetch(url, {
+            method: 'DELETE', // *GET, POST, PUT, DELETE, etc.
+        })
+        return await response.status; // parses JSON response into native JavaScript object
     }
     catch(e){
         //console.log(e);
@@ -62,13 +90,13 @@ async function updateNS(){
     //async function => no awaiting, just continues!
     getNameserverData(ipNS)
         .then(data => {
-        if (data !== undefined){
-            nameServerData = data;
-        }
-		else{
-			throw "No data from nameserver";
-		}
-    })
+            if (data !== undefined){
+                nameServerData = data;
+            }
+            else{
+                throw "No data from nameserver";
+            }
+        })
         .then(()=> {
             //update the nodeData map
             //remove keys not present in current in nameserver data
@@ -86,19 +114,22 @@ async function updateNS(){
                 }
             }
         })
+        .then(() =>{newDataAvailable = true})
         .catch((error) => {});
 }
 async function updateNodes(){
     if (nameServerData["Mapping"] === undefined || nameServerData["Mapping"] == null) return;
 
     let ips = nameServerData["Mapping"].map((e) => {return e["ip"]});
-    getNodeData(ips).then(data => {
-		data.map( (e) => {
-			if (e === undefined || e == null) return
-			if (e["node"]["id"] in nodeData){
-				nodeData[e["node"]["id"]]= e;
-				nodeLastPing[e["node"]["id"]] = Date.now();
-			}
-		});
-    })
+    getNodeData(ips)
+        .then(data => {
+            data.map( (e) => {
+                if (e === undefined || e == null) return
+                if (e["node"]["id"] in nodeData){
+                    nodeData[e["node"]["id"]]= e;
+                    nodeLastPing[e["node"]["id"]] = Date.now();
+                }
+            });
+        })
+        .then(() =>{newDataAvailable = true})
 }
