@@ -171,6 +171,7 @@ public class NameServer {
      */
     public int getNextNode(int id){
         ipMapLock.readLock().lock();
+        if (ipMapping.isEmpty()) { ipMapLock.readLock().unlock(); return -1; }
         int next = ipMapping.higherKey(id) != null ? ipMapping.higherKey(id) : ipMapping.firstKey();
         ipMapLock.readLock().unlock();
         return next;
@@ -184,6 +185,7 @@ public class NameServer {
      */
     public String getNextNodeIP(int id){
         ipMapLock.readLock().lock();
+        if (ipMapping.isEmpty()) { ipMapLock.readLock().unlock(); return null; }
         String next = ipMapping.higherKey(id) != null ? ipMapping.get(ipMapping.higherKey(id)) : ipMapping.get(ipMapping.firstKey());
         ipMapLock.readLock().unlock();
         return next;
@@ -197,6 +199,7 @@ public class NameServer {
      */
     public int getPrevNode(int id){
         ipMapLock.readLock().lock();
+        if (ipMapping.isEmpty()) { ipMapLock.readLock().unlock(); return -1; }
         int prev = ipMapping.lowerKey(id) != null ? ipMapping.lowerKey(id) : ipMapping.lastKey();
         ipMapLock.readLock().unlock();
         return prev;
@@ -210,6 +213,7 @@ public class NameServer {
      */
     public String getPrevNodeIP(int id){
         ipMapLock.readLock().lock();
+        if (ipMapping.isEmpty()) { ipMapLock.readLock().unlock(); return null; }
         String prev = ipMapping.lowerKey(id) != null ? ipMapping.get(ipMapping.lowerKey(id)) : ipMapping.get(ipMapping.lastKey());
         ipMapLock.readLock().unlock();
         return prev;

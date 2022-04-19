@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.net.*;
 import java.nio.file.AccessDeniedException;
 import java.util.Objects;
+import java.util.concurrent.*;
 
 import static java.lang.System.exit;
 
@@ -323,12 +324,27 @@ public class Node {
         String hostname = ip.getHostName();
         System.out.println("Your current IP address : " + ip);
         System.out.println("Your current Hostname : " + hostname);
+
+        ScheduledExecutorService executorService = Executors.newScheduledThreadPool(2);
+        Runnable validator = new Runnable() {
+            @Override
+            public void run() {
+                Utils.SynchronizedPrint.clearConsole();
+                node.printStatus();
+                node.validateNode();
+            }
+        };
+        executorService.scheduleAtFixedRate(validator, 1, 5, TimeUnit.SECONDS);
+
+        /*
         node.getFileLocation("test.txt");
         node.getFileLocation("test1.txt");
         node.getFileLocation("test2.txt");
         node.getFileLocation("test3.txt");
         node.getFileLocation("test4.txt");
+        */
         /*for (int i = 0; i < 10;i++) {
+
             Thread t = new Thread(() -> {
                 for (int j = 0; j < 10000; j++) {
                     node.getFileLocation("test.txt");
@@ -342,7 +358,7 @@ public class Node {
             t.start();
         }*/
         Thread.sleep(60000 + 2*(long) ((Math.random()-0.5) * 30000)); // sleep for 60±30 seconds
-
+        executorService.shutdownNow();
         node.shutdown();
     }
 
