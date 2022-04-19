@@ -329,13 +329,10 @@ public class Node {
         System.out.println("Your current Hostname : " + hostname);
 
         ScheduledExecutorService executorService = Executors.newScheduledThreadPool(2);
-        Runnable validator = new Runnable() {
-            @Override
-            public void run() {
-                Utils.SynchronizedPrint.clearConsole();
-                node.printStatus();
-                node.validateNode();
-            }
+        Runnable validator = () -> {
+            SynchronizedPrint.clearConsole();
+            node.printStatus();
+            node.validateNode();
         };
         executorService.scheduleAtFixedRate(validator, 1, 5, TimeUnit.SECONDS);
 
