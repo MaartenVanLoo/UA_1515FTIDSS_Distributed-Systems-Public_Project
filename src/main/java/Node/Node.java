@@ -288,10 +288,10 @@ public class Node {
             JSONObject json = (JSONObject) parser.parse(response);
             JSONObject prevNode = (JSONObject) json.get("prev");
             JSONObject nextNode = (JSONObject) json.get("next");
-            if (this.prevNodeId != (long)  prevNode.get("id")) {System.out.println("prevNodeId is not valid"); flag = true;}
-            if (!Objects.equals(this.prevNodeIP, prevNode.get("ip"))) {System.out.println("prevNodeIP is not valid"); flag = true;}
-            if (this.nextNodeId != (long)  nextNode.get("id")) {System.out.println("nextNodeId is not valid"); flag = true;}
-            if (!Objects.equals(this.nextNodeIP, nextNode.get("ip"))) {System.out.println("nextNodeIP is not valid"); flag = true;}
+            if (this.prevNodeId != (long)  prevNode.get("id")) {System.out.println("prevNodeId is not valid\n\texpected:" + (long)  prevNode.get("id")); flag = true;}
+            if (!Objects.equals(this.prevNodeIP, prevNode.get("ip"))) {System.out.println("prevNodeIP is not valid\n\texpected:" + nextNode.get("ip")); flag = true;}
+            if (this.nextNodeId != (long)  nextNode.get("id")) {System.out.println("nextNodeId is not valid\n\texpected:" + (long)  nextNode.get("id")); flag = true;}
+            if (!Objects.equals(this.nextNodeIP, nextNode.get("ip"))) {System.out.println("nextNodeIP is not valid\n\texpected:" + nextNode.get("ip")); flag = true;}
         } catch (Exception e) {
             e.printStackTrace();
         }
