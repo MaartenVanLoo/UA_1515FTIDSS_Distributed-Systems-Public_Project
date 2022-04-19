@@ -61,7 +61,7 @@ public class Node {
     
     // Send broadcasts until the NS answers
     public void discoverNameServer() throws IOException {
-        InetAddress broadcastIp = InetAddress.getByName("255.255.255.255");
+        InetAddress broadcastIp = InetAddress.getByName("192.168.0.255");
         String message = "{\"type\":\"Discovery\",\"name\":\"" + name + "\"}";
         boolean received = false;
         boolean resend = false;
@@ -147,6 +147,7 @@ public class Node {
     // exit the network
     public void shutdown(){
         try {
+            System.out.println("Shutting down...");
             String updatePrev;
             String updateNext;
 
@@ -171,11 +172,13 @@ public class Node {
             socket.send(nextNodePacket);
 
             // update namingserver
-            System.out.println(Unirest.delete("/ns/{nodeID}").routeParam("nodeID", String.valueOf(this.id)).asString().getBody());
+            System.out.println(Unirest.delete("/ns/nodes/{nodeID}").routeParam("nodeID", String.valueOf(this.id)).asString().getBody());
         } catch (Exception e) {
             e.printStackTrace();
         }
         this.listeningSocket.close(); //close the listening socket, this will cause the N2N to exit
+        this.nodeAPI.stop();
+        System.out.println("Shutdown complete");
     }
 
     // print the variables of the node to the console

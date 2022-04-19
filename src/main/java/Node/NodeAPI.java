@@ -35,7 +35,6 @@ public class NodeAPI {
                     exchange.sendResponseHeaders(400, -1);
                 }
             });
-            this.server.setExecutor((ThreadPoolExecutor) Executors.newFixedThreadPool(10));
         } catch (Exception e) {
             this.server = null;
             System.out.println("Error creating http server");
@@ -48,6 +47,11 @@ public class NodeAPI {
         }
     }
 
+    public void stop(){
+        if(this.server != null){
+            this.server.stop(0);
+        }
+    }
     private String getNodeInfo() {
         JSONObject response = new JSONObject();
         JSONObject node = new JSONObject();

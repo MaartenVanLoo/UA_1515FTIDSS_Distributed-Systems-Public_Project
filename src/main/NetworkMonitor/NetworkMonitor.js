@@ -39,7 +39,7 @@ async function GetData(url = '') {
             method: 'GET', // *GET, POST, PUT, DELETE, etc.
             mode: 'cors', // no-cors, *cors, same-origin
             cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
-            credentials: 'same-origin', // include, *same-origin, omit
+            credentials: 'omit', // include, *same-origin, omit
             headers: {},
             redirect: 'follow', // manual, *follow, error
             referrerPolicy: 'no-referrer', // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
@@ -174,6 +174,7 @@ function nodesTableUpdate(jsonData){
             }
         }else{
             if (nodesTable.rows.length <= 3){
+                nodesTable.rows[i].cells[0].innerHTML = "&lt;&lt;name&gt;&gt;";
                 nodesTable.rows[i].cells[1].innerHTML = "&lt;&lt;Id&gt;&gt;";
                 nodesTable.rows[i].cells[2].innerHTML = "Unknown";
                 nodesTable.rows[i].cells[3].innerHTML = "Offline" + "<img src='images/ERROR.png' alt='NOK' height='15' width='15'>";

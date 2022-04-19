@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="stylesheet" href="NetworkMonitor2.css">
+
+  <script src="utils.js"></script>
+  <script src="RefreshTables.js"></script>
+  <script src="GetData.js"></script>
+  <title>Network monitor</title>
+
+</head>
+<body class = "bg-gray">
+<div class="dashboard-main-wrapper">
+<div class="dashboard-header">
+  <nav class="navbar fixed-top bg-white">
+    <img class="navbar-brand" src="images/logo.png" alt="">
+    <a class="navbar-brand" href="#">Network Monitor</a>
+    <div class="navbar-content">
+    <ul class ="navbar-nav ml-auto navbar-right-top">
+      <li class="nav-item dropdown">
+        <div class="nav-options ">
+          <a class="nav-link" href="#" role="button" onclick=toggle_options()>
+            <img src="images/options.png" alt="options" width="40px" height="40px">
+          </a>
+          <ul class="dropdown-menu dropdown-menu-right connection-dropdown" id="dropdown-options">
+            <li class="connection-list">
+              <div class="row" style="padding-top:5px">
+                <div class="col-5">
+                  <label>Name server ip</label>
+                </div>
+                <div class="col-5">
+                  <input type="text" id = "ns-ip" placeholder="localhost">
+                </div>
+              </div>
+              <div class="row" style="padding-top:5px">
+                <div class="col-5">
+                  <label>Port</label>
+                </div>
+                <div class="col-6">
+                  <input type="text" id = "network-port" placeholder="8081">
+                </div>
+              </div>
+              <div class="row" style="padding-top:5px">
+                <div class="col-5">
+                  <label>Refresh rate NS</label>
+                </div>
+                <div class="col-3">
+                  <input type="range" min="100" max="10000" value="1000" class="slider" id="nsRefreshRate">
+                </div>
+                <div class="col-col-col-auto">
+                  <label id="nsRefreshRateLabel">1 000 ms</label>
+                </div>
+              </div>
+              <div class="row" style="padding-top:5px">
+                <div class="col-5">
+                  <label>Refresh rate node</label>
+                </div>
+                <div class="col-3">
+                  <input type="range" min="100" max="10000" value="1000" class="slider" id="nodeRefreshRate">
+                </div>
+                <div class="col-col-auto">
+                  <label id="nodeRefreshRateLabel">1 000 ms</label>
+                </div>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </li>
+    </ul>
+    </div>
+  </nav>
+</div>
+<div class="nav-left-sidebar sidebar-dark">
+  <div class="slimScrollDiv" style="position:relative; overflow: hidden; width:auto; height:100%;">
+    <div class="menu-list" style="overflow:hidden; width:auto; height:100%;">
+      <nav class="navbar navbar-expand-lg navbar-light">
+        <a class="d-xl-none d-lg-none" href="#">Dashboard</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation"></button>
+        <div class="navbar-collapse collapse show" id="navbarNav" style>
+          <ul class="navbar-nav flex-column">
+            <li class="nav-divider">Menu</li>
+            <li class="nav-item">
+              <a class="nav-link" href="#" onclick=toggle_options()>
+                <i class="fa fa-fw fa-user-circle"></i>Options</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#" onclick="refresh_tables()">
+                <i class="fa fa-fw fa-home"></i>Dashboard</a>
+            </li>
+            <li class="nav-item">
+            </li>
+          </ul>
+        </div>
+      </nav>
+    </div>
+  </div>
+</div>
+<div class="dashboard-wrapper">
+  <div class="dashboard-content">
+    <div class="row">
+      <div class="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
+        <div class="card">
+          <h class="card-header">Nameserver</h>
+          <table>
+            <thead></thead>
+            <tbody>
+              <tr>
+                <td>Status</td>
+                <td id="ns-status">online</td>
+              </tr>
+              <tr>
+                <td>Nodes</td>
+                <td id="ns-nodes">0</td>
+              </tr>
+              <tr>
+                <th colspan="2">UTILITIES</th>
+              </tr>
+              <tr>
+                <td>Discovery</td>
+                <td id="ns-discovery">Online</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
+        <div class="card">
+          <h class="card-header">Nodes</h>
+          <table>
+            <thead>
+              <th>Name</th>
+              <th>Id</th>
+              <th>IP</th>
+              <th>Status</th>
+            </thead>
+            <tbody id="nodes-list"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+        <div class="card">
+          <h class="card-header">Details</h>
+          <table>
+            <thead></thead>
+            <tbody id="node-details"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+  document.getElementById("nsRefreshRate").oninput = function() {
+    document.getElementById("nsRefreshRateLabel").innerHTML = numberWithSpaces(this.value) +" ms";
+    try{
+        setDataRefreshRate(this.value);
+    }catch(err){
+      console.log(err);
+    }
+
+  }
+  document.getElementById("nodeRefreshRate").oninput = function() {
+    document.getElementById("nodeRefreshRateLabel").innerHTML = numberWithSpaces(this.value) + " ms";
+     try{
+        setScreenRefreshRate(this.value);
+    }catch(err){
+      console.log(err);
+    }
+  }
+  document.getElementById("ns-ip").oninput=function(){
+    try{
+      setNameServerIp(this.value);
+    }catch(err){
+      console.log(err);
+    }
+  }
+  document.getElementById("ns-port").oninput=function(){
+    try{
+      setNameServerPort(this.value);
+    }catch(err){
+      console.log(err);
+    }
+  }
+</script>
+</body>
+</html>

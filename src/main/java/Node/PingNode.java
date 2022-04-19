@@ -73,6 +73,7 @@ public class PingNode extends Thread{
                 if (this.node.getListeningSocket() != null && this.node.getListeningSocket().isClosed()){
                     //socket closed => node is dead
                     this.running = false;
+                    break;
                 }
                 e.printStackTrace();
             }
