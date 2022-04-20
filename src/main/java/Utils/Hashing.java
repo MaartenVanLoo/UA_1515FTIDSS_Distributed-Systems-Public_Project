@@ -11,8 +11,9 @@ public class Hashing {
             messageDigest = MessageDigest.getInstance("SHA-256");
             messageDigest.update(string.getBytes());
         } catch (NoSuchAlgorithmException e){return -1;}
-        String stringHash = new String(messageDigest.digest());
-        SynchronizedPrint.printHex(messageDigest.digest());
+        byte[] digest = messageDigest.digest();
+        String stringHash = new String(digest);
+        SynchronizedPrint.printHex(digest);
         System.out.println();
         //System.out.println(javax.xml.bind.DatatypeConverter.printHexBinary(stringHash.getBytes()));
         long max = 2147483647;
