@@ -7,20 +7,14 @@ import org.json.simple.parser.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.*;
 
+import NameServer.NameServerStatusCodes.* ;
 import java.io.*;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.SocketException;
+import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
-import java.util.TreeMap;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 
 //TODO: clean API:
@@ -50,20 +44,25 @@ import java.util.stream.Collectors;
 //  --> /ns/files
 //      --> /ns/files/{fileName}
 
+//usefull info:
+//https://spring.io/blog/2013/11/01/exception-handling-in-spring-mvc
+//https://www.restapitutorial.com/lessons/httpmethods.html#:~:text=The%20primary%20or%20most%2Dcommonly,but%20are%20utilized%20less%20frequently.
+//https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/GET
+//https://stackoverflow.com/questions/39835648/how-do-i-get-the-json-in-a-response-body-with-spring-annotaion
+@CrossOrigin(origins = "*") //Use to allow access from any origin
 @RestController
 public class NameServerController {
     Logger logger = LoggerFactory.getLogger(NameServerController.class);
 
     static final int DATAGRAM_PORT = 8001;
+    private NameServer nameServer;
+    private JSONParser jsonParser = new JSONParser();
 
-    private final String mappingFile = "nameServerMap.json";
-    private final TreeMap<Integer,String> ipMapping = new TreeMap<>(); //id =>ip;//MOET PRIVATE!!!
-    private ReadWriteLock ipMapLock = new ReentrantReadWriteLock();
     DiscoveryHandler discoveryHandler;
     private DatagramSocket socket;
 
     public NameServerController() {
-        loadMapping();
+        this.nameServer = new NameServer();
         try {
             this.socket = new DatagramSocket(DATAGRAM_PORT);
         } catch (SocketException e) {
@@ -74,261 +73,170 @@ public class NameServerController {
         discoveryHandler.start();
     }
 
-    @RequestMapping(value = "/ns", method = RequestMethod.GET)
-    public String getNameServer() {
-        return "NameServer is running";
+    public NameServer getNameServer() {
+        return this.nameServer;
     }
 
-    private void saveMapping(){
-        try {
-            saveMapping(this.mappingFile);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-    private void loadMapping() {
-        try {
-            loadMapping(this.mappingFile);
-        }catch (IOException e){
-            System.out.println("File reading error:" + e.getMessage());
-            System.out.println("Creating new file.");
-            this.ipMapLock.writeLock().lock();
-            this.ipMapping.clear();
-            this.ipMapLock.writeLock().unlock();
-            try {
-                saveMapping(this.mappingFile);
-            } catch (IOException ignored){}
-            System.out.println("Starting with empty map.");
-        }
-        catch(ParseException e){
-            System.out.println("File parsing error:" + e.getMessage());
-            System.out.println("Creating new file.");
-            this.ipMapLock.writeLock().lock();
-            this.ipMapping.clear();
-            this.ipMapLock.writeLock().unlock();
-            try {
-                saveMapping(this.mappingFile);
-            } catch (IOException ignored){}
-            System.out.println("Starting with empty map.");
-        }
-    }
-    private void saveMapping(String filename) throws IOException {
-        JSONObject jsonObject = new JSONObject();
-        ipMapLock.readLock().lock();
-            for (int key : ipMapping.keySet()) {
-                //System.out.println(key + "->" + this.ipMapping.get(key));
-                jsonObject.put(key, ipMapping.get(key));
-            }
-        ipMapLock.readLock().unlock();
-        PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(filename)));
-        jsonObject.writeJSONString(out);
-        out.flush();
-        out.close();
-    }
-    private void loadMapping(String filename) throws FileNotFoundException, ParseException {
-        BufferedReader reader = new BufferedReader(new FileReader(filename));//new file(filename)
-        JSONParser parser = new JSONParser();
-        JSONObject jsonObject = (JSONObject) parser.parse(reader.lines().collect(Collectors.joining(System.lineSeparator())));
-        ipMapLock.writeLock().lock();
-        this.ipMapping.clear();
-        for (Object obj : jsonObject.keySet()) {
-            long key = Long.parseLong((String) obj);
-            this.ipMapping.put((int) key, (String) jsonObject.get(obj));
-        }
-        ipMapLock.writeLock().unlock();
-    }
-
-    public boolean addNode(int Id, String ip){
-        System.out.println("Adding node with id: " + Id + " and ip: " + ip);
-        this.logger.info("Adding node with id: " + Id + " and ip: " + ip);
-        ipMapLock.writeLock().lock(); //note: take write lock to avoid someone else changing the ipmap between changing the lock from read to write
-        if (ipMapping.containsKey(Id)){
-            ipMapLock.writeLock().unlock();
-            return false;
-        }
-        this.ipMapping.put(Id, ip);
-        try {
-            saveMapping(this.mappingFile);
-            ipMapLock.writeLock().unlock();
-            return true;
-        } catch (IOException exception) {
-            exception.printStackTrace();
-            ipMapLock.writeLock().unlock();
-        }
-        return false;
-    }
-
-    //location of the file (what node?)
-    @GetMapping("/ns/getFile")
-    public String getLocation(@RequestParam String fileName) {
-        this.logger.info("Request for file: " + fileName);
-        int hash = Hashing.hash(fileName);
-        Map.Entry<Integer,String> entry;
-        this.ipMapLock.readLock().lock();
-        entry = this.ipMapping.floorEntry(hash-1); //searches for equal or lower than
-        if (entry == null){ //no smaller key
-            entry = this.ipMapping.lastEntry();// biggest
-        }
-        this.ipMapLock.readLock().unlock();
-        return entry.getValue();
-    }
-
-    @GetMapping("/ns/getPrevIP")
-    public String getPrevIP(@RequestParam int currentID) {
-        ipMapLock.readLock().lock();
-        this.logger.info("Request ip for previous node with id: " + currentID);
-        int prevKey = ipMapping.lowerKey(currentID) != null ? ipMapping.lowerKey(currentID) :ipMapping.lastKey();
-        String prevIP = ipMapping.get(prevKey);
-        ipMapLock.readLock().unlock();
-        return prevIP;
-    }
-
-    @GetMapping("/ns/getNextIP")
-    public String getNextIP(@RequestParam int currentID) {
-        ipMapLock.readLock().lock();
-        this.logger.info("Request ip for next node with id: " + currentID);
-        int nextKey = ipMapping.higherKey(currentID) != null ? ipMapping.higherKey(currentID) :ipMapping.firstKey();
-        String nextIP = ipMapping.get(nextKey);
-        ipMapLock.readLock().unlock();
-        return nextIP;
-    }
-
-    @GetMapping("/ns/getNodeIP")
-    public String getIP(@RequestParam int id){
-        ipMapLock.readLock().lock();
-        this.logger.info("Request ip for node with id: " + id);
-        if (!ipMapping.containsKey(id)) return null;
-        String ip = ipMapping.get(id);
-        ipMapLock.readLock().unlock();
-        return ip;
-    }
-
-    @DeleteMapping("/ns/removeNode")
-    public ResponseEntity<String> removeNode(@RequestParam int Id){
-        //System.out.println("Removing node with id: " + Id);
-        this.logger.info("Removing node with id: " + Id);
-        ResponseEntity<String> response;
-        this.ipMapLock.writeLock().lock();  //note: take write lock to avoid someone else changing the ipmap between changing the lock from read to write
-        if (this.ipMapping.containsKey(Id)) {
-            this.ipMapping.remove(Id);
-            try {
-                saveMapping(this.mappingFile);
-            } catch (IOException exception) {
-                exception.printStackTrace();
-            }
-            response = new ResponseEntity<>("Node with id: " + Id + " removed", HttpStatus.OK);
-        } else{
-            response = new ResponseEntity<>("Node with id: " + Id + " does not exist", HttpStatus.NOT_FOUND);
-        }
-        this.ipMapLock.writeLock().unlock();
+    @ResponseStatus(HttpStatus.OK) //200
+    @GetMapping(value = "/ns", produces = "application/json")
+    public String getNameServerStatus() {
+        this.nameServer.getIpMapLock().readLock().lock();
+        String response =  "{\"Status\": \"running\","+
+                "\"Utilities\":{" +
+                    "\"Discovery\":\"" + (this.socket == null?"disabled":"enabled")+"\"" +
+                "}," +
+                "\"Nodes\":" + this.nameServer.getIpMapping().size() +"," +
+                "\"Mapping\":[" +
+                this.nameServer.getIpMapping().keySet().stream().map(s -> "{" + this.nameServer.nodeToString(s) + "}").collect(Collectors.joining(","))+
+                "]}";
+        this.nameServer.getIpMapLock().readLock().unlock();
         return response;
     }
 
-    @PutMapping("/ns/updateNode")
-    public boolean updateNode(@RequestParam int Id,@RequestParam String ip){
-        System.out.println("Updating node with id: " + Id);
-        this.logger.info("Updating node with id: " + Id);
-        this.ipMapLock.writeLock().lock();
-        if (!this.ipMapping.containsKey(Id)) return false;
-        this.ipMapping.put(Id, ip);
 
+    //<editor-fold desc="/ns/nodes">
+    @ResponseStatus(HttpStatus.OK) // 200
+    @GetMapping("/ns/nodes")
+    public String getAllNodes() {
+        this.nameServer.getIpMapLock().readLock().lock();
+        String response = "{" + this.nameServer.getIpMapping().entrySet().stream().map(e -> e.getKey()+" => "+e.getValue()).collect(Collectors.joining("\n")) + "}";
+        this.nameServer.getIpMapLock().readLock().unlock();
+        return response;
+    }
+
+    @ResponseStatus(HttpStatus.OK) // 200
+    @GetMapping(value = "/ns/nodes/{nodeId}", produces = "application/json")
+    public String getNode(@PathVariable int nodeId) {
+        return this.nameServer.nodeToJson(nodeId); //no need for lock as this is only 1 operation (every method is thread safe)
+    }
+
+    @ResponseStatus(HttpStatus.NO_CONTENT) // 204
+    @PutMapping("/ns/nodes/{nodeId}")
+    public void putNode(@PathVariable int nodeId, @RequestBody String nodeJson) {
+        String ip = "";
         try {
-            saveMapping(this.mappingFile);
-        } catch (IOException exception) {
-            exception.printStackTrace();
-            this.ipMapLock.writeLock().unlock();
-            return false;
+            JSONObject node = (JSONObject) this.jsonParser.parse(nodeJson);
+            ip = node.get("ip")!=null?(String) node.get("ip"):null;
+            if (ip == null)  throw new JSONInvalidFormatException("No ip specified"); //return "HttpStatus.BAD_REQUEST" 400
+        } catch (ParseException e) {
+            logger.warn("Invalid JSON format for node update");
+            return; //TODO: return: "HttpStatus.NOT_FOUND"; 404
         }
-        this.ipMapLock.writeLock().unlock();
-        return true;
+
+        this.nameServer.getIpMapLock().writeLock().lock();
+        boolean updateStatus = this.nameServer.updateNode(nodeId, ip);
+        if (!updateStatus) {//Node wasn't found => create new node
+            this.nameServer.getIpMapLock().writeLock().unlock();
+            this.nameServer.addNode(nodeId, ip); //TODO: return "HttpStatus.CREATED"; 201
+        }
+        this.nameServer.getIpMapLock().writeLock().unlock();
     }
 
-    @DeleteMapping("/ns/nodeFailure")
-    public ResponseEntity<String> nodeFailure(@RequestParam int Id) {
-        this.logger.info("Node with id: " + Id + " failed");
-
-        //remove existing node from ip mapping
-        this.ipMapLock.writeLock().lock();
-        if (!this.ipMapping.containsKey(Id)) return new ResponseEntity<>("Node with id: " + Id + " does not exist", HttpStatus.NOT_FOUND);
-        this.ipMapping.remove(Id);
-        if (this.ipMapping.isEmpty()) return new ResponseEntity<>("No nodes left", HttpStatus.NOT_FOUND);
+    @ResponseStatus(HttpStatus.CREATED) // 201
+    @PostMapping(value = "/ns/nodes", consumes = "application/json", produces = "application/json")
+    public String postNode(@RequestBody String nodeJson) {
+        logger.debug("New post request");
+        String name = "";
+        String ip = "";
         try {
-            saveMapping(this.mappingFile);
-        } catch (IOException exception) {
-            exception.printStackTrace();
+            JSONObject node = (JSONObject) this.jsonParser.parse(nodeJson);
+            name = node.get("name")!=null?(String) node.get("name"):null;
+            ip = node.get("ip")!=null?(String) node.get("ip"):null;
+            if (name == null){
+                logger.debug("Invalid JSON format for node creation: no name specified");
+                throw new JSONInvalidFormatException("No name specified"); //return "HttpStatus.BAD_REQUEST" 400
+            }
+            if (ip == null){
+                logger.debug("Invalid JSON format for node creation: no ip specified");
+                throw new JSONInvalidFormatException("No ip specified"); //return "HttpStatus.BAD_REQUEST" 400
+            }
+        } catch (ParseException e) {
+            logger.debug("Invalid JSON format for node creation" + e.getMessage());
+            throw new JSONInvalidFormatException(e.getMessage()); //return "HttpStatus.BAD_REQUEST" 400
         }
-        this.logger.info(this.ipMapping.size() + " nodes left");
-        this.ipMapLock.writeLock().unlock();
+        int id = Hashing.hash(name);
 
+        this.nameServer.getIpMapLock().writeLock().lock();
+        boolean status = this.nameServer.addNode(id, ip);
+        if (!status) {
+            this.nameServer.getIpMapLock().writeLock().unlock();
+            throw new NodeAlreadyExistsException(id,ip); // return HttpStatus.CONFLICT 409
+        }
+        String response = "{\"link\":\"/ns/nodes/"+id+"\"}";
+        this.nameServer.getIpMapLock().writeLock().unlock();
+        return response;
+    }
+
+    @ResponseStatus(HttpStatus.OK) // 200
+    @DeleteMapping("/ns/nodes/{nodeId}")
+    public void deleteNode(@PathVariable int nodeId) {
+        boolean status = this.nameServer.deleteNode(nodeId); //single call doesn't need lock
+        if (!status) {
+            throw new NodeNotFoundException(nodeId); // return HttpStatus.NOT_FOUND 404
+        }
+    }
+
+    @ResponseStatus(HttpStatus.OK) // 200
+    @DeleteMapping("/ns/nodes/{nodeId}/fail")
+    public void failNode(@PathVariable int nodeId) {
+        this.nameServer.getIpMapLock().writeLock().lock();
+        boolean status = this.nameServer.deleteNode(nodeId);
+        String message = "{\"nodeId\":"+nodeId+",\"type\":\"Failure\"}";
         try {
-            this.ipMapLock.readLock().lock();
-            Integer prevId = ipMapping.lowerKey(Id) != null ? ipMapping.lowerKey(Id) : ipMapping.lastKey();
-            Integer nextId = ipMapping.higherKey(Id) != null ? ipMapping.higherKey(Id) : ipMapping.firstKey();
-            this.ipMapLock.readLock().unlock();
-            String nextIP = getNextIP(Id);
-            String prevIP = getPrevIP(Id);
-
-            //Update the next node
-            String message = "{\"type\":\"Failure\"," +
-                    "\"failed\":" + Id + "," +
-                    "\"prevNodeId\":" + prevId + "," +
-                    "\"prevNodeIP\":\"" + prevIP + "\"}";
-            DatagramPacket packet = new DatagramPacket(message.getBytes(StandardCharsets.UTF_8), message.length(), InetAddress.getByName(nextIP), 8001);
-            this.socket.send(packet);
-
-
-            //update the prev node
-            message = "{\"type\":\"Failure\"," +
-                    "\"failed\":" + Id + "," +
-                    "\"nextNodeId\":" + nextId + "," +
-                    "\"nextNodeIP\":\"" + nextIP + "\"}";
-            packet = new DatagramPacket(message.getBytes(StandardCharsets.UTF_8), message.length(), InetAddress.getByName(prevIP), 8001);
-            this.socket.send(packet);
-            return new ResponseEntity<>("Node with id: " + Id + " failed", HttpStatus.OK);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return new ResponseEntity<>("IO Exception thrown", HttpStatus.BAD_REQUEST);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return new ResponseEntity<>("Unknown exception thrown", HttpStatus.BAD_REQUEST);
+            if (status) {
+                //notify neighbors of failed node
+                DatagramPacket packetNext = new DatagramPacket(message.getBytes(), message.length(), InetAddress.getByName(this.nameServer.getNextNodeIP(nodeId)), NameServer.DATAGRAM_PORT);
+                this.socket.send(packetNext);
+                DatagramPacket packetPrev = new DatagramPacket(message.getBytes(), message.length(), InetAddress.getByName(this.nameServer.getPrevNodeIP(nodeId)), NameServer.DATAGRAM_PORT);
+                this.socket.send(packetPrev);
+            }else{
+                // This node is not alive and someone reports a failure. (This is a duplicate message)
+                // Thus, something might went wrong, notify everyone of node failure.
+                DatagramPacket packet = new DatagramPacket(message.getBytes(), message.length(), InetAddress.getByName("255.255.255.255"), NameServer.DATAGRAM_PORT);
+                this.socket.send(packet);
+            }
         }
+        catch (IOException ignored) {}
+        this.nameServer.getIpMapLock().writeLock().unlock();
     }
 
+    //</editor-fold>
 
-    public TreeMap<Integer,String> getIdMap(){
-        return this.ipMapping;
+    //<editor-fold desc="/ns/files">
+    @ResponseStatus(HttpStatus.NOT_IMPLEMENTED) // 501
+    @GetMapping("/ns/files")
+    public void getFiles() {}
+
+    @ResponseStatus(HttpStatus.OK) // 200
+    @GetMapping("/ns/files/{fileName}")
+    public String getFile(@PathVariable String fileName) {
+        this.logger.info("Request for file: " + fileName);
+        int hash = Hashing.hash(fileName);
+        return this.nameServer.getPrevNodeIP(hash);
     }
 
-    public DatagramSocket getSocket() {
-        return socket;
-    }
+    @ResponseStatus(HttpStatus.NOT_IMPLEMENTED) // 501
+    @PutMapping("/ns/files/{fileName}")
+    public void putFile(@PathVariable String fileName){}
 
-    @GetMapping("/ns/validateNode")
-    public String validationData(@RequestParam int Id){
-        this.logger.info("Node with id: " + Id + " is validating");
-        this.ipMapLock.readLock().lock();
-        String thisIp = this.ipMapping.get(Id);
-        String nextIp = getNextIP(Id);
-        String prevIp = getPrevIP(Id);
-        Integer nextId = ipMapping.higherKey(Id) != null ? ipMapping.higherKey(Id) :ipMapping.firstKey();
-        Integer prevId = ipMapping.lowerKey(Id) != null ? ipMapping.lowerKey(Id) :ipMapping.lastKey();
-        this.ipMapLock.readLock().unlock();
-        return "{\"type\":\"Validate\"," +
-                "\"id\":" + Id + "," +
-                "\"nextNodeIP\":\"" + nextIp + "\"," +
-                "\"prevNodeIP\":\"" + prevIp + "\"," +
-                "\"nextNodeId\":" + nextId + "," +
-                "\"prevNodeId\":" + prevId + "}";
-    }
+    @ResponseStatus(HttpStatus.NOT_IMPLEMENTED) // 501
+    @PostMapping("/ns/files/{fileName}")
+    public void postFile(@PathVariable String fileName){}
+
+    @ResponseStatus(HttpStatus.NOT_IMPLEMENTED) // 501
+    @DeleteMapping("/ns/files/{fileName}")
+    public void deleteFile(@PathVariable String fileName){}
+    //</editor-fold>
+
 
     @Scheduled(fixedRate = 10000)
     public void printMapping() {
-        ipMapLock.readLock().lock();
-        this.logger.info("Current mapping: " + this.ipMapping);
-        for (Map.Entry<Integer, String> entry : this.ipMapping.entrySet()) {
+        this.nameServer.getIpMapLock().readLock().lock();
+        this.logger.info("Current mapping: " + this.nameServer.getIpMapping());
+        for (Map.Entry<Integer, String> entry : this.nameServer.getIpMapping().entrySet()) {
             System.out.println("Key: " + entry.getKey() + " Value: " + entry.getValue());
         }
-        ipMapLock.readLock().unlock();
+        this.nameServer.getIpMapLock().readLock().unlock();
     }
 
     /**
@@ -376,23 +284,15 @@ public class NameServerController {
                         response = "{\"status\":\"Access Denied\"}";
                     }else {
                         int Id = Hashing.hash(name);
-
-                        if (this.nameServerController.addNode(Id, ip)) {
+                        if (this.nameServerController.nameServer.addNode(Id, ip)) {
                             //adding successful
-                            this.nameServerController.ipMapLock.readLock().lock();
-                            Integer lowerId = this.nameServerController.getIdMap().lowerKey(Id - 1);
-                            if (lowerId == null) lowerId = this.nameServerController.getIdMap().lastKey();
-                            Integer higherId = this.nameServerController.getIdMap().higherKey(Id + 1);
-                            if (higherId == null) higherId = this.nameServerController.getIdMap().firstKey();
-
+                            this.nameServerController.nameServer.getIpMapLock().readLock().lock();
                             response = "{" +
                                     "\"type\":\"NS-offer\"," +
                                     "\"status\":\"OK\"," +
-                                    "\"id\":" + Id + "," +
-                                    "\"nodeCount\":" + this.nameServerController.getIdMap().size() + "," +
-                                    "\"prevNodeId\":" + lowerId + "," +
-                                    "\"nextNodeId\":" + higherId + "}";
-                            this.nameServerController.ipMapLock.readLock().unlock();
+                                    "\"nodeCount\":" + this.nameServerController.nameServer.getIpMapping().size() + "," +
+                                    "\"node\":" + this.nameServerController.nameServer.nodeToJson(Id) + "}";
+                            this.nameServerController.nameServer.getIpMapLock().readLock().unlock();
 
                         } else {
                             //adding unsuccessful
@@ -422,10 +322,10 @@ public class NameServerController {
         System.out.println("Starting NameServer...");
         try {
             NameServerController nameServerController = new NameServerController();
-            nameServerController.addNode(5, "192.168.0.5");
-            nameServerController.addNode(6, "192.168.0.6");
-            nameServerController.addNode(7, "192.168.0.7");
-            nameServerController.addNode(8, "192.168.0.8");
+            nameServerController.putNode(5, "192.168.0.5");
+            nameServerController.putNode(6, "192.168.0.6");
+            nameServerController.putNode(7, "192.168.0.7");
+            nameServerController.putNode(8, "192.168.0.8");
         }
         catch (Exception e) {
             e.printStackTrace();

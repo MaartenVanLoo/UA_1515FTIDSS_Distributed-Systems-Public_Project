@@ -12,6 +12,9 @@ import java.io.IOException;
 import java.net.*;
 import java.nio.file.AccessDeniedException;
 import java.util.Objects;
+import java.util.concurrent.*;
+
+import static java.lang.System.exit;
 
 public class Node {
     //<editor-fold desc="global variables">
@@ -28,7 +31,9 @@ public class Node {
     private long nextNodeId;    // id of the next node in the network
     private String nextNodeIP;  // ip addr of the next node in the network
 
-    private N2NListener n2NListener;
+    private final JSONParser parser = new JSONParser();
+    private final N2NListener n2NListener;
+    private final NodeAPI nodeAPI;
     private DatagramSocket listeningSocket;
 
     private boolean setUpComplete = false;
@@ -50,6 +55,8 @@ public class Node {
 
         this.n2NListener = new N2NListener(this);
         this.n2NListener.start();
+        this.nodeAPI = new NodeAPI(this);
+        this.nodeAPI.start();
     }
     
     // Send broadcasts until the NS answers
@@ -86,15 +93,18 @@ public class Node {
 
                 //parse response data:
                 JSONParser parser = new JSONParser();
-                Object obj = parser.parse(responseData);
-                String type = ((JSONObject) obj).get("type").toString();
+                JSONObject obj = (JSONObject)parser.parse(responseData);
+                String type = obj.get("type").toString();
                 if (type.equals("NS-offer")) {
-                    String status = ((JSONObject) obj).get("status").toString();
+                    String status = obj.get("status").toString();
                     if (status.equals("OK")) {
-                        this.id = (int) (long) (((JSONObject) obj).get("id"));
-                        this.nodeCount = (long) (((JSONObject) obj).get("nodeCount"));
-                        this.prevNodeId = (long) (((JSONObject) obj).get("prevNodeId"));
-                        this.nextNodeId = (long) (((JSONObject) obj).get("nextNodeId"));
+                        JSONObject node = (JSONObject) obj.get("node");
+                        this.id = (int)   (long) ((JSONObject)node.get("node")).get("id");
+                        this.prevNodeId = (long)   ((JSONObject)node.get("prev")).get("id");
+                        this.prevNodeIP = (String) ((JSONObject)node.get("prev")).get("ip");
+                        this.nextNodeId = (long)   ((JSONObject)node.get("next")).get("id");
+                        this.nextNodeIP = (String) ((JSONObject)node.get("next")).get("ip");
+                        this.nodeCount  = (long)   obj.get("nodeCount");
                     } else if (status.equals("Access Denied")) {
                         throw new AccessDeniedException("Access to network denied by nameserver");
                     }
@@ -120,9 +130,6 @@ public class Node {
             }
         }
         Unirest.config().defaultBaseUrl("http://"+this.NS_ip +":8081");
-        //request neighbour ip from the nameserver
-        this.nextNodeIP = Unirest.get("/ns/getNodeIP").queryString("id",this.nextNodeId).asString().getBody();
-        this.prevNodeIP = Unirest.get("/ns/getNodeIP").queryString("id",this.prevNodeId).asString().getBody();
         this.setUpComplete = true;
     }
 
@@ -130,10 +137,8 @@ public class Node {
     public void getFileLocation(String filename) {
         try {
             //String url = "http://" + this.NS_ip + ":8081/ns/getFile?fileName="+filename;
-            System.out.println(Unirest.get("/ns/getFile")
-                    .queryString("fileName", filename)
-                    .asString()
-                    .getBody());
+            System.out.println(Unirest.get("/ns/files/{fileName}").routeParam("fileName", filename)
+                    .asString().getBody());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -142,13 +147,14 @@ public class Node {
     // exit the network
     public void shutdown(){
         try {
+            System.out.println("Shutting down...");
             String updatePrev;
             String updateNext;
 
             // update prev node
             updatePrev = "{\"type\":\"Shutdown\"," +
                            "\"nextNodeId\":"+this.getNextNodeId() + "," +
-                           "\"nextNodeIP\":"+this.getNextNodeIP() +"}";
+                           "\"nextNodeIP\":\""+this.getNextNodeIP() +"\"}";
 
             DatagramPacket prevNodePacket = new DatagramPacket(updatePrev.getBytes(), updatePrev.length(),
                     InetAddress.getByName(prevNodeIP), 8001);
@@ -159,18 +165,21 @@ public class Node {
             // update next node
             updateNext = "{\"type\":\"Shutdown\"," +
                           "\"prevNodeId\":"+this.getPrevNodeId() + "," +
-                          "\"prevNodeIP\":"+this.getPrevNodeIP() +"}";
+                          "\"prevNodeIP\":\""+this.getPrevNodeIP() +"\"}";
             DatagramPacket nextNodePacket = new DatagramPacket(updateNext.getBytes(), updateNext.length(),
                     InetAddress.getByName(nextNodeIP), 8001);
             //send this.nextNodeID to prevNodeID
             socket.send(nextNodePacket);
 
+            // Todo: first send shutdown to nameserver and then to neighbours
             // update namingserver
-            System.out.println(Unirest.delete("/ns/removeNode?Id=" +this.id).asString().getBody());
+            System.out.println(Unirest.delete("/ns/nodes/{nodeID}").routeParam("nodeID", String.valueOf(this.id)).asString().getBody());
         } catch (Exception e) {
             e.printStackTrace();
         }
         this.listeningSocket.close(); //close the listening socket, this will cause the N2N to exit
+        this.nodeAPI.stop();
+        System.out.println("Shutdown complete");
     }
 
     // print the variables of the node to the console
@@ -241,6 +250,10 @@ public class Node {
         return id;
     }
 
+    public String getIP() {
+        return ip;
+    }
+
     public String getName() {
         return name;
     }
@@ -254,7 +267,7 @@ public class Node {
      */
     public void failureHandler(int targetId){
         // update namingserver
-        System.out.println(Unirest.delete("/ns/nodeFailure").queryString("Id", targetId).asString().getBody());
+        System.out.println(Unirest.delete("/ns/nodes/{nodeID}/fail").routeParam("nodeID", String.valueOf(targetId)).asString().getBody());
         System.out.println("Node " + targetId + " has failed");
         // TODO: request the prev node and next node params from the NS
 
@@ -271,13 +284,15 @@ public class Node {
     public void validateNode(){
         boolean flag = false;
         try {
-            String response = Unirest.get("/ns/validateNode?Id=" + this.id).asString().getBody();
+            String response = Unirest.get("/ns/nodes/{nodeId}").routeParam("nodeId", String.valueOf(this.id)).asString().getBody();
             JSONParser parser = new JSONParser();
             JSONObject json = (JSONObject) parser.parse(response);
-            if (this.prevNodeId != (long)  json.get("prevNodeId")) {System.out.println("prevNodeId is not valid"); flag = true;}
-            if (!Objects.equals(this.prevNodeIP, (String) json.get("prevNodeIP"))) {System.out.println("prevNodeIP is not valid"); flag = true;}
-            if (this.nextNodeId != (long)  json.get("nextNodeId")) {System.out.println("nextNodeId is not valid"); flag = true;}
-            if (!Objects.equals(this.nextNodeIP, (String) json.get("nextNodeIP"))) {System.out.println("nextNodeIP is not valid"); flag = true;}
+            JSONObject prevNode = (JSONObject) json.get("prev");
+            JSONObject nextNode = (JSONObject) json.get("next");
+            if (this.prevNodeId != (long)  prevNode.get("id")) {System.out.println("prevNodeId is not valid\n\texpected:" + (long)  prevNode.get("id")); flag = true;}
+            if (!Objects.equals(this.prevNodeIP, prevNode.get("ip"))) {System.out.println("prevNodeIP is not valid\n\texpected:" + nextNode.get("ip")); flag = true;}
+            if (this.nextNodeId != (long)  nextNode.get("id")) {System.out.println("nextNodeId is not valid\n\texpected:" + (long)  nextNode.get("id")); flag = true;}
+            if (!Objects.equals(this.nextNodeIP, nextNode.get("ip"))) {System.out.println("nextNodeIP is not valid\n\texpected:" + nextNode.get("ip")); flag = true;}
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -301,7 +316,11 @@ public class Node {
         System.out.println("Network interfaces:");
         System.out.println(NetworkInterface.getNetworkInterfaces());
         Node node = new Node(name);
-        node.discoverNameServer();
+        try{
+            node.discoverNameServer();
+        } catch (AccessDeniedException e){
+            exit(-1);
+        }
         node.printStatus();
         node.validateNode();
 
@@ -309,12 +328,24 @@ public class Node {
         String hostname = ip.getHostName();
         System.out.println("Your current IP address : " + ip);
         System.out.println("Your current Hostname : " + hostname);
+
+        ScheduledExecutorService executorService = Executors.newScheduledThreadPool(2);
+        Runnable validator = () -> {
+            SynchronizedPrint.clearConsole();
+            node.printStatus();
+            node.validateNode();
+        };
+        executorService.scheduleAtFixedRate(validator, 1, 5, TimeUnit.SECONDS);
+
+        /*
         node.getFileLocation("test.txt");
         node.getFileLocation("test1.txt");
         node.getFileLocation("test2.txt");
         node.getFileLocation("test3.txt");
         node.getFileLocation("test4.txt");
+        */
         /*for (int i = 0; i < 10;i++) {
+
             Thread t = new Thread(() -> {
                 for (int j = 0; j < 10000; j++) {
                     node.getFileLocation("test.txt");
@@ -328,7 +359,7 @@ public class Node {
             t.start();
         }*/
         Thread.sleep(60000 + 2*(long) ((Math.random()-0.5) * 30000)); // sleep for 60±30 seconds
-
+        executorService.shutdownNow();
         node.shutdown();
     }
 

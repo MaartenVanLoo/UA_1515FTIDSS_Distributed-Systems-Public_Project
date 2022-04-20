@@ -13,6 +13,7 @@ public class NamingServerApp {
         SpringApplication app = new SpringApplication(NamingServerApp.class);
         Properties properties = new Properties();
         properties.put("server.port", "8081");
+        properties.put("server.error.include-message","always");
         app.setDefaultProperties(properties);
         app.run(args);
     }

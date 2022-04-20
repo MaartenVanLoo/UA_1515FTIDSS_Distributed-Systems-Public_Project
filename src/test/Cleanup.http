@@ -1,0 +1,90 @@
+### Clean up: Delete Node0 [DELETE]
+DELETE http://localhost:8081/{{node0}}
+
+> {%
+    client.test("Removed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200\nExpected: 200\nActual: " + response.status + "\n");
+    });
+%}
+### Clean up: Delete Node1 [DELETE]
+DELETE http://localhost:8081/{{node1}}
+
+> {%
+    client.test("Removed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200\nExpected: 200\nActual: " + response.status + "\n");
+    });
+%}
+### Clean up: Delete Node2 [DELETE]
+DELETE http://localhost:8081/{{node2}}
+
+> {%
+    client.test("Removed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200\nExpected: 200\nActual: " + response.status + "\n");
+    });
+%}
+### Clean up: Delete Node3 [DELETE]
+DELETE http://localhost:8081/{{node3}}
+
+> {%
+    client.test("Removed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200\nExpected: 200\nActual: " + response.status + "\n");
+    });
+%}
+### Clean up: Delete Node4 [DELETE]
+DELETE http://localhost:8081/{{node4}}
+
+> {%
+    client.test("Removed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200\nExpected: 200\nActual: " + response.status + "\n");
+    });
+%}
+
+### Clean up: Delete Node5 [DELETE]
+DELETE http://localhost:8081/{{node5}}
+
+> {%
+    client.test("Removed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200\nExpected: 200\nActual: " + response.status + "\n");
+    });
+%}
+### Clean up: Delete Node6 [DELETE]
+DELETE http://localhost:8081/{{node6}}
+
+> {%
+    client.test("Removed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200\nExpected: 200\nActual: " + response.status + "\n");
+    });
+%}
+### Clean up: Delete Node7 [DELETE]
+DELETE http://localhost:8081/{{node7}}
+
+> {%
+    client.test("Removed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200\nExpected: 200\nActual: " + response.status + "\n");
+    });
+%}
+### Clean up: Delete Node8 [DELETE]
+DELETE http://localhost:8081/{{node8}}
+
+> {%
+    client.test("Removed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200\nExpected: 200\nActual: " + response.status + "\n");
+    });
+%}
+### Clean up: Delete Node9 [DELETE]
+DELETE http://localhost:8081/{{node9}}
+
+> {%
+    client.test("Removed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200\nExpected: 200\nActual: " + response.status + "\n");
+    });
+%}
+
+### Clean up: Delete Node10 [DELETE]
+DELETE http://localhost:8081/{{node10}}
+
+> {%
+    client.test("Removed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200\nExpected: 200\nActual: " + response.status + "\n");
+    });
+%}
