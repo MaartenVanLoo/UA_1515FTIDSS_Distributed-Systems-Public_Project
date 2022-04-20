@@ -278,12 +278,18 @@ public class NameServerController {
 
                     JSONParser parser = new JSONParser();
                     JSONObject jsonObject = (JSONObject) parser.parse(data);
+                    String type = (String) jsonObject.get("type");
+
+                    if (!type.equals("Discovery")) {continue;} //do not respond on non discovery packets
+
                     String name = (String) jsonObject.get("name");
                     if (name == null) {
                         this.nameServerController.logger.info("Adding node failed");
                         response = "{\"status\":\"Access Denied\"}";
                     }else {
                         int Id = Hashing.hash(name);
+                        System.out.println("Name: " + name);
+                        System.out.println("Hashed name: " + Id);
                         if (this.nameServerController.nameServer.addNode(Id, ip)) {
                             //adding successful
                             this.nameServerController.nameServer.getIpMapLock().readLock().lock();

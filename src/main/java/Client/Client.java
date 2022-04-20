@@ -9,9 +9,7 @@ import java.util.Enumeration;
 public class Client {
     public static void main(String[] args) throws UnknownHostException, SocketException {
          System.out.println("Client Started");
-         System.out.println(Hashing.hash("Node0"));
-         System.out.println(Hashing.hash("Node1"));
-         System.out.println(Hashing.hash("Node2"));
+         System.out.println(Hashing.hash("Node4"));
 
         InetAddress.getAllByName("localhost");
         for (InetAddress address : InetAddress.getAllByName("localhost")) {

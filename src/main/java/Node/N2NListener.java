@@ -116,6 +116,7 @@ public class N2NListener extends Thread {
         if (name.equals(this.node.getName())) return; //no answer!
         System.out.println("Name: " + name);
         int neighbourId = Hashing.hash(name);
+        System.out.println("NeighbourId: " + neighbourId);
 
         // if the old prevId and NextId are equal to the currentId, then the new node is the second node in the
         // network, and the prevId and nextId should be updated to the new node's Id
