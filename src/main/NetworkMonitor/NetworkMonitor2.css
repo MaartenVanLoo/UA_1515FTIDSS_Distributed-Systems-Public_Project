@@ -272,15 +272,52 @@ input[type="text"]{
     background-color: #fff;
     background-clip: border-box;
     border-radius: 0.25rem;
+    font-size: 20px;
 }
 .card-header {
     padding: 0.75rem 1.25rem;
     margin-bottom: 0;
     background-color: #fff;
     border-bottom: 1px solid #e6e6f2;
+    font-size: 24px;
+    font-weight: 600;
 }
 .card-header:first-child {
     border-radius: calc(0.25rem - 1px) calc(0.25rem - 1px) 0 0;
+}
+
+
+.table-dark{
+    background-color: #141241;
+    color: #fff;
+}
+.table-dark thead th{
+    background-color: #141241;
+    color: #fff;
+    text-decoration: underline;
+}
+.table-dark tbody tr:nth-child(even) {
+    background-color: #141241;
+}
+.table-dark tbody tr:nth-child(odd) {
+    background-color: #151260;
+}
+.table-dark tbody tr:hover {
+    background-color: #2f2c70;
+}
+
+.scrollable-wrapper{
+    max-height: 300px;
+    overflow-y: auto;
+}
+.table-scroll-fixed-headers{
+    width: 100%;
+}
+.table-scroll-fixed-headers th{
+    color: white;
+    position: sticky;
+    top: 0;
+    z-index: 2;
 }
 
 /*

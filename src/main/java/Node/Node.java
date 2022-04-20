@@ -171,6 +171,7 @@ public class Node {
             //send this.nextNodeID to prevNodeID
             socket.send(nextNodePacket);
 
+            // Todo: first send shutdown to nameserver and then to neighbours
             // update namingserver
             System.out.println(Unirest.delete("/ns/nodes/{nodeID}").routeParam("nodeID", String.valueOf(this.id)).asString().getBody());
         } catch (Exception e) {

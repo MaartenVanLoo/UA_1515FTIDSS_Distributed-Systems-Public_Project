@@ -39,7 +39,7 @@
                   <label>Port</label>
                 </div>
                 <div class="col-6">
-                  <input type="text" id = "network-port" placeholder="8081">
+                  <input type="text" id = "ns-port" placeholder="8081">
                 </div>
               </div>
               <div class="row" style="padding-top:5px">
@@ -62,6 +62,12 @@
                 </div>
                 <div class="col-col-auto">
                   <label id="nodeRefreshRateLabel">1 000 ms</label>
+                </div>
+              </div>
+              <div class ="row" style ="padding-top:5px">
+                <div class ="col-8">
+                  <label for="enable-ssh-tunnel">Enable SSH tunnel</label>
+                  <input type = "checkbox" id="enable-ssh-tunnel" name="ssh-tunnel" checked>
                 </div>
               </div>
             </li>
@@ -100,10 +106,10 @@
 <div class="dashboard-wrapper">
   <div class="dashboard-content">
     <div class="row">
-      <div class="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
+      <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12 col-12">
         <div class="card">
           <h class="card-header">Nameserver</h>
-          <table>
+          <table class ="table-dark">
             <thead></thead>
             <tbody>
               <tr>
@@ -125,18 +131,20 @@
           </table>
         </div>
       </div>
-      <div class="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-12">
+      <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12 col-12">
         <div class="card">
-          <h class="card-header">Nodes</h>
-          <table>
-            <thead>
-              <th>Name</th>
-              <th>Id</th>
-              <th>IP</th>
-              <th>Status</th>
-            </thead>
-            <tbody id="nodes-list"></tbody>
-          </table>
+          <h class="card-header card-dark">Nodes</h>
+          <div class="scrollable-wrapper">
+            <table class ="table-dark table-scroll-fixed-headers">
+              <thead>
+                <th>Name</th>
+                <th>Id</th>
+                <th>IP</th>
+                <th>Status</th>
+              </thead>
+              <tbody id="nodes-list" style = "max-height: 200px;"></tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
@@ -144,9 +152,35 @@
       <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
         <div class="card">
           <h class="card-header">Details</h>
-          <table>
+          <table class ="table-dark">
             <thead></thead>
-            <tbody id="node-details"></tbody>
+            <tbody id="node-details">
+              <tr>
+                <td>Name</td>
+                <td id="node-details-name" colspan="2">please select a node</td>
+              </tr>
+              <tr>
+                <td>Status</td>
+                <td id="node-details-status" colspan="2">-</td></tr>
+              <tr>
+                <td>Id</td>
+                <td id="node-details-id" colspan="2">-</td>
+              </tr>
+              <tr>
+                <td>IP</td>
+                <td id="node-details-ip" colspan="2">-</td>
+              </tr>
+              <tr>
+                <td>Next</td>
+                <td id="node-details-next-id">-</td>
+                <td id="node-details-next-ip">-</td>
+              </tr>
+              <tr>
+                <td>Next</td>
+                <td id="node-details-prev-id">-</td>
+                <td id="node-details-prev-ip">-</td>
+              </tr>
+            </tbody>
           </table>
         </div>
       </div>

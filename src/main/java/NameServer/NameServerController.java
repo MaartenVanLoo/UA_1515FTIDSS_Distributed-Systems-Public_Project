@@ -81,9 +81,9 @@ public class NameServerController {
     @GetMapping(value = "/ns", produces = "application/json")
     public String getNameServerStatus() {
         this.nameServer.getIpMapLock().readLock().lock();
-        String response =  "{\"STATUS\": \"NameServer is running\","+
+        String response =  "{\"Status\": \"running\","+
                 "\"Utilities\":{" +
-                    "\"Discovery\":\"Discovery is "+ (this.socket == null?"disabled":"enabled")+"\"" +
+                    "\"Discovery\":\"" + (this.socket == null?"disabled":"enabled")+"\"" +
                 "}," +
                 "\"Nodes\":" + this.nameServer.getIpMapping().size() +"," +
                 "\"Mapping\":[" +
