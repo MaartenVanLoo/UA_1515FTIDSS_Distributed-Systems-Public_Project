@@ -261,13 +261,13 @@ public class N2NListener extends Thread {
         return;
         //TODO:: Can you trust that the nameserver already updated the shutdown of the node? => no??? origin of problems during lecture 20/4 ?
         //Get config from nameserver
-        JSONParser parser = new JSONParser();
+        /*JSONParser parser = new JSONParser();
         JSONObject config = new JSONObject();
         try {
             config = (JSONObject) parser.parse(Unirest.get("/ns/nodes/{Id}").routeParam("Id",String.valueOf(this.node.getId())).asString().getBody());
         } catch (ParseException ignore) {}
         JSONObject next = (JSONObject) config.get("next");
-        this.node.setNextNodeIP(next.get("ip").toString());
+        this.node.setNextNodeIP(next.get("ip").toString());*/
     }
     private void updatePrevNode(int neighbourId, DatagramPacket receivedPacket) throws IOException {
         this.node.setPrevNodeId(neighbourId);
