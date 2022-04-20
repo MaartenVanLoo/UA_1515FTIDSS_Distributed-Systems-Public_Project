@@ -12,7 +12,7 @@ public class Hashing {
             messageDigest.update(string.getBytes());
         } catch (NoSuchAlgorithmException e){return -1;}
         String stringHash = new String(messageDigest.digest());
-        SynchronizedPrint.printHex(stringHash.getBytes(StandardCharsets.UTF_8));
+        SynchronizedPrint.printHex(messageDigest.digest());
         System.out.println();
         //System.out.println(javax.xml.bind.DatatypeConverter.printHexBinary(stringHash.getBytes()));
         long max = 2147483647;
