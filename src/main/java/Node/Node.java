@@ -309,6 +309,35 @@ public class Node {
     public JSONParser getParser(){
         return this.parser;
     }
+
+
+    public static void launchNode(String name) throws IOException, InterruptedException{
+        Node node = new Node(name);
+        try {
+            node.discoverNameServer();
+        } catch (AccessDeniedException e) {
+            exit(-1);
+        }
+        node.printStatus();
+        node.validateNode();
+
+        InetAddress ip = InetAddress.getLocalHost();
+        String hostname = ip.getHostName();
+        System.out.println("Your current IP address : " + ip);
+        System.out.println("Your current Hostname : " + hostname);
+
+        ScheduledExecutorService executorService = Executors.newScheduledThreadPool(2);
+        Runnable validator = () -> {
+            SynchronizedPrint.clearConsole();
+            node.printStatus();
+            node.validateNode();
+        };
+        executorService.scheduleAtFixedRate(validator, 1, 5, TimeUnit.SECONDS);
+
+        Thread.sleep(60000 + 2 * (long) ((Math.random() - 0.5) * 30000)); // sleep for 60±30 seconds
+        executorService.shutdownNow();
+        node.shutdown();
+    }
     public static void main(String[] args) throws IOException, InterruptedException {
         System.out.println("Starting Node");
         String name;
@@ -322,32 +351,8 @@ public class Node {
         System.out.println("Network interfaces:");
         System.out.println(NetworkInterface.getNetworkInterfaces());
         while (true) {
-
-            Node node = new Node(name);
-            try {
-                node.discoverNameServer();
-            } catch (AccessDeniedException e) {
-                exit(-1);
-            }
-            node.printStatus();
-            node.validateNode();
-
-            InetAddress ip = InetAddress.getLocalHost();
-            String hostname = ip.getHostName();
-            System.out.println("Your current IP address : " + ip);
-            System.out.println("Your current Hostname : " + hostname);
-
-            ScheduledExecutorService executorService = Executors.newScheduledThreadPool(2);
-            Runnable validator = () -> {
-                SynchronizedPrint.clearConsole();
-                node.printStatus();
-                node.validateNode();
-            };
-            executorService.scheduleAtFixedRate(validator, 1, 5, TimeUnit.SECONDS);
-
-            Thread.sleep(60000 + 2 * (long) ((Math.random() - 0.5) * 30000)); // sleep for 60±30 seconds
-            executorService.shutdownNow();
-            node.shutdown();
+            launchNode(name);
+            System.gc();
             Thread.sleep((long) (Math.random() * 10000)); // sleep for a value between 0-10 seconds
         }
     }
