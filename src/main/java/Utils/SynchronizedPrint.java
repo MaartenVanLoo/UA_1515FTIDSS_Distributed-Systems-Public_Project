@@ -29,4 +29,10 @@ public class SynchronizedPrint {
             ignored.printStackTrace();
         }
     }
+
+    public static void printHex(byte[] bytes){
+        for (byte b : bytes) {
+            print(String.format("%02X ", b));
+        }
+    }
 }

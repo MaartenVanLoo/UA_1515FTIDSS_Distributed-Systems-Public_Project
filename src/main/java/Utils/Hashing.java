@@ -1,5 +1,6 @@
 package Utils;
 
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -11,7 +12,8 @@ public class Hashing {
             messageDigest.update(string.getBytes());
         } catch (NoSuchAlgorithmException e){return -1;}
         String stringHash = new String(messageDigest.digest());
-        System.out.println(stringHash);
+        SynchronizedPrint.printHex(stringHash.getBytes(StandardCharsets.UTF_8));
+        System.out.println();
         //System.out.println(javax.xml.bind.DatatypeConverter.printHexBinary(stringHash.getBytes()));
         long max = 2147483647;
         long min = -2147483648;
