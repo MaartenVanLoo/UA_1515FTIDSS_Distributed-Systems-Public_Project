@@ -76,6 +76,7 @@ public class N2NListener extends Thread {
                     case "PingAck":
                         //System.out.println("Received ping ack message from " + sourceIp);
                         pingAckHandler(receivedPacket,jsonObject);
+                        break;
                     case "PingNack":
                         System.out.println("Received ping nack message from " + sourceIp);
                         pingNackHandler(receivedPacket,jsonObject);
@@ -287,10 +288,10 @@ public class N2NListener extends Thread {
             JSONObject json = (JSONObject) this.node.getParser().parse(response);
             JSONObject prevNode = (JSONObject) json.get("prev");
             JSONObject nextNode = (JSONObject) json.get("next");
-            this.node.setPrevNodeId((long)prevNode.get("id")); System.out.println("update prevNodeId: "+this.node.getPrevNodeId());
-            this.node.setPrevNodeIP((String)prevNode.get("ip")); System.out.println("update prevNodeIP: "+this.node.getPrevNodeIP());
-            this.node.setNextNodeId((long)nextNode.get("id")); System.out.println("update nextNodeId: "+this.node.getNextNodeId());
-            this.node.setNextNodeIP((String)nextNode.get("ip")); System.out.println("update nextNodeIP: "+this.node.getNextNodeIP());
+            this.node.setPrevNodeId((long)prevNode.get("id"));
+            this.node.setPrevNodeIP((String)prevNode.get("ip"));
+            this.node.setNextNodeId((long)nextNode.get("id"));
+            this.node.setNextNodeIP((String)nextNode.get("ip"));
         }catch (Exception e){
             e.printStackTrace();
         }
