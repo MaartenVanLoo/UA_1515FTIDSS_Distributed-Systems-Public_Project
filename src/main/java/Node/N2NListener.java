@@ -212,17 +212,18 @@ public class N2NListener extends Thread {
             //request correct configuration from nameserver
             try {
                 String response = Unirest.get("/ns/nodes/{nodeId}").routeParam("nodeId", String.valueOf(this.node.getId())).asString().getBody();
-                JSONParser parser = new JSONParser();
                 JSONObject json = (JSONObject) this.node.getParser().parse(response);
                 JSONObject prevNode = (JSONObject) json.get("prev");
                 JSONObject nextNode = (JSONObject) json.get("next");
-                this.node.setPrevNodeId((long)prevNode.get("id"));
-                this.node.setPrevNodeIP((String)prevNode.get("ip"));
-                this.node.setNextNodeId((long)nextNode.get("id"));
-                this.node.setNextNodeIP((String)nextNode.get("ip"));
+                this.node.setPrevNodeId((long)prevNode.get("id")); System.out.println("update prevNodeId: "+this.node.getPrevNodeId());
+                this.node.setPrevNodeIP((String)prevNode.get("ip")); System.out.println("update prevNodeIP: "+this.node.getPrevNodeIP());
+                this.node.setNextNodeId((long)nextNode.get("id")); System.out.println("update nextNodeId: "+this.node.getNextNodeId());
+                this.node.setNextNodeIP((String)nextNode.get("ip")); System.out.println("update nextNodeIP: "+this.node.getNextNodeIP());
             } catch (Exception e) {
                 e.printStackTrace();
             }
+        }else{
+            System.out.println("NodeID " + nodeId + " is not a neighbour");
         }
     }
     private void pingHandler(DatagramPacket receivedPacket){
