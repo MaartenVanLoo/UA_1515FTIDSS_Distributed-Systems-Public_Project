@@ -302,7 +302,12 @@ public class Node {
             System.out.println("Node " + this.id + " is OK");
         }
     }
-
+    public boolean isSetUp() {
+        return this.setUpComplete;
+    }
+    public JSONParser getParser(){
+        return this.parser;
+    }
     public static void main(String[] args) throws IOException, InterruptedException {
         System.out.println("Starting Node");
         String name;
@@ -363,7 +368,5 @@ public class Node {
         node.shutdown();
     }
 
-    public boolean isSetUp() {
-        return this.setUpComplete;
-    }
+
 }

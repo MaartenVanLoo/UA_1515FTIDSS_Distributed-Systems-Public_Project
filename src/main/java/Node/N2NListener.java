@@ -202,13 +202,27 @@ public class N2NListener extends Thread {
         }
     }
     private void failureHandler(DatagramPacket receivedPacket,JSONObject jsonObject){
-        if (jsonObject.containsKey("nextNodeId") && jsonObject.get("failed").equals(this.node.getNextNodeId())) {
-            this.node.setNextNodeId((long) jsonObject.get("nextNodeId"));
-            this.node.setNextNodeIP(jsonObject.get("nextNodeIP").toString());
+        if (!jsonObject.containsKey("nodeId")){
+            System.out.println("Bad formatted failure message");
         }
-        if (jsonObject.containsKey("prevNodeId") && jsonObject.get("failed").equals(this.node.getPrevNodeId())) {
-            this.node.setPrevNodeId((long)jsonObject.get("prevNodeId"));
-            this.node.setPrevNodeIP(jsonObject.get("prevNodeIP").toString());
+        long nodeId = (long)jsonObject.get("nodeId");
+        //check if nodeId = neighbourId
+        if (nodeId == this.node.getNextNodeId() || nodeId == this.node.getPrevNodeId()){
+            //failed node is neighbour
+            //request correct configuration from nameserver
+            try {
+                String response = Unirest.get("/ns/nodes/{nodeId}").routeParam("nodeId", String.valueOf(this.node.getId())).asString().getBody();
+                JSONParser parser = new JSONParser();
+                JSONObject json = (JSONObject) this.node.getParser().parse(response);
+                JSONObject prevNode = (JSONObject) json.get("prev");
+                JSONObject nextNode = (JSONObject) json.get("next");
+                this.node.setPrevNodeId((long)prevNode.get("id"));
+                this.node.setPrevNodeIP((String)prevNode.get("ip"));
+                this.node.setNextNodeId((long)nextNode.get("id"));
+                this.node.setNextNodeIP((String)nextNode.get("ip"));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
     private void pingHandler(DatagramPacket receivedPacket){
