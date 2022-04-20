@@ -271,7 +271,7 @@ public class N2NListener extends Thread {
     }
     private void updatePrevNode(int neighbourId, DatagramPacket receivedPacket) throws IOException {
         this.node.setPrevNodeId(neighbourId);
-        this.node.setNextNodeIP(receivedPacket.getAddress().getHostAddress());
+        this.node.setPrevNodeIP(receivedPacket.getAddress().getHostAddress());
         String response = "{" +
                 "\"type\":\"NB-prev\"," +
                 "\"currentId\":" + this.node.getId() + "," +
