@@ -113,7 +113,8 @@ public class Node {
                     this.NS_ip = String.valueOf(responsePacket.getAddress().getHostAddress());
                     this.NS_port = String.valueOf(responsePacket.getPort());
                     received = true; //no need to read the neighbour's messages when all information already obtained from the NS
-                }else if (type.equals("NB-next")) {
+                }
+                else if (type.equals("NB-next")) {
                     this.nextNodeId = (long) (((JSONObject) obj).get("currentId"));
                     resend = false;
                 }else if (type.equals("NB-prev")) {
@@ -148,6 +149,7 @@ public class Node {
     public void shutdown(){
         try {
             System.out.println("Shutting down...");
+            this.setUpComplete = false;
             String updatePrev;
             String updateNext;
 

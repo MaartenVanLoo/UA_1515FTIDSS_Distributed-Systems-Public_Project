@@ -271,6 +271,7 @@ public class N2NListener extends Thread {
     }
     private void updatePrevNode(int neighbourId, DatagramPacket receivedPacket) throws IOException {
         this.node.setPrevNodeId(neighbourId);
+        this.node.setNextNodeIP(receivedPacket.getAddress().getHostAddress());
         String response = "{" +
                 "\"type\":\"NB-prev\"," +
                 "\"currentId\":" + this.node.getId() + "," +
@@ -278,7 +279,9 @@ public class N2NListener extends Thread {
                 "}";
         DatagramPacket responsePacket = new DatagramPacket(response.getBytes(StandardCharsets.UTF_8), response.length(), receivedPacket.getAddress(), receivedPacket.getPort());
         this.node.getListeningSocket().send(responsePacket);
+        return;
         //TODO:: Can you trust that the nameserver already updated the shutdown of the node?
+        /*
         //Get config from nameserver
         JSONParser parser = new JSONParser();
         JSONObject config = new JSONObject();
@@ -287,6 +290,8 @@ public class N2NListener extends Thread {
         } catch (ParseException ignore) {}
         JSONObject prev = (JSONObject) config.get("prev");
         this.node.setPrevNodeIP(prev.get("ip").toString());
+        */
+
     }
 
 
