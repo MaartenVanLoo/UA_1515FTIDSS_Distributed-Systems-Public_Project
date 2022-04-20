@@ -3,4 +3,5 @@
   git fetch --all
   git reset --hard origin/Discovery
   mvn package
+  chmod +x reload.sh
   clear
