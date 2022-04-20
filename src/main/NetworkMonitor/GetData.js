@@ -103,8 +103,9 @@ const getNodeData = async (ips) =>{
         }
         if (ip == "Unknown") return undefined;
         nodeRequest++;
-        //ip = translateSSHTunnel(ip);
-        const data = await GetData("http://"+ ip +":8081/node");
+        let port = translateSSHTunnelPort(ip,ipPort);
+        ip = translateSSHTunnelIP(ip);
+        const data = await GetData("http://"+ ip +":"+port+"/node");
         nodeRequest--;
         return data;
     })
@@ -113,8 +114,9 @@ const getNodeData = async (ips) =>{
 const getNameserverData = async (ip) =>{
     if (nameserverRequests > 0) return undefined;
     nameserverRequests++;
-    //ip = translateSSHTunnel(ip);
-    const data = await GetData("http://"+ ip +":8081/ns");
+    let port = translateSSHTunnelPort(ip,ipPort);
+    ip = translateSSHTunnelIP(ip);
+    const data = await GetData("http://"+ ip +":"+port + "/ns");
     nameserverRequests--;
     return data;
 }
@@ -184,17 +186,17 @@ async function loadSSHTunnelMap(){
 }
 //check if tunnel checkbox is checekd
 function checkSSHTunnel(){
-    if (document.getElementById("loadSSHTunnelMap").checked){
+    if (document.getElementById("enable-ssh-tunnel").checked){
         return true;
     }
     else{
         return false;
     }
 }
-function translateSSHTunnel(ip){
+function translateSSHTunnelIP(ip){
     if (checkSSHTunnel()){
         if (ip in sshTunnelMap){
-            return sshTunnelMap[ip];
+            return sshTunnelMap[ip].ip;
         }
         else{
             return ip;
@@ -202,5 +204,18 @@ function translateSSHTunnel(ip){
     }
     else{
         return ip;
+    }
+}
+function translateSSHTunnelPort(ip,port){
+    if (checkSSHTunnel()){
+        if (ip in sshTunnelMap){
+            return sshTunnelMap[ip].port;
+        }
+        else{
+            return port;
+        }
+    }
+    else{
+        return port;
     }
 }

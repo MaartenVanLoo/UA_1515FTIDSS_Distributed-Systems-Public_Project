@@ -57,7 +57,7 @@ public class PingNode extends Thread{
                 continue;
             }
             String ping = "{\"type\":\"Ping\"," +
-                    "       \"nodeId\":" + this.node.getId() + "}";
+                           "\"nodeId\":" + this.node.getId() + "}";
 
             //ping neighbors
             DatagramPacket pingNext = new DatagramPacket(ping.getBytes(StandardCharsets.UTF_8), ping.length(),nextAddress , 8001);

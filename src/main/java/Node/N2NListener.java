@@ -46,7 +46,6 @@ public class N2NListener extends Thread {
                 String data = new String(receivedPacket.getData()).trim();
                 System.out.println("Received: " + data);
                 String sourceIp = receivedPacket.getAddress().getHostAddress();
-                String response ="{}";
 
                 //what type is the received packet?
                 JSONParser parser = new JSONParser();
@@ -74,9 +73,12 @@ public class N2NListener extends Thread {
                         //System.out.println("Received ping message from " + sourceIp);
                         pingHandler(receivedPacket);
                         break;
-                    case "PingReply":
-                        //System.out.println("Received ping replay message from " + sourceIp);
-                        pingReplayHandler(jsonObject);
+                    case "PingAck":
+                        //System.out.println("Received ping ack message from " + sourceIp);
+                        pingAckHandler(receivedPacket,jsonObject);
+                    case "PingNack":
+                        System.out.println("Received ping nack message from " + sourceIp);
+                        pingNackHandler(receivedPacket,jsonObject);
                         break;
                     default:
                         System.out.println("Unknown message type: " + type);
@@ -230,22 +232,67 @@ public class N2NListener extends Thread {
     }
     private void pingHandler(DatagramPacket receivedPacket){
         //TODO: check if ping is from neighbour, otherwise a neighbour must have failed?
-        //echo back a ping replay
         JSONObject jsonObject = new JSONObject();
-        jsonObject.put("type", "PingReply");
-        jsonObject.put("nodeId", this.node.getId());
+        //check if source is from neighbour
+
+        if (receivedPacket.getAddress().getHostAddress().equals(this.node.getNextNodeIP()) || receivedPacket.getAddress().getHostAddress().equals(this.node.getPrevNodeIP())){
+            //ping is from neighbour
+            jsonObject.put("type", "PingAck");
+            jsonObject.put("nodeId", this.node.getId());
+        }else{
+            //ping is from another node
+            jsonObject.put("type", "PingNack");
+            jsonObject.put("nodeId", this.node.getId());
+
+            //Am I the node with a misconfiguration? => request correct configuration from nameserver
+            try {
+                String response = Unirest.get("/ns/nodes/{nodeId}").routeParam("nodeId", String.valueOf(this.node.getId())).asString().getBody();
+                JSONObject json = (JSONObject) this.node.getParser().parse(response);
+                JSONObject prevNode = (JSONObject) json.get("prev");
+                JSONObject nextNode = (JSONObject) json.get("next");
+                this.node.setPrevNodeId((long)prevNode.get("id")); System.out.println("update prevNodeId: "+this.node.getPrevNodeId());
+                this.node.setPrevNodeIP((String)prevNode.get("ip")); System.out.println("update prevNodeIP: "+this.node.getPrevNodeIP());
+                this.node.setNextNodeId((long)nextNode.get("id")); System.out.println("update nextNodeId: "+this.node.getNextNodeId());
+                this.node.setNextNodeIP((String)nextNode.get("ip")); System.out.println("update nextNodeIP: "+this.node.getNextNodeIP());
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+        //echo back a ping replay
         DatagramPacket datagramPacket = new DatagramPacket(jsonObject.toString().getBytes(), jsonObject.toString().getBytes().length, receivedPacket.getAddress(), receivedPacket.getPort());
         try {
             this.node.getListeningSocket().send(datagramPacket);
         } catch (IOException ignored) {}
     }
-    private void pingReplayHandler(JSONObject jsonObject){
+    private void pingAckHandler(DatagramPacket receivedPacket, JSONObject jsonObject){
         long id = (long)jsonObject.get("nodeId");
         if (id == this.node.getNextNodeId()){
             this.pingNode.resetNext();
         }
         if (id == this.node.getPrevNodeId()){
             this.pingNode.resetPrev();
+        }
+    }
+    private void pingNackHandler(DatagramPacket receivedPacket, JSONObject jsonObject){
+        long id = (long)jsonObject.get("nodeId");
+        if (id == this.node.getNextNodeId()){
+            this.pingNode.resetNext();
+        }
+        if (id == this.node.getPrevNodeId()){
+            this.pingNode.resetPrev();
+        }
+        //some config is wrong, request correct config from nameserver
+        try {
+            String response = Unirest.get("/ns/nodes/{nodeId}").routeParam("nodeId", String.valueOf(this.node.getId())).asString().getBody();
+            JSONObject json = (JSONObject) this.node.getParser().parse(response);
+            JSONObject prevNode = (JSONObject) json.get("prev");
+            JSONObject nextNode = (JSONObject) json.get("next");
+            this.node.setPrevNodeId((long)prevNode.get("id")); System.out.println("update prevNodeId: "+this.node.getPrevNodeId());
+            this.node.setPrevNodeIP((String)prevNode.get("ip")); System.out.println("update prevNodeIP: "+this.node.getPrevNodeIP());
+            this.node.setNextNodeId((long)nextNode.get("id")); System.out.println("update nextNodeId: "+this.node.getNextNodeId());
+            this.node.setNextNodeIP((String)nextNode.get("ip")); System.out.println("update nextNodeIP: "+this.node.getNextNodeIP());
+        }catch (Exception e){
+            e.printStackTrace();
         }
     }
     private void updateNextNode(int neighbourId, DatagramPacket receivedPacket) throws IOException {

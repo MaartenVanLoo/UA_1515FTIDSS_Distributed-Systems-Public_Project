@@ -72,7 +72,7 @@ function updateNodeTable(){
 }
 function appendNodeTable(node, table){
     row = table.insertRow()
-    row.insertCell().innerHTML = nodeData[node.id] == null? node.id : nodeData[node.id].name;
+    row.insertCell().innerHTML = nodeData[node.id] == null? node.id : nodeData[node.id].node.name;
     row.insertCell().innerHTML = node.id;
     row.insertCell().innerHTML = node.ip;
     row.insertCell().innerHTML = nodeLastPing[node.id]  + Math.max(parseInt(document.getElementById("nsRefreshRate").value)*2,10000) > Date.now() ?
@@ -111,12 +111,12 @@ function updateDetailsTable(){
         document.getElementById("node-details-prev-id").innerHTML = "-";
         document.getElementById("node-details-prev-ip").innerHTML = "-";
     }else{
-        document.getElementById("node-details-name").innerHTML = nodeData[selectedID].name;
-        document.getElementById("node-details-status").innerHTML = nodeLastPing[selectedID] + Math.max(parseInt(document.getElementById("nsRefreshRate").value) * 2, 10000) > Date.now() ?
+        document.getElementById("node-details-name").innerHTML = nodeData[selectedID].node.name;
+        document.getElementById("node-details-status").innerHTML = nodeLastPing[selectedID]  + Math.max(parseInt(document.getElementById("nsRefreshRate").value)*2,10000) > Date.now() ?
             "online <img src='images/OK.png' alt='OK' height='15' width='15'>" :
-            "offline <img src='images/ERROR.png' alt='ERROR' height='15'>";
-        document.getElementById("node-details-id").innerHTML = nodeData[selectedID].id;
-        document.getElementById("node-details-ip").innerHTML = nodeData[selectedID].ip;
+            "offline <img src='images/ERROR.png' alt='ERROR' height='15' width='15'>";
+        document.getElementById("node-details-id").innerHTML = nodeData[selectedID].node.id;
+        document.getElementById("node-details-ip").innerHTML = nodeData[selectedID].node.ip;
         document.getElementById("node-details-next-id").innerHTML = nodeData[selectedID].next.id;
         document.getElementById("node-details-next-ip").innerHTML = nodeData[selectedID].next.ip;
         document.getElementById("node-details-prev-id").innerHTML = nodeData[selectedID].prev.id;
