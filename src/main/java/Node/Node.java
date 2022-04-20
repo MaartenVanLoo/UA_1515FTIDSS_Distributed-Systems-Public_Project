@@ -151,6 +151,11 @@ public class Node {
             String updatePrev;
             String updateNext;
 
+            // first send shutdown to nameserver and then neighbours
+            // update namingserver
+            System.out.println(Unirest.delete("/ns/nodes/{nodeID}").routeParam("nodeID", String.valueOf(this.id)).asString().getBody());
+
+
             // update prev node
             updatePrev = "{\"type\":\"Shutdown\"," +
                            "\"nextNodeId\":"+this.getNextNodeId() + "," +
@@ -170,10 +175,6 @@ public class Node {
                     InetAddress.getByName(nextNodeIP), 8001);
             //send this.nextNodeID to prevNodeID
             socket.send(nextNodePacket);
-
-            // Todo: first send shutdown to nameserver and then to neighbours
-            // update namingserver
-            System.out.println(Unirest.delete("/ns/nodes/{nodeID}").routeParam("nodeID", String.valueOf(this.id)).asString().getBody());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -320,52 +321,35 @@ public class Node {
 
         System.out.println("Network interfaces:");
         System.out.println(NetworkInterface.getNetworkInterfaces());
-        Node node = new Node(name);
-        try{
-            node.discoverNameServer();
-        } catch (AccessDeniedException e){
-            exit(-1);
-        }
-        node.printStatus();
-        node.validateNode();
+        while (true) {
 
-        InetAddress ip = InetAddress.getLocalHost();
-        String hostname = ip.getHostName();
-        System.out.println("Your current IP address : " + ip);
-        System.out.println("Your current Hostname : " + hostname);
-
-        ScheduledExecutorService executorService = Executors.newScheduledThreadPool(2);
-        Runnable validator = () -> {
-            SynchronizedPrint.clearConsole();
+            Node node = new Node(name);
+            try {
+                node.discoverNameServer();
+            } catch (AccessDeniedException e) {
+                exit(-1);
+            }
             node.printStatus();
             node.validateNode();
-        };
-        executorService.scheduleAtFixedRate(validator, 1, 5, TimeUnit.SECONDS);
 
-        /*
-        node.getFileLocation("test.txt");
-        node.getFileLocation("test1.txt");
-        node.getFileLocation("test2.txt");
-        node.getFileLocation("test3.txt");
-        node.getFileLocation("test4.txt");
-        */
-        /*for (int i = 0; i < 10;i++) {
+            InetAddress ip = InetAddress.getLocalHost();
+            String hostname = ip.getHostName();
+            System.out.println("Your current IP address : " + ip);
+            System.out.println("Your current Hostname : " + hostname);
 
-            Thread t = new Thread(() -> {
-                for (int j = 0; j < 10000; j++) {
-                    node.getFileLocation("test.txt");
-                    node.getFileLocation("test1.txt");
-                    node.getFileLocation("test2.txt");
-                    node.getFileLocation("test3.txt");
-                    node.getFileLocation("test4.txt");
+            ScheduledExecutorService executorService = Executors.newScheduledThreadPool(2);
+            Runnable validator = () -> {
+                SynchronizedPrint.clearConsole();
+                node.printStatus();
+                node.validateNode();
+            };
+            executorService.scheduleAtFixedRate(validator, 1, 5, TimeUnit.SECONDS);
 
-                }
-            });
-            t.start();
-        }*/
-        Thread.sleep(60000 + 2*(long) ((Math.random()-0.5) * 30000)); // sleep for 60±30 seconds
-        executorService.shutdownNow();
-        node.shutdown();
+            Thread.sleep(60000 + 2 * (long) ((Math.random() - 0.5) * 30000)); // sleep for 60±30 seconds
+            executorService.shutdownNow();
+            node.shutdown();
+            Thread.sleep((long) (Math.random() * 10000)); // sleep for a value between 0-10 seconds
+        }
     }
 
 

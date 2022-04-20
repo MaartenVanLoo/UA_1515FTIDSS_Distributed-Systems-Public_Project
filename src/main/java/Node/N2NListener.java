@@ -71,11 +71,11 @@ public class N2NListener extends Thread {
                         this.node.validateNode();
                         break;
                     case "Ping":
-                        System.out.println("Received ping message from " + sourceIp);
+                        //System.out.println("Received ping message from " + sourceIp);
                         pingHandler(receivedPacket);
                         break;
                     case "PingReply":
-                        System.out.println("Received ping replay message from " + sourceIp);
+                        //System.out.println("Received ping replay message from " + sourceIp);
                         pingReplayHandler(jsonObject);
                         break;
                     default:
