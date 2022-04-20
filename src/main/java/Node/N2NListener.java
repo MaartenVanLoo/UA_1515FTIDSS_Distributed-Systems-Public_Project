@@ -202,6 +202,7 @@ public class N2NListener extends Thread {
         }
     }
     private void failureHandler(DatagramPacket receivedPacket,JSONObject jsonObject){
+
         if (!jsonObject.containsKey("nodeId")){
             System.out.println("Bad formatted failure message");
         }

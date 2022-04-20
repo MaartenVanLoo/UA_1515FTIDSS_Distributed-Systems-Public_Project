@@ -37,9 +37,24 @@
  /*******
  git pull
  ******/
-  cd ~/UA_1515FTIDSS_Distributed-Systems-Public_Project
+  /*cd ~/UA_1515FTIDSS_Distributed-Systems-Public_Project
   git clean -f
   git reset --hard
   git pull
-  mvn package
- 
+  mvn package*/
+
+  cd ~/UA_1515FTIDSS_Distributed-Systems-Public_Project
+  git clean -f
+  git fetch --all
+  git reset --hard origin/Discovery
+  clear
+
+
+/**
+clean
+**/
+cd ~
+rm -rd UA_1515FTIDSS_Distributed-Systems-Public_Project
+git clone https://github.com/MaartenVanLoo/UA_1515FTIDSS_Distributed-Systems-Public_Project
+ cd UA_1515FTIDSS_Distributed-Systems-Public_Project
+
