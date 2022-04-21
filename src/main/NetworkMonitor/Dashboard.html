@@ -3,11 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <link rel="stylesheet" href="NetworkMonitor2.css">
+  <link rel="stylesheet" href="css/all.css">
+  <link rel="stylesheet" href="css/NetworkMonitor2.css">
 
-  <script src="utils.js"></script>
-  <script src="RefreshTables.js"></script>
-  <script src="GetData.js"></script>
+
+  <script src="scripts/utils.js"></script>
+  <script src="scripts/RefreshDashboard.js" defer></script>
+  <script src="scripts/GetData.js" defer></script> <!-- defer is used to load the script after the page is loaded -->
   <title>Network monitor</title>
 
 </head>
@@ -15,66 +17,75 @@
 <div class="dashboard-main-wrapper">
 <div class="dashboard-header">
   <nav class="navbar fixed-top bg-white">
-    <img class="navbar-brand" src="images/logo.png" alt="">
+    <picture class="navbar-brand" style="height: 67px">
+      <source media="(min-width: 900px)" srcset="images/logo.png">
+      <source media="(min-width: 750px)" srcset="images/logo_small.png">
+      <img src="" alt="">
+    </picture>
     <a class="navbar-brand" href="#">Network Monitor</a>
     <div class="navbar-content">
-    <ul class ="navbar-nav ml-auto navbar-right-top">
-      <li class="nav-item dropdown">
-        <div class="nav-options ">
-          <a class="nav-link" href="#" role="button" onclick=toggle_options()>
-            <img src="images/options.png" alt="options" width="40px" height="40px">
+      <ul class ="navbar-nav ml-auto navbar-right-top">
+        <li class="nav-item" style = "padding-top:10px;">
+          <a class="nav-link" href="#">
+            <img src="images/refresh.png" alt="refresh" width="40px" height="40px" onclick=updateData();screenRefresh(); >
           </a>
-          <ul class="dropdown-menu dropdown-menu-right connection-dropdown" id="dropdown-options">
-            <li class="connection-list">
-              <div class="row" style="padding-top:5px">
-                <div class="col-5">
-                  <label>Name server ip</label>
+        </li>
+        <li class="nav-item dropdown" style = "padding-top:10px;">
+          <div class="nav-options ">
+            <a class="nav-link" href="#" role="button" onclick=toggle_options()>
+              <img src="images/options.png" alt="options" width="40px" height="40px">
+            </a>
+            <ul class="dropdown-menu dropdown-menu-right connection-dropdown" id="dropdown-options">
+              <li class="connection-list">
+                <div class="row" style="padding-top:5px">
+                  <div class="col-5">
+                    <label>Name server ip</label>
+                  </div>
+                  <div class="col-5">
+                    <input type="text" id = "ns-ip" placeholder="localhost">
+                  </div>
                 </div>
-                <div class="col-5">
-                  <input type="text" id = "ns-ip" placeholder="localhost">
+                <div class="row" style="padding-top:5px">
+                  <div class="col-5">
+                    <label>Port</label>
+                  </div>
+                  <div class="col-6">
+                    <input type="text" id = "ns-port" placeholder="8081">
+                  </div>
                 </div>
-              </div>
-              <div class="row" style="padding-top:5px">
-                <div class="col-5">
-                  <label>Port</label>
+                <div class="row" style="padding-top:5px">
+                  <div class="col-5">
+                    <label>Refresh rate NS</label>
+                  </div>
+                  <div class="col-3">
+                    <input type="range" min="100" max="10000" value="1000" class="slider" id="nsRefreshRate">
+                  </div>
+                  <div class="col-col-col-auto">
+                    <label id="nsRefreshRateLabel">1 000 ms</label>
+                  </div>
                 </div>
-                <div class="col-6">
-                  <input type="text" id = "ns-port" placeholder="8081">
+                <div class="row" style="padding-top:5px">
+                  <div class="col-5">
+                    <label>Refresh rate node</label>
+                  </div>
+                  <div class="col-3">
+                    <input type="range" min="100" max="10000" value="1000" class="slider" id="nodeRefreshRate">
+                  </div>
+                  <div class="col-col-auto">
+                    <label id="nodeRefreshRateLabel">1 000 ms</label>
+                  </div>
                 </div>
-              </div>
-              <div class="row" style="padding-top:5px">
-                <div class="col-5">
-                  <label>Refresh rate NS</label>
+                <div class ="row" style ="padding-top:5px">
+                  <div class ="col-8">
+                    <label for="enable-ssh-tunnel">Enable SSH tunnel</label>
+                    <input type = "checkbox" id="enable-ssh-tunnel" name="ssh-tunnel" checked>
+                  </div>
                 </div>
-                <div class="col-3">
-                  <input type="range" min="100" max="10000" value="1000" class="slider" id="nsRefreshRate">
-                </div>
-                <div class="col-col-col-auto">
-                  <label id="nsRefreshRateLabel">1 000 ms</label>
-                </div>
-              </div>
-              <div class="row" style="padding-top:5px">
-                <div class="col-5">
-                  <label>Refresh rate node</label>
-                </div>
-                <div class="col-3">
-                  <input type="range" min="100" max="10000" value="1000" class="slider" id="nodeRefreshRate">
-                </div>
-                <div class="col-col-auto">
-                  <label id="nodeRefreshRateLabel">1 000 ms</label>
-                </div>
-              </div>
-              <div class ="row" style ="padding-top:5px">
-                <div class ="col-8">
-                  <label for="enable-ssh-tunnel">Enable SSH tunnel</label>
-                  <input type = "checkbox" id="enable-ssh-tunnel" name="ssh-tunnel" checked>
-                </div>
-              </div>
-            </li>
-          </ul>
-        </div>
-      </li>
-    </ul>
+              </li>
+            </ul>
+          </div>
+        </li>
+      </ul>
     </div>
   </nav>
 </div>
@@ -82,20 +93,25 @@
   <div class="slimScrollDiv" style="position:relative; overflow: hidden; width:auto; height:100%;">
     <div class="menu-list" style="overflow:hidden; width:auto; height:100%;">
       <nav class="navbar navbar-expand-lg navbar-light">
-        <a class="d-xl-none d-lg-none" href="#">Dashboard</a>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation"></button>
         <div class="navbar-collapse collapse show" id="navbarNav" style>
           <ul class="navbar-nav flex-column">
             <li class="nav-divider">Menu</li>
+
             <li class="nav-item">
+              <a class="nav-link" href="#">
+                <i class="fa fa-home"></i>Dashboard</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="Nodes.html">
+                <i class="fa fa-table"></i>Nodes</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#">
+                <i class="fa fa-map"></i>Network map</a>
+            </li>
+            <li class="nav-item" hidden>
               <a class="nav-link" href="#" onclick=toggle_options()>
-                <i class="fa fa-fw fa-user-circle"></i>Options</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="#" onclick="refresh_tables()">
-                <i class="fa fa-fw fa-home"></i>Dashboard</a>
-            </li>
-            <li class="nav-item">
+              <i class="fa fa-bars"></i>Options</a>
             </li>
           </ul>
         </div>
@@ -133,14 +149,16 @@
       </div>
       <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12 col-12">
         <div class="card">
-          <h class="card-header card-dark">Nodes</h>
+          <h1 class="card-header card-dark">Nodes</h1>
           <div class="scrollable-wrapper">
             <table class ="table-dark table-scroll-fixed-headers">
               <thead>
-                <th>Name</th>
-                <th>Id</th>
-                <th>IP</th>
-                <th>Status</th>
+                <tr>
+                  <th>Name</th>
+                  <th>Id</th>
+                  <th>IP</th>
+                  <th>Status</th>
+                </tr>
               </thead>
               <tbody id="nodes-list" style = "max-height: 200px;"></tbody>
             </table>
@@ -151,7 +169,7 @@
     <div class="row">
       <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
         <div class="card">
-          <h class="card-header">Details</h>
+          <h1 class="card-header">Details</h1>
           <table class ="table-dark">
             <thead></thead>
             <tbody id="node-details">
@@ -193,7 +211,8 @@
   document.getElementById("nsRefreshRate").oninput = function() {
     document.getElementById("nsRefreshRateLabel").innerHTML = numberWithSpaces(this.value) +" ms";
     try{
-        setDataRefreshRate(this.value);
+      setDataRefreshRate(this.value);
+      saveSettings();
     }catch(err){
       console.log(err);
     }
@@ -203,6 +222,7 @@
     document.getElementById("nodeRefreshRateLabel").innerHTML = numberWithSpaces(this.value) + " ms";
      try{
         setScreenRefreshRate(this.value);
+       saveSettings();
     }catch(err){
       console.log(err);
     }
@@ -210,6 +230,7 @@
   document.getElementById("ns-ip").oninput=function(){
     try{
       setNameServerIp(this.value);
+      saveSettings();
     }catch(err){
       console.log(err);
     }
@@ -217,6 +238,14 @@
   document.getElementById("ns-port").oninput=function(){
     try{
       setNameServerPort(this.value);
+      saveSettings();
+    }catch(err){
+      console.log(err);
+    }
+  }
+  document.getElementById("enable-ssh-tunnel").onclick=function(){
+    try{
+      saveSettings();
     }catch(err){
       console.log(err);
     }
