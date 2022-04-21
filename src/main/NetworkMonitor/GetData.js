@@ -97,10 +97,10 @@ async function DeleteData(url = '') {
     }
 }
 const getNodeData = async (ips) =>{
+    if (nodeRequest > 2* ips.length){
+        return null;
+    }
     const nodes = ips.map(async ip =>{
-        if (nodeRequest > 2* ips.length){
-            return null;
-        }
         if (ip == "Unknown") return undefined;
         nodeRequest++;
         let port = translateSSHTunnelPort(ip,ipPort);

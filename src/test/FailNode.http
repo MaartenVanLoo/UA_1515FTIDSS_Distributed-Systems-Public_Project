@@ -1,0 +1,18 @@
+DELETE http://localhost:8081/ns/nodes/20199/fail
+
+### host 0
+DELETE http://localhost:8081/ns/nodes/467/fail
+
+### host 1
+DELETE http://127.0.0.1:8082/ns/nodes/24402/fail
+
+### host 2
+DELETE http://127.0.0.1:8083/ns/nodes/24402/fail
+
+### host 3
+DELETE http://127.0.0.1:8084/ns/nodes/24402/fail
+
+### host 4
+DELETE http://127.0.0.1:8085/ns/nodes/24402/fail
+
+###
