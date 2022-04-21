@@ -54,6 +54,7 @@ import java.util.stream.Collectors;
 public class NameServerController {
     Logger logger = LoggerFactory.getLogger(NameServerController.class);
 
+
     static final int DATAGRAM_PORT = 8001;
     private NameServer nameServer;
     private JSONParser jsonParser = new JSONParser();
@@ -272,7 +273,6 @@ public class NameServerController {
                     byte[] receiveBuffer = new byte[512]; //make a new buffer for every request (to overwrite the old one)
                     DatagramPacket receivePacket = new DatagramPacket(receiveBuffer, receiveBuffer.length);
                     this.nameServerController.socket.receive(receivePacket);
-                    System.out.println("Discovery package received! -> " + receivePacket.getAddress() + ":" + receivePacket.getPort());
                     String data = new String(receivePacket.getData()).trim();
                     String ip = receivePacket.getAddress().getHostAddress();
                     String response;
@@ -282,6 +282,8 @@ public class NameServerController {
                     String type = (String) jsonObject.get("type");
 
                     if (!type.equals("Discovery")) {continue;} //do not respond on non discovery packets
+
+                    System.out.println("Discovery package received! -> " + receivePacket.getAddress() + ":" + receivePacket.getPort());
 
                     String name = (String) jsonObject.get("name");
                     if (name == null) {
