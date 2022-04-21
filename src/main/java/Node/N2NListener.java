@@ -230,6 +230,9 @@ public class N2NListener extends Thread {
         }else{
             System.out.println("NodeID " + nodeId + " is not a neighbour");
         }
+        //reset counter to avoid cascading failures
+        this.pingNode.resetPrev();
+        this.pingNode.resetNext();
     }
     private void pingHandler(DatagramPacket receivedPacket){
         //TODO: check if ping is from neighbour, otherwise a neighbour must have failed?
