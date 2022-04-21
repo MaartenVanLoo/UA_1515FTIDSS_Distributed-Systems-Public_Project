@@ -10,7 +10,7 @@ public class PingNode extends Thread{
     private Node node;
     private int nextUnanswerd = 0;
     private int prevUnanswerd = 0;
-    private int delay = 500000;
+    private int delay = 5000;
     private boolean running = false;
 
     public PingNode(Node node){
