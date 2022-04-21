@@ -182,6 +182,7 @@ public class NameServerController {
         this.nameServer.getIpMapLock().writeLock().lock();
         boolean status = this.nameServer.deleteNode(nodeId);
         String message = "{\"nodeId\":"+nodeId+",\"type\":\"Failure\"}";
+        System.out.println(message);
         try {
             if (status) {
                 //notify neighbors of failed node
