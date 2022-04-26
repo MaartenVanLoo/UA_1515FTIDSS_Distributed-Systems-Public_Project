@@ -35,20 +35,23 @@ import java.util.stream.Collectors;
 // future:
 // GET /ns/nodes => get a list of all available nodes and there configuration in JSON, use "?" to set constraints, filter, the list
 
-//Overview:
-// /ns
-//  --> /ns/nodes
-//      --> /ns/nodes/{nodeId}
-//      --> /ns/nodes/{nodeId}/fail
-//      --> /ns/nodes/name/{name}
-//  --> /ns/files
-//      --> /ns/files/{fileName}
+/* Overview:
+   /ns
+    --> /ns/nodes
+        --> /ns/nodes/{nodeId}
+        --> /ns/nodes/{nodeId}/fail
+        --> /ns/nodes/name/{name}
+    --> /ns/files
+        --> /ns/files/{fileName}
+*/
 
-//usefull info:
-//https://spring.io/blog/2013/11/01/exception-handling-in-spring-mvc
-//https://www.restapitutorial.com/lessons/httpmethods.html#:~:text=The%20primary%20or%20most%2Dcommonly,but%20are%20utilized%20less%20frequently.
-//https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/GET
-//https://stackoverflow.com/questions/39835648/how-do-i-get-the-json-in-a-response-body-with-spring-annotaion
+/* useful info:
+  https://spring.io/blog/2013/11/01/exception-handling-in-spring-mvc
+  https://www.restapitutorial.com/lessons/httpmethods.html#:~:text=The%20primary%20or%20most%2Dcommonly,but%20are%20utilized%20less%20frequently.
+  https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/GET
+  https://stackoverflow.com/questions/39835648/how-do-i-get-the-json-in-a-response-body-with-spring-annotaion
+ */
+
 @CrossOrigin(origins = "*") //Use to allow access from any origin
 @RestController
 public class NameServerController {
@@ -207,6 +210,11 @@ public class NameServerController {
     @GetMapping("/ns/files")
     public void getFiles() {}
 
+    /**
+     * Returns the id of the node where the file should be located.
+     * @param fileName
+     * @return
+     */
     @ResponseStatus(HttpStatus.OK) // 200
     @GetMapping("/ns/files/{fileName}")
     public String getFile(@PathVariable String fileName) {
@@ -229,6 +237,9 @@ public class NameServerController {
     //</editor-fold>
 
 
+    /**
+     * Prints the ip mapping of the nodes to the console of the NS, every second.
+     */
     @Scheduled(fixedRate = 10000)
     public void printMapping() {
         this.nameServer.getIpMapLock().readLock().lock();

@@ -185,16 +185,18 @@ public class Node {
     // print the variables of the node to the console
     public void printStatus(){
         synchronized (SynchronizedPrint.lock) {
-            System.out.println("Node name:   \t" + this.name);
-            System.out.println("Node ip:     \t" + this.ip);
-            System.out.println("Node id:     \t" + this.id);
-            System.out.println("Node ns ip:  \t" + this.NS_ip);
-            System.out.println("Node ns port:\t" + this.NS_port);
-            System.out.println("Node prev id:\t" + this.prevNodeId);
-            System.out.println("Node prev ip:\t" + this.prevNodeIP);
-            System.out.println("Node next id:\t" + this.nextNodeId);
-            System.out.println("Node next ip:\t" + this.nextNodeIP);
-            System.out.println("Node nodeCount:\t" + this.nodeCount);
+            System.out.println(
+                    "Node name:   \t" + this.name + "\n" +
+                    "Node ip:     \t" + this.ip + "\n" +
+                    "Node id:     \t" + this.id + "\n" +
+                    "Node ns ip:  \t" + this.NS_ip + "\n" +
+                    "Node ns port:\t" + this.NS_port + "\n" +
+                    "Node prev id:\t" + this.prevNodeId + "\n" +
+                    "Node prev ip:\t" + this.prevNodeIP + "\n" +
+                    "Node next id:\t" + this.nextNodeId + "\n" +
+                    "Node next ip:\t" + this.nextNodeIP + "\n" +
+                    "Node nodeCount:\t" + this.nodeCount + "\n" +
+                    "--------------------------------------------");
         }
     }
 
@@ -284,6 +286,7 @@ public class Node {
     public void validateNode(){
         boolean flag = false;
         try {
+            System.out.println("Validating node parameters...");
             String response = Unirest.get("/ns/nodes/{nodeId}").routeParam("nodeId", String.valueOf(this.id)).asString().getBody();
             JSONParser parser = new JSONParser();
             JSONObject json = (JSONObject) parser.parse(response);
@@ -301,6 +304,7 @@ public class Node {
         }else{
             System.out.println("Node " + this.id + " is OK");
         }
+        System.out.println("--------------------------------------------");
     }
 
     public static void main(String[] args) throws IOException, InterruptedException {
