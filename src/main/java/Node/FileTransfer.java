@@ -77,6 +77,7 @@ public class FileTransfer extends Thread {
                outputStream.write(buffer, 0, bytesRead);
            while((bytesRead = inputStream.read(buffer)) != -1){
            }
+           outputStream.flush();
            IOUtils.closeQuietly(inputStream);
            IOUtils.closeQuietly(outputStream);
            return true; //file created successfully
@@ -84,8 +85,6 @@ public class FileTransfer extends Thread {
        catch (Exception e){
            return false;
        }
-
-
     }
 
     public static boolean sendFile(String fileName, String host) {
