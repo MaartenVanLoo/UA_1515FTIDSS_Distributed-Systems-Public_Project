@@ -36,16 +36,17 @@ public class Client {
 
     //TCP debug method
     public void sendTCPMessage() throws IOException {
-        startTCPConnection("192.168.48.4", 8000); //misschien 8001?node3
+        startTCPConnection("192.168.48.4", 8001); //misschien 8001?node3
         String message = "Hello from Client to NODE3";
         System.out.printf("Sending message: %s\n", message);
         String response = sendMessage(message);
         System.out.printf("Response: %s\n", response);
         stopTCPConnection();
     }
-    public static void main(String[] args) throws UnknownHostException, SocketException {
+    public static void main(String[] args) throws IOException {
         //TCP
-
+        Client client = new Client();
+        client.sendTCPMessage();
         /*System.out.println("Client Started");
         System.out.println("Node0\t" + Hashing.hash("Node0"));
         System.out.println("Node1\t" + Hashing.hash("Node1"));
