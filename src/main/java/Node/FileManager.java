@@ -1,6 +1,7 @@
 package Node;
 
 import Utils.Hashing;
+import kong.unirest.Unirest;
 
 import java.io.File;
 import java.util.TreeMap;
@@ -30,8 +31,13 @@ public class FileManager extends Thread {
                 //System.out.println(file.getName());
                 int filehash = Hashing.hash(file.getName());
                 fileMapping.put(filehash,file.getName());
-                //send fileHash to NameServer
-
+                //send fileName to NameServer
+                try {
+                    String message = Unirest.get("/ns/files/{filename}").routeParam("filename", file.getName()).asString().getBody();
+                }
+                catch (Exception e) {
+                    System.out.println("Error: " + e.getMessage());
+                }
             }
         }
         catch (Exception e) {
