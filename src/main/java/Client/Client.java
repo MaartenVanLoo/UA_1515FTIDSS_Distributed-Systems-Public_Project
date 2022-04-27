@@ -43,9 +43,10 @@ public class Client {
         System.out.printf("Response: %s\n", response);
         stopTCPConnection();
     }
-    public static void main(String[] args) throws UnknownHostException, SocketException {
+    public static void main(String[] args) throws IOException {
         //TCP
-
+        Client client = new Client();
+        client.sendTCPMessage();
         /*System.out.println("Client Started");
         System.out.println("Node0\t" + Hashing.hash("Node0"));
         System.out.println("Node1\t" + Hashing.hash("Node1"));
