@@ -8,7 +8,7 @@ public class FileTransfer extends Thread {
     private ServerSocket serverSocket;
     private static final int LISTENING_PORT = 8001;
 
-    public static boolean sendFile(String fileName, String host, int port) {
+    public static boolean sendFile(String fileName, String host, int port){
         try {
             Socket socket = new Socket(host, port);
             OutputStream outputStream = socket.getOutputStream();
@@ -26,6 +26,9 @@ public class FileTransfer extends Thread {
             e.printStackTrace();
             return false;
         }
+    }
+    public static boolean sendFile(String fileName, String host) {
+        return sendFile(fileName, host, LISTENING_PORT);
     }
     public FileTransfer(int port) throws IOException {
         startListener(port);
