@@ -50,6 +50,9 @@ public class FileTransfer extends Thread {
         serverSocket.close();
     }
 
+    /**
+     * When a connection is accepted to receive a file for replication, then this class will further handle the reception of the file.
+     */
     private static class NodeHandler extends Thread {
         private final Socket clientSocket;
         private PrintWriter out;

@@ -5,6 +5,7 @@ import kong.unirest.Unirest;
 
 import java.io.*;
 import java.net.Socket;
+import java.nio.file.*;
 import java.util.TreeMap;
 
 public class FileManager extends Thread {
@@ -13,10 +14,13 @@ public class FileManager extends Thread {
     final String replicaFolder = "/replica";
     private final TreeMap<Integer,String> fileMapping = new TreeMap<>();
 
+    WatchService watchService = FileSystems.getDefault().newWatchService();
+    Path path = Paths.get(".\\local");
+
     private static final int SENDING_PORT = 8004;
 
 
-    public FileManager(Node node) {
+    public FileManager(Node node) throws IOException {
         super("FileManager");
         this.node = node;
         this.setDaemon(true);
@@ -88,6 +92,24 @@ public class FileManager extends Thread {
             //if (os != null) os.close();
             //if (replicateSocket != null) replicateSocket.close();
         //}
+    }
+
+    public void checkDirectory() throws IOException, InterruptedException {
+        path.register(
+                watchService,
+                StandardWatchEventKinds.ENTRY_CREATE,
+                StandardWatchEventKinds.ENTRY_DELETE,
+                StandardWatchEventKinds.ENTRY_MODIFY);
+
+        WatchKey key;
+        while ((key = watchService.take()) != null) {
+            for (WatchEvent<?> event : key.pollEvents()) {
+                System.out.println(
+                        "Event kind:" + event.kind()
+                                + ". File affected: " + event.context() + ".");
+            }
+            key.reset();
+        }
     }
 }
 
