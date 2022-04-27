@@ -55,7 +55,6 @@ import java.util.stream.Collectors;
 public class NameServerController {
     Logger logger = LoggerFactory.getLogger(NameServerController.class);
 
-
     static final int DATAGRAM_PORT = 8001;
     private NameServer nameServer;
     private JSONParser jsonParser = new JSONParser();
@@ -211,11 +210,11 @@ public class NameServerController {
 
     //<editor-fold desc="/ns/files">
     @ResponseStatus(HttpStatus.NOT_IMPLEMENTED) // 501
-    @GetMapping("/ns/files")
+    @GetMapping(value = "/ns/files", produces = "application/json")
     public void getFiles() {}
 
     @ResponseStatus(HttpStatus.OK) // 200
-    @GetMapping("/ns/files/{fileName}")
+    @GetMapping(value = "/ns/files/{fileName}")
     public String getFile(@PathVariable String fileName) {
         this.logger.info("Request for file: " + fileName);
         int hash = Hashing.hash(fileName);
