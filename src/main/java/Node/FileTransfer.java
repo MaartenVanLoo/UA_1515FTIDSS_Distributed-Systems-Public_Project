@@ -70,6 +70,7 @@ public class FileTransfer extends Thread {
        try{
            File file = new File(filename);
            InputStream inputStream = httpExchange.getRequestBody();
+           System.out.println("Read body");
            OutputStream outputStream = new FileOutputStream(file);
 
            byte[] buffer = new byte[1024*8];
@@ -77,6 +78,7 @@ public class FileTransfer extends Thread {
            while((bytesRead = inputStream.read(buffer)) != -1){
                outputStream.write(buffer, 0, bytesRead);
            }
+           System.out.print("File created!");
            outputStream.flush();
            IOUtils.closeQuietly(inputStream);
            IOUtils.closeQuietly(outputStream);
