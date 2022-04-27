@@ -34,8 +34,28 @@ public class NodeAPI {
                     outputStream.flush();
                     outputStream.close();
                 } else {
-                    exchange.sendResponseHeaders(400, -1);
+                    exchange.sendResponseHeaders(501, -1);
                 }
+            });
+            this.server.createContext("/file/exchange", (exchange) -> {
+                if ("POST".equals(exchange.getRequestMethod())) {
+
+                    String filename = exchange.getRequestURI().getPath().replace("/file/exchange", "");
+                    if (filename.startsWith("/")) filename = filename.substring(1);
+
+                    System.out.println("File exchange request for " + filename);
+                    boolean success = FileTransfer.handleFileExchange(filename, exchange);
+                    if (success){
+                        exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
+                        exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "POST");
+                        exchange.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type");
+                        exchange.sendResponseHeaders(201, -1); // Created
+                    }
+                    else{
+                        exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
+                    }
+                }
+
             });
         } catch (Exception e) {
             this.server = null;
@@ -46,6 +66,7 @@ public class NodeAPI {
 
     public void start() {
         if (this.server != null) {
+            this.server.setExecutor(Executors.newCachedThreadPool());
             this.server.start();
         }
     }
