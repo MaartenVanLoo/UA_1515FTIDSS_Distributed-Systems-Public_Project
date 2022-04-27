@@ -12,7 +12,9 @@ public class FileTransfer extends Thread {
         try {
             Socket socket = new Socket(host, port);
             OutputStream outputStream = socket.getOutputStream();
-            FileInputStream fileInputStream = new FileInputStream(new File(fileName));
+            File file = new File(fileName);
+            long fileSize = file.length();
+            FileInputStream fileInputStream = new FileInputStream();
             byte[] buffer = new byte[1024];
             int bytesRead;
             while ((bytesRead = fileInputStream.read(buffer)) != -1) {
