@@ -63,8 +63,8 @@ public class FileManager extends Thread {
 
     /**
      * Sends a given file to a given IP address.
-     * @param file
-     * @param ipAddr
+     * @param file the file to be sent
+     * @param ipAddr the IP address to send the file to
      * @throws IOException
      */
     public void startReplication(File file, String ipAddr) throws IOException {
@@ -86,6 +86,16 @@ public class FileManager extends Thread {
             //os.write(buffer, 0, buffer.length);
             //os.flush();
             //System.out.println("Request processed: " + time);
+        //catch (Exception e) {
+            //System.err.println(e.getMessage());
+        //}
+        //finally {
+            //if (os != null) os.close();
+            //if (bis != null) bis.close();
+            //if (fis != null) fis.close();
+            //if (replicateSocket != null) replicateSocket.close();
+        //}
+    //}
        // }
         //finally {
             //if (bis != null) bis.close();
