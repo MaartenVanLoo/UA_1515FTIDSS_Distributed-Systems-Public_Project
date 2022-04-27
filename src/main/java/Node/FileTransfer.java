@@ -66,7 +66,7 @@ public class FileTransfer extends Thread {
     }
 
     public boolean handleFileExchange(String filename,  HttpExchange httpExchange) {
-        
+        return true;
     }
 
     public static boolean sendFile(String fileName, String host) {
