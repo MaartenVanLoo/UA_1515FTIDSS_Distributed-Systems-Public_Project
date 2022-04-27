@@ -74,8 +74,8 @@ public class FileTransfer extends Thread {
 
            byte[] buffer = new byte[1024*8];
            int bytesRead;
-               outputStream.write(buffer, 0, bytesRead);
            while((bytesRead = inputStream.read(buffer)) != -1){
+               outputStream.write(buffer, 0, bytesRead);
            }
            outputStream.flush();
            IOUtils.closeQuietly(inputStream);
