@@ -70,9 +70,8 @@ public class FileTransfer extends Thread {
        try{
            File file = new File(filename);
            InputStream inputStream = httpExchange.getRequestBody();
-           System.out.println("Read body");
+           System.out.println("Read body" + httpExchange.getRequestBody().toString());
            OutputStream outputStream = new FileOutputStream(file);
-
            byte[] buffer = new byte[1024*8];
            int bytesRead;
            while((bytesRead = inputStream.read(buffer)) != -1){
