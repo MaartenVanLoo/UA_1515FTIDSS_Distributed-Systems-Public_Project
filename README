@@ -27,6 +27,7 @@
  //java -cp target/G1-ProjectY-1.0.jar Node.Node Node3
  //java -cp target/G1-ProjectY-1.0.jar Node.Node Node4
 
+// In stead we need to use these commands:
  mvn exec:java -Dexec.mainClass="Node.Node" -Dexec.args="Node0"
  mvn exec:java -Dexec.mainClass="Node.Node" -Dexec.args="Node1"
  mvn exec:java -Dexec.mainClass="Node.Node" -Dexec.args="Node2"

@@ -48,7 +48,6 @@ public class UnitTests {
         System.out.println(n3 + "=>" + n3.hashCode() +"->" + Hashing.hash(n3));
         System.out.println(n4 + "=>" + n4.hashCode() +"->" + Hashing.hash(n4));
         System.out.println(n5 + "=>" + n5.hashCode() +"->" + Hashing.hash(n5));
-
     }
 
     @Test
@@ -77,6 +76,7 @@ public class UnitTests {
 
         int hash = -1;
         String generatedString = "";
+        //make sure hash in between existing nodes
         while (hash<= 2000 || hash >=3000){
             byte[] array = new byte[7];
             new Random().nextBytes(array);
@@ -87,6 +87,7 @@ public class UnitTests {
         Assertions.assertEquals("192.168.2.2", ns.getFile(generatedString));
         Assertions.assertEquals(ns.getNameServer().getIpMapping().get(2000), ns.getFile(generatedString));
 
+        System.out.println(ns.getLocation(generatedString));
     }
     @Test
     public void sendFileNameLower() throws Exception{
@@ -108,13 +109,30 @@ public class UnitTests {
         Assertions.assertEquals("192.168.2.5", ns.getFile(generatedString));
         Assertions.assertEquals(ns.getNameServer().getIpMapping().get(5000), ns.getFile(generatedString));
     }
+  
     @Test
     public void sendFileNameRemove() throws Exception{
         ns.getNameServer().addNode(5, "192.168.5.5");
         //test5.sendFile();
         ns.getNameServer().deleteNode(5);
-
+      
+        ns.removeNode(1);
+        System.out.println("nodes: "+idMap.toString());
     }
+  
+    @Test
+    public void removeNode() throws Exception{
+        TreeMap<Integer,String> idMap = ns.getIdMap();
+        ns.addNode(1, "192.168.3.55");
+        System.out.println("nodes: "+idMap.toString());
+        ns.addNode(2, "192.168.3.55");
+        System.out.println("nodes: "+idMap.toString());
+
+        ns.removeNode(1);
+        System.out.println("nodes: "+idMap.toString());
+    }
+
+
     @Test
     public void askTwoPCs() throws Exception{
 

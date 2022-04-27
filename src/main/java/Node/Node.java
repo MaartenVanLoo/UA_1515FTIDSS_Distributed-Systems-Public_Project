@@ -341,6 +341,7 @@ public class Node {
         executorService.shutdownNow();
         node.shutdown();
     }
+
     public static void main(String[] args) throws IOException, InterruptedException {
         System.out.println("Starting Node");
         String name;
@@ -359,6 +360,4 @@ public class Node {
             Thread.sleep((long) (Math.random() * 10000)); // sleep for a value between 0-10 seconds
         }
     }
-
-
 }
