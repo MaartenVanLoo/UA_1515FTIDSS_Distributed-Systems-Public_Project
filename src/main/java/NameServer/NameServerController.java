@@ -105,7 +105,7 @@ public class NameServerController {
     @GetMapping("/ns/nodes")
     public String getAllNodes() {
         this.nameServer.getIpMapLock().readLock().lock();
-        String response = "{" + this.nameServer.getIpMapping().entrySet().stream().map(e -> "\"" + e.getKey()+"\":\""+e.getValue() + "\"").collect(Collectors.joining("\n")) + "}";
+        String response = "{" + this.nameServer.getIpMapping().entrySet().stream().map(e -> "\"" + e.getKey()+"\":\""+e.getValue() + "\"").collect(Collectors.joining(",")) + "}";
         this.nameServer.getIpMapLock().readLock().unlock();
         return response;
     }
