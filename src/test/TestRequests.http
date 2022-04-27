@@ -202,5 +202,6 @@ GET http://localhost:8081/ns/nodes/{{nodeID4}}
     });
 %}
 
-
+###
+DELETE http://localhost:8081/ns/nodes/1
 

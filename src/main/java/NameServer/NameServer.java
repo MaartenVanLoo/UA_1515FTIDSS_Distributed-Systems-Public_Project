@@ -242,8 +242,8 @@ public class NameServer {
         next.put("ip", getNode(getNextNode(id)));
         json.put("next", next);
         JSONObject prev = new JSONObject();
-        next.put("id", getPrevNode(id));
-        next.put("ip", getNode(getPrevNode(id)));
+        prev.put("id", getPrevNode(id));
+        prev.put("ip", getNode(getPrevNode(id)));
         json.put("prev", prev);
         ipMapLock.readLock().unlock();
         return json.toString();

@@ -1,6 +1,7 @@
 package Node;
 
 import Utils.Hashing;
+import kong.unirest.HttpResponse;
 import kong.unirest.Unirest;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -109,11 +110,6 @@ public class N2NListener extends Thread {
      * @throws IOException
      */
     private void discoveryHandler(DatagramPacket receivedPacket,JSONObject jsonObject) throws IOException {
-        //TODO: still error when the lowest node gets a new "highest" node neighbor. The lowest node doesn't detect that the new node is actually a new neighbor ands sends a "not a neighbor" message.
-        // Easy solution => ask nameserver what my neighbors are
-        // Hard solution => work out the logic by hand....?
-
-
         //discovery message
         String name = (String) jsonObject.get("name");
         if (name.equals(this.node.getName())) return; //no answer!
@@ -287,7 +283,11 @@ public class N2NListener extends Thread {
         }
         //some config is wrong, request correct config from nameserver
         try {
-            String response = Unirest.get("/ns/nodes/{nodeId}").routeParam("nodeId", String.valueOf(this.node.getId())).asString().getBody();
+            HttpResponse<String> httpResponse = Unirest.get("/ns/nodes/{nodeId}").routeParam("nodeId", String.valueOf(this.node.getId())).asString();
+            if (httpResponse.getStatus() >= 400){
+                System.exit(-1); //stop everything!
+            }
+            String response = httpResponse.getBody();
             System.out.println(response);
             JSONObject json = (JSONObject) this.node.getParser().parse(response);
             JSONObject prevNode = (JSONObject) json.get("prev");
