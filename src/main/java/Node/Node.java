@@ -79,10 +79,11 @@ public class Node {
         socket.setSoTimeout(1000);
         DatagramPacket discoveryPacket = new DatagramPacket(message.getBytes(), message.length(),
                 broadcastIp, 8001);
-        byte[] response = new byte[256];
-        DatagramPacket responsePacket = new DatagramPacket(response, response.length);
 
         while (!received) {
+            //Refresh buffer
+            byte[] response = new byte[256];
+            DatagramPacket responsePacket = new DatagramPacket(response, response.length);
             // Discovery request command
             if (resend) socket.send(discoveryPacket);
             System.out.println("Discovery package sent!" + discoveryPacket.getAddress() + ":" + discoveryPacket.getPort());
