@@ -8,8 +8,28 @@ public class FileTransfer extends Thread {
     private ServerSocket serverSocket;
     private static final int LISTENING_PORT = 8001;
 
+    public static boolean sendFile(String fileName, String host, int port) {
+        try {
+            Socket socket = new Socket(host, port);
+            OutputStream outputStream = socket.getOutputStream();
+            FileInputStream fileInputStream = new FileInputStream(new File(fileName));
+            byte[] buffer = new byte[1024];
+            int bytesRead;
+            while ((bytesRead = fileInputStream.read(buffer)) != -1) {
+                outputStream.write(buffer, 0, bytesRead);
+            }
+            outputStream.close();
+            fileInputStream.close();
+            socket.close();
+            return true;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
     public FileTransfer(int port) throws IOException {
-        this.start();
+        startListener(port);
+        this.start(); //start the thread;
     }
 
     public void startListener(int port) throws IOException {
