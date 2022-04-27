@@ -38,7 +38,7 @@ public class FileTransfer extends Thread {
         serverSocket = new ServerSocket(port);
         while (true) {
             try {
-                new Node.FileTransfer.NodeHandler(serverSocket.accept()).start();
+                new NodeHandler(serverSocket.accept()).start();
             } catch (IOException exception) {
                 exception.printStackTrace();
                 break;
