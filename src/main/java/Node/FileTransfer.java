@@ -30,8 +30,7 @@ public class FileTransfer extends Thread {
     public static boolean sendFile(String fileName, String host) {
         return sendFile(fileName, host, LISTENING_PORT);
     }
-    public FileTransfer(int port) throws IOException {
-        startListener(port);
+    public FileTransfer() {
         this.start(); //start the thread;
     }
 
