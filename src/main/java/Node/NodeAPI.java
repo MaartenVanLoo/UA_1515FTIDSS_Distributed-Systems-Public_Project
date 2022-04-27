@@ -41,7 +41,7 @@ public class NodeAPI {
                 if ("POST".equals(exchange.getRequestMethod())) {
                     String filename = exchange.getRequestURI().getQuery();
                     System.out.println("File exchange request for " + filename);
-                    // success = FileTransfer.handleFileExchange(filename, exchange);
+                    boolean success = FileTransfer.handleFileExchange(filename, exchange);
                     if (true){
                         exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
                         exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "POST");
