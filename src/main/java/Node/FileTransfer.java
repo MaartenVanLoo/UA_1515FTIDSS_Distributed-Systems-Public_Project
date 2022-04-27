@@ -14,7 +14,7 @@ public class FileTransfer extends Thread {
             OutputStream outputStream = socket.getOutputStream();
             File file = new File(fileName);
             long fileSize = file.length();
-            FileInputStream fileInputStream = new FileInputStream();
+            FileInputStream fileInputStream = new FileInputStream(file);
             byte[] buffer = new byte[1024];
             int bytesRead;
             while ((bytesRead = fileInputStream.read(buffer)) != -1) {
