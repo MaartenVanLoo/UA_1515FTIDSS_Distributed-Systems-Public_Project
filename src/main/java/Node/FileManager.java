@@ -5,6 +5,8 @@ import kong.unirest.Unirest;
 
 import java.io.*;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.Objects;
 import java.nio.file.*;
 import java.util.TreeMap;
 
@@ -12,7 +14,7 @@ public class FileManager extends Thread {
     private Node node;
     final String localFolder= "/local";
     final String replicaFolder = "/replica";
-    private final TreeMap<Integer,String> fileMapping = new TreeMap<>();
+    private ArrayList<String> fileList = new ArrayList<>();
 
     WatchService watchService = FileSystems.getDefault().newWatchService();
     Path path = Paths.get(".\\local");
@@ -40,14 +42,17 @@ public class FileManager extends Thread {
             for (File file : files) {
                 //System.out.println(file.getName());
                 int filehash = Hashing.hash(file.getName());
-                fileMapping.put(filehash,file.getName());
+                fileList.add(file.getName());
                 //send fileName to NameServer
                 try {
                     String replicateIPAddr = Unirest.get("/ns/files/{filename}")
                             .routeParam("filename", file.getName()).asString().getBody();
-                    // if the IP addr the NS sent back is the same as the one of this node, it should replicate to itself
-                    //if (replicateIPAddr == node.getIP()) return;
-                    System.out.println("Replicating " + file.getName() + " to " + replicateIPAddr);
+                    // if the IP addr the NS sent back is the same as the one of this node, get the prev node IP address
+                    // check example 3 doc3.pdf
+                    if (Objects.equals(replicateIPAddr, node.getIP())) {
+                        replicateIPAddr = this.node.getPrevNodeIP();
+                    }
+                    System.out.println("Replicating " + file.getName() + " to " + replicateIPAddr); //vieze ai zeg
 
                     //startReplication(file, replicateIPAddr);
                 }
@@ -61,10 +66,44 @@ public class FileManager extends Thread {
             }
     }
 
+    public void updateFileCheck(String fileName) {
+        try {
+            File dir = new File(localFolder);
+            File[] files = dir.listFiles();
+            if (files == null || files.length == 0) {
+                System.out.println("No files in local folder");
+                return;
+            }
+            // Get the names of the files by using the .getName() method
+            // check if file is not in the list
+            for (File file : files) {
+                if (!fileList.contains(file.getName())) {
+                    int filehash = Hashing.hash(file.getName());
+                    fileList.add(file.getName());
+                    //send fileName to NameServer
+                    try {
+                        String replicateIPAddr = Unirest.get("/ns/files/{filename}")
+                                .routeParam("filename", file.getName()).asString().getBody();
+                        // if the IP addr the NS sent back is the same as the one of this node, get the prev node IP address
+                        // check example 3 doc3.pdf
+                        if (Objects.equals(replicateIPAddr, node.getIP())) {
+                            replicateIPAddr = this.node.getPrevNodeIP();
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
+                }
+            }
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+
+        }
+    }
     /**
      * Sends a given file to a given IP address.
-     * @param file
-     * @param ipAddr
+     * @param file the file to be sent
+     * @param ipAddr the IP address to send the file to
      * @throws IOException
      */
     public void startReplication(File file, String ipAddr) throws IOException {
@@ -86,6 +125,16 @@ public class FileManager extends Thread {
             //os.write(buffer, 0, buffer.length);
             //os.flush();
             //System.out.println("Request processed: " + time);
+        //catch (Exception e) {
+            //System.err.println(e.getMessage());
+        //}
+        //finally {
+            //if (os != null) os.close();
+            //if (bis != null) bis.close();
+            //if (fis != null) fis.close();
+            //if (replicateSocket != null) replicateSocket.close();
+        //}
+    //}
        // }
         //finally {
             //if (bis != null) bis.close();

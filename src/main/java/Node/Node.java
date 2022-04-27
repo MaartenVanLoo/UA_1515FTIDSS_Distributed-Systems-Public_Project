@@ -36,9 +36,10 @@ public class Node {
     private final JSONParser parser = new JSONParser();
     private final N2NListener n2NListener;
     private final NodeAPI nodeAPI;
+    private final FileTransfer fileTransfer;
+
     private DatagramSocket listeningSocket;
 
-    private FileTransfer fileTransfer;
 
     private boolean setUpComplete = false;
     //</editor-fold>
@@ -78,10 +79,11 @@ public class Node {
         socket.setSoTimeout(1000);
         DatagramPacket discoveryPacket = new DatagramPacket(message.getBytes(), message.length(),
                 broadcastIp, 8001);
-        byte[] response = new byte[256];
-        DatagramPacket responsePacket = new DatagramPacket(response, response.length);
 
         while (!received) {
+            //Refresh buffer
+            byte[] response = new byte[256];
+            DatagramPacket responsePacket = new DatagramPacket(response, response.length);
             // Discovery request command
             if (resend) socket.send(discoveryPacket);
             System.out.println("Discovery package sent!" + discoveryPacket.getAddress() + ":" + discoveryPacket.getPort());
@@ -334,6 +336,7 @@ public class Node {
      */
     public static void launchNode(String name) throws IOException, InterruptedException{
         Node node = new Node(name);
+        //FileManager fm = new FileManager(node);
         try {
             node.discoverNameServer();
         } catch (AccessDeniedException e) {
