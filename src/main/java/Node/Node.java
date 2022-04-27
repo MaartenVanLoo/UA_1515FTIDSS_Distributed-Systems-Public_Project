@@ -312,6 +312,10 @@ public class Node {
         return this.parser;
     }
 
+    public void startupFilesCheck(){
+
+    }
+
 
     public static void launchNode(String name) throws IOException, InterruptedException{
         Node node = new Node(name);
