@@ -36,9 +36,10 @@ public class Node {
     private final JSONParser parser = new JSONParser();
     private final N2NListener n2NListener;
     private final NodeAPI nodeAPI;
+    private final FileTransfer fileTransfer;
+
     private DatagramSocket listeningSocket;
 
-    private FileTransfer fileTransfer;
 
     private boolean setUpComplete = false;
     //</editor-fold>

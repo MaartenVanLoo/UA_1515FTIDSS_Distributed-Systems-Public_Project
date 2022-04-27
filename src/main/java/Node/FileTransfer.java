@@ -60,11 +60,6 @@ public class FileTransfer extends Thread {
         }
 
         @Override
-        public synchronized void start() {
-            super.start();
-        }
-
-        @Override
         public void run() {
             try {
                 out = new PrintWriter(clientSocket.getOutputStream(), true);
