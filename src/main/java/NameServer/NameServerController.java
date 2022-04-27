@@ -211,6 +211,10 @@ public class NameServerController {
 
     @ResponseStatus(HttpStatus.OK) // 200
     @GetMapping("/ns/files/{fileName}")
+    /**
+     * Get the location of a certain file. The hash of the file is then calculated and based on
+     * the hash the node on which the file should be stored is returned.
+     */
     public String getFile(@PathVariable String fileName) {
         this.logger.info("Request for file: " + fileName);
         int hash = Hashing.hash(fileName);

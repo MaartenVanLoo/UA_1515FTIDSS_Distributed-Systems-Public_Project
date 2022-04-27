@@ -10,8 +10,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
 public class NodeAPI {
+
     private HttpServer server;
     private Node node;
+
     public NodeAPI(Node node) {
         this.node = node;
         try {
@@ -21,7 +23,7 @@ public class NodeAPI {
                 exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
                 exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "GET");
                 exchange.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type");
-                if (!this.node.isSetUp()){
+                if (!this.node.isSetUp()) {
                     exchange.sendResponseHeaders(400, -1);
                 }
                 if ("GET".equals(exchange.getRequestMethod())) {
@@ -31,7 +33,7 @@ public class NodeAPI {
                     outputStream.write(response.getBytes());
                     outputStream.flush();
                     outputStream.close();
-                }else{
+                } else {
                     exchange.sendResponseHeaders(400, -1);
                 }
             });
@@ -41,23 +43,25 @@ public class NodeAPI {
         }
 
     }
-    public void start(){
-        if(this.server != null){
+
+    public void start() {
+        if (this.server != null) {
             this.server.start();
         }
     }
 
-    public void stop(){
-        if(this.server != null){
+    public void stop() {
+        if (this.server != null) {
             this.server.stop(0);
         }
     }
+
     private String getNodeInfo() {
         JSONObject response = new JSONObject();
         JSONObject node = new JSONObject();
         node.put("name", this.node.getName());
         node.put("ip", this.node.getIP());
-        node.put("id",this.node.getId());
+        node.put("id", this.node.getId());
 
         JSONObject next = new JSONObject();
         next.put("id", this.node.getNextNodeId());

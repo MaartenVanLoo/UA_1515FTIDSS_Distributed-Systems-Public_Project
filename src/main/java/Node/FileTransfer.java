@@ -6,18 +6,18 @@ import java.net.Socket;
 
 public class FileTransfer extends Thread {
     private ServerSocket serverSocket;
+    private static final int LISTENING_PORT = 8001;
 
     public FileTransfer(int port) throws IOException {
-        this.run();
+        this.start();
     }
 
     public void startListener(int port) throws IOException {
         serverSocket = new ServerSocket(port);
-        while (true){
+        while (true) {
             try {
                 new Node.FileTransfer.NodeHandler(serverSocket.accept()).start();
-            }
-            catch (IOException exception){
+            } catch (IOException exception) {
                 exception.printStackTrace();
                 break;
             }
@@ -28,7 +28,7 @@ public class FileTransfer extends Thread {
         serverSocket.close();
     }
 
-    private static class NodeHandler extends Thread{
+    private static class NodeHandler extends Thread {
         private final Socket clientSocket;
         private PrintWriter out;
         private BufferedReader in;
@@ -56,7 +56,7 @@ public class FileTransfer extends Thread {
                         break;
                     }
                     out.println(inputLine); //echo input back to client
-                    System.out.printf("Recieved: %s\n",inputLine);
+                    System.out.printf("Recieved: %s\n", inputLine);
                 }
                 in.close();
                 out.close();
@@ -66,12 +66,13 @@ public class FileTransfer extends Thread {
             }
         }
     }
+
     @Override
     public void run() {
         System.out.println("Starting server");
         System.out.println("Server host ip:");
         try {
-            this.startListener(8001);
+            this.startListener(LISTENING_PORT);
         } catch (IOException e) {
             e.printStackTrace();
         }

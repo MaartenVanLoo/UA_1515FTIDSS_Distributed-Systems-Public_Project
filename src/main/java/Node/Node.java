@@ -324,6 +324,14 @@ public class Node {
     }
 
 
+    /**
+     * After the name of the node has been set and the network interfaces are printed to the console, this method is called.
+     * In this method, a node object is created and the discovery is started. After the nameserver has been discovered, the status
+     * of the node is printed and refreshed every 5 seconds. The parameters of the node are also validated by the nameserver every 5 seconds.
+     * @param name
+     * @throws IOException
+     * @throws InterruptedException
+     */
     public static void launchNode(String name) throws IOException, InterruptedException{
         Node node = new Node(name);
         try {
@@ -351,6 +359,7 @@ public class Node {
         executorService.shutdownNow();
         node.shutdown();
     }
+
     public static void main(String[] args) throws IOException, InterruptedException {
         System.out.println("Starting Node");
         String name;
