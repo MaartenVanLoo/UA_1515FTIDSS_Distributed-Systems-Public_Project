@@ -17,7 +17,7 @@ public class FileManager extends Thread {
     private ArrayList<String> fileList = new ArrayList<>();
 
     WatchService watchService = FileSystems.getDefault().newWatchService();
-    Path path = Paths.get(".\\local");
+    Path path = Paths.get("./local");
 
     private static final int SENDING_PORT = 8004;
 
