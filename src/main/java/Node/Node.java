@@ -61,7 +61,7 @@ public class Node {
         this.n2NListener.start();
         this.nodeAPI = new NodeAPI(this);
         this.nodeAPI.start();
-        this.fileTransfer = new FileTransfer(LISTENING_PORT);
+        this.fileTransfer = new FileTransfer();
     }
 
 
