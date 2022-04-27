@@ -5,13 +5,14 @@ import kong.unirest.Unirest;
 
 import java.io.*;
 import java.net.Socket;
+import java.util.Objects;
 import java.util.TreeMap;
 
 public class FileManager extends Thread {
     private Node node;
     final String localFolder= "/local";
     final String replicaFolder = "/replica";
-    private final TreeMap<Integer,String> fileMapping = new TreeMap<>();
+    //private final TreeMap<Integer,String> fileMapping = new TreeMap<>();
 
     private static final int SENDING_PORT = 8004;
 
@@ -36,14 +37,17 @@ public class FileManager extends Thread {
             for (File file : files) {
                 //System.out.println(file.getName());
                 int filehash = Hashing.hash(file.getName());
-                fileMapping.put(filehash,file.getName());
+                //fileMapping.put(filehash,file.getName());
                 //send fileName to NameServer
                 try {
                     String replicateIPAddr = Unirest.get("/ns/files/{filename}")
                             .routeParam("filename", file.getName()).asString().getBody();
-                    // if the IP addr the NS sent back is the same as the one of this node, it should replicate to itself
-                    //if (replicateIPAddr == node.getIP()) return;
-                    System.out.println("Replicating " + file.getName() + " to " + replicateIPAddr);
+                    // if the IP addr the NS sent back is the same as the one of this node, get the prev node IP address
+                    if (Objects.equals(replicateIPAddr, node.getIP())) {
+                        replicateIPAddr = this.node.getPrevNodeIP();
+
+                    }
+                    System.out.println("Replicating " + file.getName() + " to " + replicateIPAddr); //vieze ai zeg
 
                     //startReplication(file, replicateIPAddr);
                 }
