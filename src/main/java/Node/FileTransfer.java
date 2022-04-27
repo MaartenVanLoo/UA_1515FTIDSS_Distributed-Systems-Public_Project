@@ -1,5 +1,8 @@
 package Node;
 
+import com.sun.net.httpserver.HttpExchange;
+import org.json.simple.JSONObject;
+
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -12,23 +15,60 @@ public class FileTransfer extends Thread {
         try {
             Socket socket = new Socket(host, port);
             OutputStream outputStream = socket.getOutputStream();
+            ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
+            InputStream inputStream = socket.getInputStream();
             File file = new File(fileName);
             long fileSize = file.length();
             FileInputStream fileInputStream = new FileInputStream(file);
+            BufferedInputStream bufferedInputStream = new BufferedInputStream(fileInputStream);
             byte[] buffer = new byte[1024];
-            int bytesRead;
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("fileName", fileName);
+            jsonObject.put("fileSize", fileSize);
+            objectOutputStream.writeObject(jsonObject);
+            outputStream.flush();
+            System.out.println("Sending: " + jsonObject.get(fileName)+" "+jsonObject.get("fileSize"));
+            //receive acknowledgement of receiving file data
+            while (bufferedInputStream.read(buffer) > 0) {
+                outputStream.write(buffer);
+            }
+            //jsonObject.("logSize",....);
+            /*int bytesRead;
             while ((bytesRead = fileInputStream.read(buffer)) != -1) {
                 outputStream.write(buffer, 0, bytesRead);
+            }*/
+            //Now we send the file
+            long current = 0;
+            long startTime = System.currentTimeMillis();
+            while(current != fileSize){
+                int size = 10000;
+                if(fileSize - current >= size){
+                    current += size;
+                }else{
+                    size = (int)(fileSize - current);
+                    current = fileSize;
+                }
+                buffer = new byte[size];
+                bufferedInputStream.read(buffer, 0, size);
+                outputStream.write(buffer);
+                System.out.print("Sending file... " + (current * 100) / fileSize + "% complete!\r");
             }
+            outputStream.flush();
             outputStream.close();
             fileInputStream.close();
             socket.close();
+            System.out.println("File sent successfully!");
             return true;
         } catch (IOException e) {
             e.printStackTrace();
             return false;
         }
     }
+
+    public boolean handleFileExchange(String filename,  HttpExchange httpExchange) {
+        
+    }
+
     public static boolean sendFile(String fileName, String host) {
         return sendFile(fileName, host, LISTENING_PORT);
     }
