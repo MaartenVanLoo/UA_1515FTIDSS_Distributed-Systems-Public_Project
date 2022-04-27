@@ -256,11 +256,10 @@ public class NameServer {
      */
     public String nodeToString(int id){
         ipMapLock.readLock().lock();
-        JSONObject json = new JSONObject();
-        json.put("id", id);
-        json.put("ip", getNode(id));
+        String json = "\"id\": " + id + ", " +
+                "\"ip\": \"" + getNode(id) + "\"";
         ipMapLock.readLock().unlock();
-        return json.toString();
+        return json;
     }
     //</editor-fold>
 
