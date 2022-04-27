@@ -336,6 +336,7 @@ public class Node {
      */
     public static void launchNode(String name) throws IOException, InterruptedException{
         Node node = new Node(name);
+        FileManager fm = new FileManager(node);
         try {
             node.discoverNameServer();
         } catch (AccessDeniedException e) {
