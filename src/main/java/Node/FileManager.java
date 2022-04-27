@@ -32,7 +32,10 @@ public class FileManager extends Thread {
 
     public void startup() {
         try {
-            File dir = new File(localFolder);
+            String launchDirectory = System.getProperty("user.dir");
+            System.out.println("Current directory: " + launchDirectory);
+            File dir = new File(launchDirectory+localFolder);
+            System.out.println("Directory: " + dir.getCanonicalPath());
             File[] files = dir.listFiles();
             if (files == null || files.length == 0) {
                 System.out.println("No files in local folder");
