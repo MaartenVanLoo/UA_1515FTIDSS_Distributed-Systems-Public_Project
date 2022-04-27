@@ -203,4 +203,5 @@ GET http://localhost:8081/ns/nodes/{{nodeID4}}
 %}
 
 
-
+###
+POST http://localhost:8083/file/exchange/test.txt

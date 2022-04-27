@@ -39,7 +39,7 @@ public class NodeAPI {
             });
             this.server.createContext("/file/exchange", (exchange) -> {
                 if ("POST".equals(exchange.getRequestMethod())) {
-                    String filename = exchange.getRequestURI().getQuery();
+                    String filename = exchange.getRequestURI().getPath();
                     System.out.println("File exchange request for " + filename);
                     boolean success = FileTransfer.handleFileExchange(filename, exchange);
                     if (true){
