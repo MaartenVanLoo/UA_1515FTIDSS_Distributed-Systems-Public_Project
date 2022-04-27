@@ -1,6 +1,7 @@
 package Node;
 
 import com.sun.net.httpserver.HttpExchange;
+import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.json.simple.JSONObject;
 
 import java.io.*;
@@ -64,13 +65,27 @@ public class FileTransfer extends Thread {
             return false;
         }
     }
-
-<<<<<<< HEAD
-    public boolean handleFileExchange(String filename,  HttpExchange httpExchange) {
-=======
+    //creates file with name filename and writes content of httpExchange to it
     public static boolean handleFileExchange(String filename,  HttpExchange httpExchange) {
->>>>>>> Replication
-        return true;
+       try{
+           File file = new File(filename);
+           InputStream inputStream = httpExchange.getRequestBody();
+           OutputStream outputStream = new FileOutputStream(file);
+
+           byte[] buffer = new byte[1024*8];
+           int bytesRead;
+               outputStream.write(buffer, 0, bytesRead);
+           while((bytesRead = inputStream.read(buffer)) != -1){
+           }
+           IOUtils.closeQuietly(inputStream);
+           IOUtils.closeQuietly(outputStream);
+           return true; //file created successfully
+       }
+       catch (Exception e){
+           return false;
+       }
+
+
     }
 
     public static boolean sendFile(String fileName, String host) {

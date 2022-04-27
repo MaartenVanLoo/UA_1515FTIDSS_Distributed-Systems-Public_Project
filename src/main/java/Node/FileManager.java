@@ -163,6 +163,17 @@ public class FileManager extends Thread {
             key.reset();
         }
     }
+
+    @Override
+    public void run() {
+        try {
+            checkDirectory();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
 }
 
 

@@ -39,10 +39,13 @@ public class NodeAPI {
             });
             this.server.createContext("/file/exchange", (exchange) -> {
                 if ("POST".equals(exchange.getRequestMethod())) {
-                    String filename = exchange.getRequestURI().getQuery();
+
+                    String filename = exchange.getRequestURI().getPath().replace("/file/exchange", "");
+                    if (filename.startsWith("/")) filename = filename.substring(1);
+
                     System.out.println("File exchange request for " + filename);
                     boolean success = FileTransfer.handleFileExchange(filename, exchange);
-                    if (true){
+                    if (success){
                         exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
                         exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "POST");
                         exchange.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type");
