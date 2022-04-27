@@ -225,6 +225,11 @@ async function updateNodes(){
         .then(() =>{newDataAvailable = true})
 }
 
+function nodeOnline(id){
+    if (id == undefined || id == null) return false;
+    if (nodeData[id] === undefined || nodeData[id] == null) return false;
+    return nodeLastPing[id]  + Math.max(parseInt(document.getElementById("nsRefreshRate").value)*2,10000) > Date.now()
+}
 
 //ssh tunnel
 function loadSSHTunnelMap(){

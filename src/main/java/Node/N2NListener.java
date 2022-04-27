@@ -288,6 +288,7 @@ public class N2NListener extends Thread {
         //some config is wrong, request correct config from nameserver
         try {
             String response = Unirest.get("/ns/nodes/{nodeId}").routeParam("nodeId", String.valueOf(this.node.getId())).asString().getBody();
+            System.out.println(response);
             JSONObject json = (JSONObject) this.node.getParser().parse(response);
             JSONObject prevNode = (JSONObject) json.get("prev");
             JSONObject nextNode = (JSONObject) json.get("next");
