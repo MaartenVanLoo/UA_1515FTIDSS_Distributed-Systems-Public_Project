@@ -18,14 +18,19 @@ import java.util.stream.Collectors;
  * All methods are thread-safe.
  */
 public class NameServer {
+    // <editor-fold desc="params">
     Logger logger = LoggerFactory.getLogger(NameServer.class);
 
     static final int DATAGRAM_PORT = 8001;
 
-    private final String mappingFile = "nameServerMap.json";
-    private final TreeMap<Integer,String> ipMapping = new TreeMap<>(); //id =>ip;//MOET PRIVATE!!!
-    private ReadWriteLock ipMapLock = new ReentrantReadWriteLock();
+    private final String mappingFile = "nameServerMap.json";    // default file where the info of the nodes is stored
+    private final TreeMap<Integer,String> ipMapping = new TreeMap<>();  // id => ip mapping of nodes; HAS TO BE PRIVATE!!!
+    private ReadWriteLock ipMapLock = new ReentrantReadWriteLock();     // read/write lock for locking resources while reading of writing them
+    // </editor-fold>
 
+    /**
+     * Constructor of the NameServer. Loads the info of the nodes stored in the mappingFile.
+     */
     public NameServer() {
         loadMapping();
     }
@@ -121,7 +126,7 @@ public class NameServer {
     }
 
     /**
-     * Set the ip address of a node with the given id.
+     * Set the ip address of a node with the given id (and add the node to the TreeMap if it isn't in there yet).
      * If the node is already registered nothing will change.
      * @param id Node id.
      * @param ip ip address of the node.
@@ -227,13 +232,21 @@ public class NameServer {
      */
     public String nodeToJson(int id){
         ipMapLock.readLock().lock();
-        String json = "{" +
-                "\"node\":{" + nodeToString(id) + "}," +
-                "\"next\":{" + nodeToString(getNextNode(id)) + "}," +
-                "\"prev\":{" + nodeToString(getPrevNode(id)) + "}" +
-                "}";
+        JSONObject json = new JSONObject();
+        JSONObject node  = new JSONObject();
+        node.put("id", id);
+        node.put("ip", getNode(id));
+        json.put("node", node);
+        JSONObject next = new JSONObject();
+        next.put("id", getNextNode(id));
+        next.put("ip", getNode(getNextNode(id)));
+        json.put("next", next);
+        JSONObject prev = new JSONObject();
+        next.put("id", getPrevNode(id));
+        next.put("ip", getNode(getPrevNode(id)));
+        json.put("prev", prev);
         ipMapLock.readLock().unlock();
-        return json;
+        return json.toString();
     }
 
     /**
@@ -243,10 +256,11 @@ public class NameServer {
      */
     public String nodeToString(int id){
         ipMapLock.readLock().lock();
-        String json = "\"id\": " + id + ", " +
-                      "\"ip\": \"" + getNode(id) + "\"";
+        JSONObject json = new JSONObject();
+        json.put("id", id);
+        json.put("ip", getNode(id));
         ipMapLock.readLock().unlock();
-        return json;
+        return json.toString();
     }
     //</editor-fold>
 

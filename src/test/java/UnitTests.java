@@ -1,5 +1,8 @@
 import NameServer.NameServerController;
 import Utils.Hashing;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.junit.jupiter.api.*;
 
 import java.io.IOException;
@@ -114,6 +117,38 @@ public class UnitTests {
     }
     @Test
     public void askTwoPCs() throws Exception{
+
+    }
+
+    @Test
+    public void testJSon() throws JSONException {
+        ns.getNameServer().addNode(1000, "192.168.2.1");
+        ns.getNameServer().addNode(2000, "192.168.2.2");
+        ns.getNameServer().addNode(3000, "192.168.2.3");
+        ns.getNameServer().addNode(4000, "192.168.2.4");
+        ns.getNameServer().addNode(5000, "192.168.2.5");
+
+        JSONObject json = new JSONObject();
+        JSONObject node  = new JSONObject();
+        node.put("id", "123");
+        node.put("ip", "192.168");
+        json.put("node", node);
+        JSONObject next = new JSONObject();
+        next.put("id", "456");
+        next.put("ip", "192.169");
+        json.put("next", next);
+        JSONObject prev = new JSONObject();
+        prev.put("id", "098");
+        prev.put("ip", "192.167");
+        json.put("prev", prev);
+
+        System.out.println(json.toString());
+        // Output: {"next":{"ip":"192.169","id":"456"},"node":{"ip":"192.168","id":"123"},"prev":{"ip":"192.167","id":"098"}}
+
+        /*JSONArray mapping = new JSONArray(ns.getNameServer().getIpMapping());
+        System.out.println(mapping.toString());
+        */
+        System.out.println(ns.getNameServerStatus());
 
     }
 

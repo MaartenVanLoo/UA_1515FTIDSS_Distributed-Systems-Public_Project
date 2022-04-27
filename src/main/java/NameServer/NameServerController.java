@@ -80,8 +80,22 @@ public class NameServerController {
 
     @ResponseStatus(HttpStatus.OK) //200
     @GetMapping(value = "/ns", produces = "application/json")
+    /**
+     * Returns the status of the nameserver as a json string.
+     * In the json string is: if the NS is running; if Discovery is enabled; amount of nodes; mapping of the nodes.
+     */
     public String getNameServerStatus() {
         this.nameServer.getIpMapLock().readLock().lock();
+        JSONObject json = new JSONObject();
+        json.put("Status", "running");
+        JSONObject utils = new JSONObject();
+        utils.put("Discovery", (this.socket == null?"disabled":"enabled"));
+        json.put("Utilities", utils);
+        json.put("Nodes", this.nameServer.getIpMapping().size());
+        String mapping = "["+this.nameServer.getIpMapping().keySet().stream().map(s -> "{" + this.nameServer.nodeToString(s) + "}").collect(Collectors.joining(","))+ "]";
+        json.put("Mapping", mapping);
+
+        /*
         String response =  "{\"Status\": \"running\","+
                 "\"Utilities\":{" +
                     "\"Discovery\":\"" + (this.socket == null?"disabled":"enabled")+"\"" +
@@ -90,8 +104,9 @@ public class NameServerController {
                 "\"Mapping\":[" +
                 this.nameServer.getIpMapping().keySet().stream().map(s -> "{" + this.nameServer.nodeToString(s) + "}").collect(Collectors.joining(","))+
                 "]}";
+        */
         this.nameServer.getIpMapLock().readLock().unlock();
-        return response;
+        return json.toString();
     }
 
 
