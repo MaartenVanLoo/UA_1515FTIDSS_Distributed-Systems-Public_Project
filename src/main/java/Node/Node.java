@@ -8,7 +8,8 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-import java.io.IOException;
+import java.io.*;
+
 import java.net.*;
 import java.nio.file.AccessDeniedException;
 import java.util.Objects;
@@ -31,15 +32,18 @@ public class Node {
     private long nextNodeId;    // id of the next node in the network
     private String nextNodeIP;  // ip addr of the next node in the network
 
+
     private final JSONParser parser = new JSONParser();
     private final N2NListener n2NListener;
     private final NodeAPI nodeAPI;
     private DatagramSocket listeningSocket;
 
+    private FileTransfer fileTransfer;
+
     private boolean setUpComplete = false;
     //</editor-fold>
 
-    public Node(String name) {
+    public Node(String name) throws IOException {
         // turn logger off so it doesn't clutter the console
         Logger root = (Logger) org.slf4j.LoggerFactory.getLogger("org.apache.http");
         root.setLevel(Level.OFF);
@@ -57,8 +61,11 @@ public class Node {
         this.n2NListener.start();
         this.nodeAPI = new NodeAPI(this);
         this.nodeAPI.start();
+        this.fileTransfer = new FileTransfer(LISTENING_PORT);
     }
-    
+
+
+
     // Send broadcasts until the NS answers
     public void discoverNameServer() throws IOException {
         InetAddress broadcastIp = InetAddress.getByName("255.255.255.255");

@@ -2,14 +2,51 @@ package Client;
 import Utils.Hashing;
 import Utils.IPUtils;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Enumeration;
 
 public class Client {
+    private Socket nodeTCPSocket;
+    private PrintWriter out;
+    private BufferedReader in;
+
+    //TCP connection
+    public void startTCPConnection(String ip, int port) throws IOException {
+        nodeTCPSocket = new Socket(ip, port);
+        out = new PrintWriter(nodeTCPSocket.getOutputStream(), true);
+        in = new BufferedReader(new InputStreamReader(nodeTCPSocket.getInputStream()));
+    }
+
+    public String sendMessage(String message) throws IOException {
+        out.println(message);
+        return in.readLine(); //Return response;
+    }
+
+    public void stopTCPConnection() throws IOException {
+        in.close();
+        out.close();
+        nodeTCPSocket.close();
+    }
+
+    //TCP debug method
+    public void sendTCPMessage() throws IOException {
+        startTCPConnection("192.168.48.4", 8000); //misschien 8001?node3
+        String message = "Hello from Client to NODE3";
+        System.out.printf("Sending message: %s\n", message);
+        String response = sendMessage(message);
+        System.out.printf("Response: %s\n", response);
+        stopTCPConnection();
+    }
     public static void main(String[] args) throws UnknownHostException, SocketException {
-        System.out.println("Client Started");
+        //TCP
+
+        /*System.out.println("Client Started");
         System.out.println("Node0\t" + Hashing.hash("Node0"));
         System.out.println("Node1\t" + Hashing.hash("Node1"));
         System.out.println("Node2\t" + Hashing.hash("Node2"));
@@ -39,7 +76,7 @@ public class Client {
         for (InetAddress address : arrayList) {
             System.out.println(address.getHostAddress());
         }
+    }*/
     }
-
 
 }
