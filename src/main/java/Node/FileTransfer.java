@@ -65,7 +65,11 @@ public class FileTransfer extends Thread {
         }
     }
 
+<<<<<<< HEAD
     public boolean handleFileExchange(String filename,  HttpExchange httpExchange) {
+=======
+    public static boolean handleFileExchange(String filename,  HttpExchange httpExchange) {
+>>>>>>> Replication
         return true;
     }
 
