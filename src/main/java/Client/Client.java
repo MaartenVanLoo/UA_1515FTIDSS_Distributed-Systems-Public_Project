@@ -36,7 +36,7 @@ public class Client {
 
     //TCP debug method
     public void sendTCPMessage() throws IOException {
-        startTCPConnection("192.168.48.4", 8000); //misschien 8001?node3
+        startTCPConnection("192.168.48.4", 8001); //misschien 8001?node3
         String message = "Hello from Client to NODE3";
         System.out.printf("Sending message: %s\n", message);
         String response = sendMessage(message);
