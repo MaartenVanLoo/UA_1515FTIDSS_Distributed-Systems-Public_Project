@@ -102,7 +102,7 @@ public class NameServerController {
 
     //<editor-fold desc="/ns/nodes">
     @ResponseStatus(HttpStatus.OK) // 200
-    @GetMapping("/ns/nodes")
+    @GetMapping(value = "/ns/nodes", produces = "application/json")
     public String getAllNodes() {
         this.nameServer.getIpMapLock().readLock().lock();
         String response = "{" + this.nameServer.getIpMapping().entrySet().stream().map(e -> "\"" + e.getKey()+"\":\""+e.getValue() + "\"").collect(Collectors.joining(",")) + "}";
