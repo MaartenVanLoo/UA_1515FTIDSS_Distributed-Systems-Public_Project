@@ -1,6 +1,7 @@
 package NameServer;
 
 import Utils.Hashing;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -86,27 +87,16 @@ public class NameServerController {
      */
     public String getNameServerStatus() {
         this.nameServer.getIpMapLock().readLock().lock();
-        JSONObject json = new JSONObject();
-        json.put("Status", "running");
-        JSONObject utils = new JSONObject();
-        utils.put("Discovery", (this.socket == null?"disabled":"enabled"));
-        json.put("Utilities", utils);
-        json.put("Nodes", this.nameServer.getIpMapping().size());
-        String mapping = "["+this.nameServer.getIpMapping().keySet().stream().map(s -> "{" + this.nameServer.nodeToString(s) + "}").collect(Collectors.joining(","))+ "]";
-        json.put("Mapping", mapping);
-
-        /*
         String response =  "{\"Status\": \"running\","+
                 "\"Utilities\":{" +
-                    "\"Discovery\":\"" + (this.socket == null?"disabled":"enabled")+"\"" +
-                "}," +
+                         "\"Discovery\":\"" + (this.socket == null?"disabled":"enabled")+"\"" +
+                    "}," +
                 "\"Nodes\":" + this.nameServer.getIpMapping().size() +"," +
                 "\"Mapping\":[" +
                 this.nameServer.getIpMapping().keySet().stream().map(s -> "{" + this.nameServer.nodeToString(s) + "}").collect(Collectors.joining(","))+
                 "]}";
-        */
         this.nameServer.getIpMapLock().readLock().unlock();
-        return json.toString();
+        return response;
     }
 
 
@@ -115,7 +105,7 @@ public class NameServerController {
     @GetMapping("/ns/nodes")
     public String getAllNodes() {
         this.nameServer.getIpMapLock().readLock().lock();
-        String response = "{" + this.nameServer.getIpMapping().entrySet().stream().map(e -> e.getKey()+" => "+e.getValue()).collect(Collectors.joining("\n")) + "}";
+        String response = "{" + this.nameServer.getIpMapping().entrySet().stream().map(e -> "\"" + e.getKey()+"\":\""+e.getValue() + "\"").collect(Collectors.joining("\n")) + "}";
         this.nameServer.getIpMapLock().readLock().unlock();
         return response;
     }
