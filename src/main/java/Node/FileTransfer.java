@@ -25,6 +25,7 @@ public class FileTransfer extends Thread {
             in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
             File file = new File(fileName);
+            System.out.println("File exists:" + file.exists());
             long fileSize = file.length();
             BufferedInputStream bufferedInputStream = new BufferedInputStream(new FileInputStream(file));
 
@@ -139,6 +140,8 @@ public class FileTransfer extends Thread {
                     clientSocket.close();
                     throw new IOException("File name not received!");
                 }
+                System.out.println("Raw: " + inputLine);
+                System.out.println("Parsing");
                 JSONParser parser = new JSONParser();
                 JSONObject metaData = (JSONObject) parser.parse(inputLine);
                 String fileName = (String) metaData.get("fileName");
@@ -169,6 +172,7 @@ public class FileTransfer extends Thread {
 
                 exception.printStackTrace();
             }
+
 
         }
     }
