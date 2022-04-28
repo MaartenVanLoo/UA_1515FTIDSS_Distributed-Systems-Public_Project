@@ -35,7 +35,7 @@ public class FileTransfer extends Thread {
             out.write(jsonObject.toJSONString());
             out.flush();
 
-            System.out.println("Sending: " + jsonObject.get(fileName)+" "+jsonObject.get("fileSize"));
+            System.out.println("Sending: " + file.getName()+" "+ fileSize);
             //receive acknowledgement of receiving file data
             String response = in.readLine();
             System.out.println("Received: " + response);
@@ -137,7 +137,7 @@ public class FileTransfer extends Thread {
                 JSONParser parser = new JSONParser();
                 JSONObject metaData = (JSONObject) parser.parse(inputLine);
                 String fileName = (String) metaData.get("fileName");
-                String fileSize = (String) metaData.get("fileSize");
+                long fileSize = (long) metaData.get("fileSize");
 
                 //send fileneame recieved
                 out.println("ACK");
