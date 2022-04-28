@@ -144,9 +144,13 @@ public class FileTransfer extends Thread {
                 String fileName = (String) metaData.get("fileName");
                 long fileSize = (long) metaData.get("fileSize");
 
+                System.out.println("Received file name: " + fileName);
+                System.out.println("Received file size: " + fileSize);
+
                 //send fileneame recieved
                 out.println("ACK");
                 out.flush();
+                System.out.println("Sent ACK");
 
                 // recieve file
                 byte[] buffer = new byte[1024];
