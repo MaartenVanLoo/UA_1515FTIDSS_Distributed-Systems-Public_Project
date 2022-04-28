@@ -125,6 +125,7 @@ public class FileTransfer extends Thread {
         @Override
         public void run() {
             try {
+                System.out.println("Receiving file...");
                 out = new PrintWriter(clientSocket.getOutputStream(), true);
                 in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
                 String inputLine;
@@ -132,6 +133,10 @@ public class FileTransfer extends Thread {
                 //receive file name
                 inputLine = in.readLine();
                 if(inputLine == null){
+                    System.out.println("Received null");
+                    in.close();
+                    out.close();
+                    clientSocket.close();
                     throw new IOException("File name not received!");
                 }
                 JSONParser parser = new JSONParser();
@@ -153,13 +158,14 @@ public class FileTransfer extends Thread {
                 }
                 bufferedOutputStream.flush();
                 bufferedOutputStream.close();
-
                 in.close();
                 out.close();
                 clientSocket.close();
             } catch (IOException | ParseException exception) {
+
                 exception.printStackTrace();
             }
+
         }
     }
 
