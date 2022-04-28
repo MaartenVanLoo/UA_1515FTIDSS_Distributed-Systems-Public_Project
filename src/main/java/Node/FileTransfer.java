@@ -43,6 +43,7 @@ public class FileTransfer extends Thread {
             String response = in.readLine();
             System.out.println("Received: " + response);
             if(!response.equals("ACK")){
+                System.out.println("Error sending file data");
                 socket.close();
                 return false;
             }
