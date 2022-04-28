@@ -35,7 +35,7 @@ public class FileTransfer extends Thread {
             Random rn = new Random();
             jsonObject.put("fileName", fileName + "_copy" + rn.nextInt(100));
             jsonObject.put("fileSize", fileSize);
-            out.write(jsonObject.toJSONString());
+            out.println(jsonObject.toJSONString());
             out.flush();
 
             System.out.println("Sending: " + jsonObject.get("fileName")+" "+ fileSize);
