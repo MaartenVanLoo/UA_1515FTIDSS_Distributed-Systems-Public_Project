@@ -146,6 +146,7 @@ public class FileManager extends Thread {
         //}
     }
 
+    //https://www.baeldung.com/java-nio2-watchservice
     public void checkDirectory() throws IOException, InterruptedException {
         path.register(
                 watchService,
