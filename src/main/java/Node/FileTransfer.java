@@ -54,6 +54,7 @@ public class FileTransfer extends Thread {
                 socket.getOutputStream().write(buffer, 0, (int)current);
                 System.out.print("Sending file... " + (current * 100) / fileSize + "% complete!\r");
             }
+            socket.getOutputStream().flush();
             bufferedInputStream.close();
 
             out.flush();
@@ -160,10 +161,12 @@ public class FileTransfer extends Thread {
                 // recieve file
                 byte[] buffer = new byte[1024];
                 int bytesRead;
+                int totalBytesRead = 0;
                 FileOutputStream fileOutputStream = new FileOutputStream(fileName);
                 BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(fileOutputStream);
-                while ((bytesRead = clientSocket.getInputStream().read(buffer)) != -1) {
+                while ((bytesRead = clientSocket.getInputStream().read(buffer)) != -1 && totalBytesRead < fileSize) {
                     bufferedOutputStream.write(buffer, 0, bytesRead);
+                    totalBytesRead += bytesRead;
                 }
                 bufferedOutputStream.flush();
                 bufferedOutputStream.close();
