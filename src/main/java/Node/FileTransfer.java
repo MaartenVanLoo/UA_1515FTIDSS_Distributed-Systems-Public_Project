@@ -62,7 +62,7 @@ public class FileTransfer extends Thread {
             out.close();
             in.close();
             socket.close();
-            System.out.println("File sent successfully!");
+            System.out.println("\nFile sent successfully!");
             return true;
         } catch (IOException e) {
             e.printStackTrace();
