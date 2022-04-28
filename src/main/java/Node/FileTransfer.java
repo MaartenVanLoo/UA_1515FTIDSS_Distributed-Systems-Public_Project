@@ -11,14 +11,73 @@ import org.json.simple.parser.ParseException;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Objects;
 import java.util.Random;
 
 public class FileTransfer extends Thread {
     private ServerSocket serverSocket;
     private static final int LISTENING_PORT = 8001;
 
-    public static boolean sendFile(String fileName, String host, int port){
+    public static boolean sendFile(String fileName, String sourceFolder, String targetFolder, String host, int port) {
         PrintWriter out;
+        BufferedReader in;
+        String targetFilePath = Objects.equals(targetFolder, "") ?fileName : targetFolder + "/" + fileName;
+        String sourceFilePath = Objects.equals(sourceFolder, "") ?fileName : sourceFolder + "/" + fileName;
+        try {
+            Socket socket = new Socket(host, port);
+            out = new PrintWriter(socket.getOutputStream(), true);
+            in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
+            File file = new File(sourceFilePath);
+            System.out.println("File exists:" + file.exists());
+            long fileSize = file.length();
+            BufferedInputStream bufferedInputStream = new BufferedInputStream(new FileInputStream(file));
+
+            byte[] buffer = new byte[1024];
+            JSONObject jsonObject = new JSONObject();
+            Random rn = new Random();
+            jsonObject.put("fileName", targetFilePath + "_copy" + rn.nextInt(100));
+            jsonObject.put("fileSize", fileSize);
+            out.println(jsonObject.toJSONString());
+            out.flush();
+
+            System.out.println("Sending: " + jsonObject.get("fileName")+" "+ fileSize);
+            //receive acknowledgement of receiving file data
+            String response = in.readLine();
+            System.out.println("Received: " + response);
+            if(!response.equals("ACK")){
+                System.out.println("Error sending file data");
+                socket.close();
+                return false;
+            }
+
+            //Now we send the file
+            long current = 0;
+            long startTime = System.currentTimeMillis();
+            while((current = bufferedInputStream.read(buffer)) > 0){
+                socket.getOutputStream().write(buffer, 0, (int)current);
+                System.out.print("Sending file... " + (current * 100) / fileSize + "% complete!\r");
+            }
+            socket.getOutputStream().flush();
+            bufferedInputStream.close();
+
+            out.flush();
+            out.close();
+            in.close();
+            socket.close();
+            System.out.println("\nFile sent successfully!");
+            return true;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+    public static boolean sendFile(String fileName, String sourceFolder, String targetFolder, String host) {
+        return sendFile(fileName, sourceFolder, targetFolder, host, LISTENING_PORT);
+    }
+    public static boolean sendFile(String fileName, String host, int port){
+        return sendFile(fileName, "", "", host, port);
+        /*PrintWriter out;
         BufferedReader in;
         try {
             Socket socket = new Socket(host, port);
@@ -67,34 +126,12 @@ public class FileTransfer extends Thread {
         } catch (IOException e) {
             e.printStackTrace();
             return false;
-        }
+        }*/
     }
-    //creates file with name filename and writes content of httpExchange to it
-    public static boolean handleFileExchange(String filename,  HttpExchange httpExchange) {
-       try{
-           File file = new File(filename);
-           InputStream inputStream = httpExchange.getRequestBody();
-           System.out.println("Read body" + httpExchange.getRequestBody().toString());
-           OutputStream outputStream = new FileOutputStream(file);
-           byte[] buffer = new byte[1024*8];
-           int bytesRead;
-           while((bytesRead = inputStream.read(buffer)) != -1){
-               outputStream.write(buffer, 0, bytesRead);
-           }
-           System.out.print("File created!");
-           outputStream.flush();
-           IOUtils.closeQuietly(inputStream);
-           IOUtils.closeQuietly(outputStream);
-           return true; //file created successfully
-       }
-       catch (Exception e){
-           return false;
-       }
-    }
-
     public static boolean sendFile(String fileName, String host) {
         return sendFile(fileName, host, LISTENING_PORT);
     }
+
     public FileTransfer() {
         this.start(); //start the thread;
     }
@@ -159,7 +196,7 @@ public class FileTransfer extends Thread {
                 out.flush();
                 System.out.println("Sent ACK");
 
-                // recieve file
+                // receive file
                 byte[] buffer = new byte[1024];
                 int bytesRead;
                 int totalBytesRead = 0;
@@ -175,11 +212,8 @@ public class FileTransfer extends Thread {
                 out.close();
                 clientSocket.close();
             } catch (IOException | ParseException exception) {
-
                 exception.printStackTrace();
             }
-
-
         }
     }
 
