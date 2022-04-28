@@ -11,6 +11,7 @@ import org.json.simple.parser.ParseException;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Random;
 
 public class FileTransfer extends Thread {
     private ServerSocket serverSocket;
@@ -31,12 +32,13 @@ public class FileTransfer extends Thread {
 
             byte[] buffer = new byte[1024];
             JSONObject jsonObject = new JSONObject();
-            jsonObject.put("fileName", fileName);
+            Random rn = new Random();
+            jsonObject.put("fileName", fileName + "_copy" + rn.nextInt(100));
             jsonObject.put("fileSize", fileSize);
             out.write(jsonObject.toJSONString());
             out.flush();
 
-            System.out.println("Sending: " + file.getName()+" "+ fileSize);
+            System.out.println("Sending: " + jsonObject.get("fileName")+" "+ fileSize);
             //receive acknowledgement of receiving file data
             String response = in.readLine();
             System.out.println("Received: " + response);
