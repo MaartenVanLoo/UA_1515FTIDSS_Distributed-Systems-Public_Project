@@ -1,8 +1,12 @@
 package Node;
 
+import com.google.gson.JsonParser;
 import com.sun.net.httpserver.HttpExchange;
 import org.apache.tomcat.util.http.fileupload.IOUtils;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
 import java.io.*;
 import java.net.ServerSocket;
@@ -13,50 +17,45 @@ public class FileTransfer extends Thread {
     private static final int LISTENING_PORT = 8001;
 
     public static boolean sendFile(String fileName, String host, int port){
+        PrintWriter out;
+        BufferedReader in;
         try {
             Socket socket = new Socket(host, port);
-            OutputStream outputStream = socket.getOutputStream();
-            ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
-            InputStream inputStream = socket.getInputStream();
+            out = new PrintWriter(socket.getOutputStream(), true);
+            in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
             File file = new File(fileName);
             long fileSize = file.length();
-            FileInputStream fileInputStream = new FileInputStream(file);
-            BufferedInputStream bufferedInputStream = new BufferedInputStream(fileInputStream);
+            BufferedInputStream bufferedInputStream = new BufferedInputStream(new FileInputStream(file));
+
             byte[] buffer = new byte[1024];
             JSONObject jsonObject = new JSONObject();
             jsonObject.put("fileName", fileName);
             jsonObject.put("fileSize", fileSize);
-            objectOutputStream.writeObject(jsonObject);
-            outputStream.flush();
+            out.write(jsonObject.toJSONString());
+            out.flush();
+
             System.out.println("Sending: " + jsonObject.get(fileName)+" "+jsonObject.get("fileSize"));
             //receive acknowledgement of receiving file data
-            while (bufferedInputStream.read(buffer) > 0) {
-                outputStream.write(buffer);
+            String response = in.readLine();
+            System.out.println("Received: " + response);
+            if(!response.equals("ACK")){
+                socket.close();
+                return false;
             }
-            //jsonObject.("logSize",....);
-            /*int bytesRead;
-            while ((bytesRead = fileInputStream.read(buffer)) != -1) {
-                outputStream.write(buffer, 0, bytesRead);
-            }*/
+
             //Now we send the file
             long current = 0;
             long startTime = System.currentTimeMillis();
-            while(current != fileSize){
-                int size = 10000;
-                if(fileSize - current >= size){
-                    current += size;
-                }else{
-                    size = (int)(fileSize - current);
-                    current = fileSize;
-                }
-                buffer = new byte[size];
-                bufferedInputStream.read(buffer, 0, size);
-                outputStream.write(buffer);
+            while((current = bufferedInputStream.read(buffer)) > 0){
+                socket.getOutputStream().write(buffer, 0, (int)current);
                 System.out.print("Sending file... " + (current * 100) / fileSize + "% complete!\r");
             }
-            outputStream.flush();
-            outputStream.close();
-            fileInputStream.close();
+            bufferedInputStream.close();
+
+            out.flush();
+            out.close();
+            in.close();
             socket.close();
             System.out.println("File sent successfully!");
             return true;
@@ -127,22 +126,38 @@ public class FileTransfer extends Thread {
         public void run() {
             try {
                 out = new PrintWriter(clientSocket.getOutputStream(), true);
-                in = new BufferedReader(
-                        new InputStreamReader(clientSocket.getInputStream()));
-
+                in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
                 String inputLine;
-                while ((inputLine = in.readLine()) != null) {
-                    if (".".equals(inputLine)) {
-                        out.println("bye");
-                        break;
-                    }
-                    out.println(inputLine); //echo input back to client
-                    System.out.printf("Recieved: %s\n", inputLine);
+
+                //receive file name
+                inputLine = in.readLine();
+                if(inputLine == null){
+                    throw new IOException("File name not received!");
                 }
+                JSONParser parser = new JSONParser();
+                JSONObject metaData = (JSONObject) parser.parse(inputLine);
+                String fileName = (String) metaData.get("fileName");
+                String fileSize = (String) metaData.get("fileSize");
+
+                //send fileneame recieved
+                out.println("ACK");
+                out.flush();
+
+                // recieve file
+                byte[] buffer = new byte[1024];
+                int bytesRead;
+                FileOutputStream fileOutputStream = new FileOutputStream(fileName);
+                BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(fileOutputStream);
+                while ((bytesRead = clientSocket.getInputStream().read(buffer)) != -1) {
+                    bufferedOutputStream.write(buffer, 0, bytesRead);
+                }
+                bufferedOutputStream.flush();
+                bufferedOutputStream.close();
+
                 in.close();
                 out.close();
                 clientSocket.close();
-            } catch (IOException exception) {
+            } catch (IOException | ParseException exception) {
                 exception.printStackTrace();
             }
         }
