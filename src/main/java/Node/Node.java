@@ -337,7 +337,7 @@ public class Node {
         };
         executorService.scheduleAtFixedRate(validator, 1, 5, TimeUnit.SECONDS);
 
-        Thread.sleep(60000 + 2 * (long) ((Math.random() - 0.5) * 30000)); // sleep for 60±30 seconds
+        Thread.sleep(6000000 + 2 * (long) ((Math.random() - 0.5) * 30000)); // sleep for 60±30 seconds
         executorService.shutdownNow();
         node.shutdown();
     }
