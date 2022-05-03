@@ -14,7 +14,7 @@ import java.util.TreeMap;
 
 public class UnitTests {
     protected static NameServerController ns;
-
+/*
     @BeforeAll
     static void beforeAll() {
         System.out.println("Before All");
@@ -163,11 +163,11 @@ public class UnitTests {
         System.out.println(json.toString());
         // Output: {"next":{"ip":"192.169","id":"456"},"node":{"ip":"192.168","id":"123"},"prev":{"ip":"192.167","id":"098"}}
 
-        /*JSONArray mapping = new JSONArray(ns.getNameServer().getIpMapping());
-        System.out.println(mapping.toString());
-        */
+        //JSONArray mapping = new JSONArray(ns.getNameServer().getIpMapping());
+        //System.out.println(mapping.toString());
+        //
         System.out.println(ns.getNameServerStatus());
 
     }
-
+*/
 }
