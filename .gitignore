@@ -13,4 +13,4 @@ buildNumber.properties
 .idea/
 *.json
 
-/src/test/java/
+
