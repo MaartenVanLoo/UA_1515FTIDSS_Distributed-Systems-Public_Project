@@ -80,6 +80,7 @@ public class NodeAPI {
         try{
             System.out.println("####################################");
             System.out.println("Updating replicated file locations");
+            System.out.println("Body: " + requestBody);
             System.out.println("####################################");
             JSONObject jsonObject = (JSONObject) this.node.getParser().parse(requestBody.toString());
             long newNodeId = (long) jsonObject.get("id");
