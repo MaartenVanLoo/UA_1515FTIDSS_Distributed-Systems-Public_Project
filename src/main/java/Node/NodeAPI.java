@@ -73,7 +73,9 @@ public class NodeAPI {
     }
     public boolean updateFileLocations(String requestBody) {
         try{
+            System.out.println("#############################################################################");
             System.out.println("Updating replicated file locations");
+            System.out.println("#############################################################################");
             JSONObject jsonObject = (JSONObject) this.node.getParser().parse(requestBody);
             long newNodeId = (long) jsonObject.get("id");
             String newNodeIp = (String) jsonObject.get("ip");

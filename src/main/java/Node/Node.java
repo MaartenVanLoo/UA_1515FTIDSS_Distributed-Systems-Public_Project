@@ -366,8 +366,8 @@ public class Node {
         ScheduledExecutorService executorService = Executors.newScheduledThreadPool(2);
         Runnable validator = () -> {
             SynchronizedPrint.clearConsole();
-            node.printStatus();
-            node.validateNode();
+            //node.printStatus();
+            //node.validateNode();
         };
         executorService.scheduleAtFixedRate(validator, 1, 5, TimeUnit.SECONDS);
         Thread.sleep(10000);
