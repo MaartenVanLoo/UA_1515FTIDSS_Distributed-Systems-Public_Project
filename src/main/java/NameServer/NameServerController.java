@@ -327,7 +327,9 @@ public class NameServerController {
 
 
                 }
-                catch (ParseException | IOException ignored) {}
+                catch (ParseException | IOException ignored) {
+
+                }
                 //notify previous node from the newly added node to update his replication table
                 if (success) {
                     //notify the previous node that a new node has been created

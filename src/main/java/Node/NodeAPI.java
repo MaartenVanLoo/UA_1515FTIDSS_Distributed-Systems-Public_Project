@@ -64,6 +64,9 @@ public class NodeAPI {
                 else if ("PUT".equals(exchange.getRequestMethod())) {
                     exchange.sendResponseHeaders(501, -1);
                 }
+                else{
+                    exchange.sendResponseHeaders(501, -1);
+                }
             });
         } catch (Exception e) {
             this.server = null;
@@ -82,6 +85,7 @@ public class NodeAPI {
             this.node.getFileManager().updateFileLocations(newNodeId, newNodeIp);
             System.out.println("Update replicated file locations complete");
         }catch(Exception e) {
+            e.printStackTrace();
             return false;
         }
         return true;
