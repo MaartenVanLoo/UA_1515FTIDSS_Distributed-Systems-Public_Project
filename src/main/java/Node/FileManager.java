@@ -126,6 +126,7 @@ public class FileManager extends Thread {
             // Get the names of the files by using the .getName() method
             for (File file : files) {
                 int fileHash = Hashing.hash(file.getName());
+                System.out.println("Filename: " + file.getName() + " Hash: " + fileHash + "Transfer:" + (fileHash > nodeId));
                 if (fileHash > nodeId) {
                     //send fileName to new node
                     try {
