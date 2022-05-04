@@ -10,6 +10,7 @@ import java.util.TreeMap;
 
 
 public class UnitTests {
+/*
     protected static NameServerController ns;
 
     @BeforeAll
@@ -116,5 +117,6 @@ public class UnitTests {
     public void askTwoPCs() throws Exception{
 
     }
+    */
 
 }

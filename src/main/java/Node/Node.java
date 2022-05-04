@@ -72,7 +72,7 @@ public class Node {
         InetAddress broadcastIp = InetAddress.getByName("255.255.255.255");
         String message = "{\"type\":\"Discovery\",\"name\":\"" + name + "\"}";
         boolean received = false;
-        boolean resend = false;
+        boolean resend = true;
 
 
         DatagramSocket socket = new DatagramSocket(8000);
@@ -336,7 +336,6 @@ public class Node {
      */
     public static void launchNode(String name) throws IOException, InterruptedException{
         Node node = new Node(name);
-
         try {
             node.discoverNameServer();
         } catch (AccessDeniedException e) {
@@ -382,6 +381,4 @@ public class Node {
             Thread.sleep((long) (Math.random() * 10000)); // sleep for a value between 0-10 seconds
         }
     }
-
-
 }
