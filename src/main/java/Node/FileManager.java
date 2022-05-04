@@ -42,7 +42,9 @@ public class FileManager extends Thread {
                 System.out.println("No files in local folder");
                 return;
             }
-            System.out.println("Files in local folder:" + Arrays.toString(files));
+            for (File file : files) {
+                System.out.println("File: " + file.getName());
+            }
             // Get the names of the files by using the .getName() method
             for (File file : files) {
                 //System.out.println(file.getName());
