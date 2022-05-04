@@ -236,7 +236,7 @@ public class FileManager extends Thread {
         //check which files need to be deleted
         //send replica files to prev node
         File dir2 = new File(launchDirectory + "/" + replicaFolder);
-        System.out.println("Directory: " + dir.getCanonicalPath());
+        System.out.println("Directory: " + dir2.getCanonicalPath());
         File[] files2 = dir2.listFiles();
         for (File file : files2) {
             fileList.add(file.getName());
