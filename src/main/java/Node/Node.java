@@ -19,6 +19,7 @@ import static java.lang.System.exit;
 
 public class Node {
     //<editor-fold desc="global variables">
+    private static final int SENDING_PORT = 8000;
     private static final int LISTENING_PORT = 8001;
 
     private String ip;          // ip address of the node
@@ -75,10 +76,10 @@ public class Node {
         boolean resend = true;
 
 
-        DatagramSocket socket = new DatagramSocket(8000);
+        DatagramSocket socket = new DatagramSocket(SENDING_PORT);
         socket.setSoTimeout(1000);
         DatagramPacket discoveryPacket = new DatagramPacket(message.getBytes(), message.length(),
-                broadcastIp, 8001);
+                broadcastIp, LISTENING_PORT);
 
         while (!received) {
             //Refresh buffer
@@ -173,7 +174,7 @@ public class Node {
                            "\"nextNodeIP\":\""+this.getNextNodeIP() +"\"}";
 
             DatagramPacket prevNodePacket = new DatagramPacket(updatePrev.getBytes(), updatePrev.length(),
-                    InetAddress.getByName(prevNodeIP), 8001);
+                    InetAddress.getByName(prevNodeIP), LISTENING_PORT);
 
             DatagramSocket socket = new DatagramSocket();
             socket.send(prevNodePacket);
@@ -183,7 +184,7 @@ public class Node {
                           "\"prevNodeId\":"+this.getPrevNodeId() + "," +
                           "\"prevNodeIP\":\""+this.getPrevNodeIP() +"\"}";
             DatagramPacket nextNodePacket = new DatagramPacket(updateNext.getBytes(), updateNext.length(),
-                    InetAddress.getByName(nextNodeIP), 8001);
+                    InetAddress.getByName(nextNodeIP), LISTENING_PORT);
             //send this.nextNodeID to prevNodeID
             socket.send(nextNodePacket);
         } catch (Exception e) {
@@ -207,6 +208,16 @@ public class Node {
             System.out.println("Node next id:\t" + this.nextNodeId);
             System.out.println("Node next ip:\t" + this.nextNodeIP);
             System.out.println("Node nodeCount:\t" + this.nodeCount);
+            System.out.print("Local files: ");
+            File local = new File("./local");
+            File[] localFiles = local.listFiles();
+            for (File file: localFiles) System.out.print(file.getName() + "\t");
+            System.out.println("");
+            System.out.print("Replicated files: ");
+            File replica = new File("./replica");
+            File[] replicaFiles = replica.listFiles();
+            for (File file: replicaFiles) System.out.print(file.getName() + "\t");
+            System.out.println("");
         }
     }
 

@@ -33,24 +33,24 @@ public class FileManager extends Thread {
     public void startup() {
         try {
             while (!this.node.isSetUp()) {
-                Thread.sleep(100);
+                Thread.sleep(100); // wait for the node to be set up
             }
-            String launchDirectory = System.getProperty("user.dir");
-            System.out.println("Current directory: " + launchDirectory);
-            File dir = new File(launchDirectory + "/" + localFolder);
-            System.out.println("Directory: " + dir.getCanonicalPath());
-            File[] files = dir.listFiles();
-            if (files == null || files.length == 0) {
-                System.out.println("No files in local folder");
+            String launchDirectory = System.getProperty("user.dir"); // get the current directory
+            System.out.println("Current directory: " + launchDirectory); // print the current directory
+            File dir = new File(launchDirectory + "/" + localFolder); // get the  new directory
+            System.out.println("Directory: " + dir.getCanonicalPath()); // print the directory
+            File[] files = dir.listFiles(); // get the files in the directory
+            if (files == null || files.length == 0) {// if there are no files in the directory
+                System.out.println("No files in local folder"); // print that there are no files in the directory
                 return;
             }
-            for (File file : files) {
-                System.out.println("File: " + file.getName());
+            for (File file : files) { // for each file in the directory
+                System.out.println("File: " + file.getName()); // print the file name
             }
             // Get the names of the files by using the .getName() method
             for (File file : files) {
                 //System.out.println(file.getName());
-                int filehash = Hashing.hash(file.getName());
+                int filehash = Hashing.hash(file.getName()); // get the hash of the file
                 fileList.add(file.getName());
                 //send fileName to NameServer
                 try {
@@ -64,7 +64,7 @@ public class FileManager extends Thread {
 
                     System.out.println("Replicating " + file.getName() + " to " + replicateIPAddr); //vieze ai zeg
                     //send file to replica
-                    FileTransfer.sendFile(file.getName(), localFolder, replicaFolder, replicateIPAddr);
+                    FileTransfer.sendFile(file.getName(), localFolder, replicaFolder, replicateIPAddr);//
 
                 } catch (Exception e) {
                     System.out.println("Error: " + e.getMessage());
@@ -149,9 +149,8 @@ public class FileManager extends Thread {
      * @param ipAddr the IP address to send the file to
      * @throws IOException
      */
-    //TODO: not used???????????
     public void startReplication(File file, String ipAddr) throws IOException {
-        Socket replicateSocket = new Socket(ipAddr, 8004);
+        Socket replicateSocket = new Socket(ipAddr, SENDING_PORT);
 
         FileInputStream fis = null;
         BufferedInputStream bis = null;
@@ -188,13 +187,15 @@ public class FileManager extends Thread {
                 StandardWatchEventKinds.ENTRY_MODIFY);
 
         WatchKey key;
-        ArrayList fileEvents = new ArrayList();
         while ((key = watchService.take()) != null) {
 
             //sleep(50);
             for (WatchEvent<?> event : key.pollEvents()) {
                 //sleep(50);
                 //fileEvents.add(event.kind().toString() + " " + event.context().toString());
+                System.out.println(
+                        "Event kind:" + event.kind()
+                                + ". File affected: " + event.context() + ".");
 
                 switch (event.kind().toString()) {
                     case "ENTRY_CREATE":
@@ -232,45 +233,39 @@ public class FileManager extends Thread {
                         }
                         break;
                 }
-
-                System.out.println(
-                        "Event kind:" + event.kind()
-                                + ". File affected: " + event.context() + ".");
-
             }
-
             key.reset();
         }
     }
 
     public void shutDown(Node node) throws IOException {
         String launchDirectory = System.getProperty("user.dir");
-        System.out.println("Current directory: " + launchDirectory);
-        File dir = new File(launchDirectory + "/" + localFolder);
-        System.out.println("Directory: " + dir.getCanonicalPath());
-        File[] files = dir.listFiles();
+        System.out.println("Current directory: " + launchDirectory); //vieze ai zeg
+        File dir = new File(launchDirectory + "/" + localFolder); //get the local folder
+        System.out.println("Directory: " + dir.getCanonicalPath()); //vieze ai zeg
+        File[] files = dir.listFiles(); //get all files in the directory
         if (files == null || files.length == 0) {
-            System.out.println("No files in local folder");
+            System.out.println("No files in local folder"); //vieze ai zeg
             return;
         }
         for (File file : files) {
-            System.out.println("File: " + file.getName());
+            System.out.println("File: " + file.getName()); //vieze ai zeg
         }
         // Remove replications of local files
         for (File file : files) {
             //send fileName to NameServer
             try {
-                String deleteIPAddr = Unirest.get("/ns/files/{filename}")
-                        .routeParam("filename", file.getName()).asString().getBody();
+                String deleteIPAddr = Unirest.get("/ns/files/{filename}") //vieze ai zeg
+                        .routeParam("filename", file.getName()).asString().getBody(); //vieze ai zeg
                 // if the IP addr the NS sent back is the same as the one of this node, get the prev node IP address
                 // check example 3 doc3.pdf
                 if (Objects.equals(deleteIPAddr, node.getIP())) {
                     deleteIPAddr = this.node.getPrevNodeIP();
                 }
 
-                System.out.println("Deleting " + file.getName() + " to " + deleteIPAddr);
+                System.out.println("Deleting " + file.getName() + " to " + deleteIPAddr); //vieze ai zeg
                 //delete file to replica
-                FileTransfer.deleteFile(file.getName(), replicaFolder, deleteIPAddr);
+                FileTransfer.deleteFile(file.getName(), replicaFolder, deleteIPAddr); //vieze ai zeg
 
             } catch (Exception e) {
                 System.out.println("Error: " + e.getMessage());
@@ -295,6 +290,9 @@ public class FileManager extends Thread {
 
     }
 
+    /**
+     * If the "./local" and "./replica" folders don't exist yet, then this method will create them to avoid future errors.
+     */
     void createDirectories() {
         //check if local directory exists
         File dir = new File(localFolder);

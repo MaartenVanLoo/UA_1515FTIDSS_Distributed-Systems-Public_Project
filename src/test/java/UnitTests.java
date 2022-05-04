@@ -1,4 +1,6 @@
 import NameServer.NameServerController;
+import Node.FileManager;
+import Node.Node;
 import Utils.Hashing;
 import org.junit.jupiter.api.*;
 
@@ -118,5 +120,17 @@ public class UnitTests {
 
     }
     */
+
+    @Test
+    public void eventWatch() throws IOException, InterruptedException {
+        FileManager fm = new FileManager(new Node("def"));
+        fm.checkDirectory();
+    }
+
+    @Test
+    public void status() throws IOException {
+        Node n = new Node("def");
+        n.printStatus();
+    }
 
 }
