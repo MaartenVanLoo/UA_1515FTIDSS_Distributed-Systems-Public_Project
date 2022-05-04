@@ -18,7 +18,7 @@ public class FileManager extends Thread {
     private ArrayList<String> fileList = new ArrayList<>();
 
     WatchService watchService = FileSystems.getDefault().newWatchService();
-    Path path = Paths.get("./local");
+    Path path = Paths.get("local");
 
     private static final int SENDING_PORT = 8004;
 
@@ -151,12 +151,32 @@ public class FileManager extends Thread {
                 StandardWatchEventKinds.ENTRY_MODIFY);
 
         WatchKey key;
+        ArrayList fileEvents = new ArrayList();
         while ((key = watchService.take()) != null) {
+
+            //sleep(50);
             for (WatchEvent<?> event : key.pollEvents()) {
+                //sleep(50);
+                //fileEvents.add(event.kind().toString() + " " + event.context().toString());
+
+                switch (event.kind().toString()) {
+                    case "ENTRY_CREATE":
+
+                        break;
+
+                    case "ENTRY_DELETE":
+                        break;
+
+                    case "ENTRY_MODIFY":
+                        break;
+                }
+
                 System.out.println(
                         "Event kind:" + event.kind()
                                 + ". File affected: " + event.context() + ".");
+
             }
+
             key.reset();
         }
     }
