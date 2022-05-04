@@ -37,6 +37,7 @@ public class NodeAPI {
                 } else {
                     exchange.sendResponseHeaders(501, -1);
                 }
+                exchange.close();
             });
             this.server.createContext("/files", (exchange) -> {
                 exchange.getResponseHeaders().add("Content-Type", "application/json");
@@ -67,6 +68,7 @@ public class NodeAPI {
                 else{
                     exchange.sendResponseHeaders(501, -1);
                 }
+                exchange.close();
             });
         } catch (Exception e) {
             this.server = null;
@@ -79,7 +81,7 @@ public class NodeAPI {
             System.out.println("####################################");
             System.out.println("Updating replicated file locations");
             System.out.println("####################################");
-            JSONObject jsonObject = (JSONObject) this.node.getParser().parse(requestBody);
+            JSONObject jsonObject = (JSONObject) this.node.getParser().parse(requestBody.toString());
             long newNodeId = (long) jsonObject.get("id");
             String newNodeIp = (String) jsonObject.get("ip");
             this.node.getFileManager().updateFileLocations(newNodeId, newNodeIp);
