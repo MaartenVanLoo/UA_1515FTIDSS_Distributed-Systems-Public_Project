@@ -44,7 +44,7 @@ public class NodeAPI {
                 exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "GET");
                 exchange.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type");
                 if (!this.node.isSetUp()) {
-                    exchange.sendResponseHeaders(400, -1);
+                    exchange.sendResponseHeaders(402, -1);
                 }
                 if ("GET".equals(exchange.getRequestMethod())) {
                     exchange.sendResponseHeaders(501, -1);
@@ -55,7 +55,7 @@ public class NodeAPI {
                     if (response) {
                         exchange.sendResponseHeaders(200, -1);
                     }else{
-                        exchange.sendResponseHeaders(400, -1);
+                        exchange.sendResponseHeaders(404, -1);
                     }
                 }
                 else if ("DELETE".equals(exchange.getRequestMethod())) {
