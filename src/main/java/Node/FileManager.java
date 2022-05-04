@@ -110,40 +110,34 @@ public class FileManager extends Thread {
      * @throws IOException
      */
     public void startReplication(File file, String ipAddr) throws IOException {
-        //Socket replicateSocket = new Socket(ipAddr, 8004);
+        Socket replicateSocket = new Socket(ipAddr, 8004);
 
-        //FileInputStream fis = null;
-        //BufferedInputStream bis = null;
-        //OutputStream os = null;
+        FileInputStream fis = null;
+        BufferedInputStream bis = null;
+        OutputStream os = null;
 
-        //try {
-            //byte[] buffer = new byte[(int) file.length()];
-            //fis = new FileInputStream(file);
-            //bis = new BufferedInputStream(fis);
-            //bis.read(buffer, 0, buffer.length);
-            //os = replicateSocket.getOutputStream();
+        try {
+            byte[] buffer = new byte[(int) file.length()];
+            fis = new FileInputStream(file);
+            bis = new BufferedInputStream(fis);
+            bis.read(buffer, 0, buffer.length);
+            os = replicateSocket.getOutputStream();
 
-            //System.out.println("Sending " + file.getName() + "(" + buffer.length + " bytes)");
-            //long time = System.currentTimeMillis();
-            //os.write(buffer, 0, buffer.length);
-            //os.flush();
-            //System.out.println("Request processed: " + time);
-        //catch (Exception e) {
-            //System.err.println(e.getMessage());
-        //}
-        //finally {
-            //if (os != null) os.close();
-            //if (bis != null) bis.close();
-            //if (fis != null) fis.close();
-            //if (replicateSocket != null) replicateSocket.close();
-        //}
-    //}
-       // }
-        //finally {
-            //if (bis != null) bis.close();
-            //if (os != null) os.close();
-            //if (replicateSocket != null) replicateSocket.close();
-        //}
+            System.out.println("Sending " + file.getName() + "(" + buffer.length + " bytes)");
+            long time = System.currentTimeMillis();
+            os.write(buffer, 0, buffer.length);
+            os.flush();
+            System.out.println("Request processed: " + time);
+        }
+            catch (Exception e) {
+            System.err.println(e.getMessage());
+        }
+        finally {
+            if (os != null) os.close();
+            if (bis != null) bis.close();
+            if (fis != null) fis.close();
+            if (replicateSocket != null) replicateSocket.close();
+        }
     }
 
     //https://www.baeldung.com/java-nio2-watchservice
