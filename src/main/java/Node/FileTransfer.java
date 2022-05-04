@@ -136,6 +136,14 @@ public class FileTransfer extends Thread {
         return sendFile(fileName, host, LISTENING_PORT);
     }
 
+    /**
+     * Sends a request to the node where a certain file is replicated on, to delete that file.
+     * @param fileName      name of the file to be deleted
+     * @param targetFolder  folder where the file to be deleted is stored
+     * @param host          node which has the replicated file
+     * @param port          port of the node which has the replicated file
+     * @return              true if the file is successfully deleted
+     */
     public static boolean deleteFile(String fileName,String targetFolder, String host, int port){
         PrintWriter out;
         BufferedReader in;
