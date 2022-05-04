@@ -299,10 +299,7 @@ public class FileTransfer extends Thread {
                     while ((bytesRead = clientSocket.getInputStream().read(buffer)) != -1 && totalBytesRead < fileSize) {
                         bufferedOutputStream.write(buffer, 0, bytesRead);
                         totalBytesRead += bytesRead;
-                        //show progress bar in %
-                        System.out.print("Receiving file... " + (totalBytesRead * 100L) / fileSize + "% complete!\r");
                     }
-                    System.out.println("Receiving file... 100% complete!");
                     bufferedOutputStream.flush();
                     bufferedOutputStream.close();
                 }
