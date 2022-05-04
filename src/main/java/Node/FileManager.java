@@ -6,6 +6,7 @@ import kong.unirest.Unirest;
 import java.io.*;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Objects;
 import java.nio.file.*;
 import java.util.TreeMap;
@@ -41,6 +42,7 @@ public class FileManager extends Thread {
                 System.out.println("No files in local folder");
                 return;
             }
+            System.out.println("Files in local folder:" + Arrays.toString(files));
             // Get the names of the files by using the .getName() method
             for (File file : files) {
                 //System.out.println(file.getName());
