@@ -1,9 +1,12 @@
 package Node;
 
+import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import org.json.simple.JSONObject;
 
 import javax.swing.*;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.util.concurrent.Executors;
@@ -52,7 +55,7 @@ public class NodeAPI {
                 }
                 else if ("POST".equals(exchange.getRequestMethod())) {
                     //update file locations
-                    boolean response = this.updateFileLocations(exchange.getRequestBody().toString());
+                    boolean response = this.updateFileLocations(this.readContent(exchange));
                     if (response) {
                         exchange.sendResponseHeaders(200, -1);
                     }else{
@@ -126,5 +129,18 @@ public class NodeAPI {
         response.put("prev", prev);
 
         return response.toJSONString();
+    }
+    private String readContent(HttpExchange exchange) {
+        StringBuilder content = new StringBuilder();
+        try {
+            BufferedReader reader = new BufferedReader(new InputStreamReader(exchange.getRequestBody()));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                content.append(line);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return content.toString();
     }
 }
