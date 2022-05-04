@@ -165,12 +165,6 @@ public class FileManager extends Thread {
 
                 switch (event.kind().toString()) {
                     case "ENTRY_CREATE":
-
-                        break;
-
-                    case "ENTRY_DELETE":
-                        break;
-
                     case "ENTRY_MODIFY":
                         File file = new File(event.context().toString());
                         int filehash = Hashing.hash(file.getName());
@@ -185,11 +179,13 @@ public class FileManager extends Thread {
 
                             System.out.println("Replicating " + file.getName() + " to " + replicateIPAddr); //vieze ai zeg
                             //send file to replica
-                            FileTransfer.sendFile(file.getName(),localFolder , replicaFolder, replicateIPAddr);
+                            FileTransfer.sendFile(file.getName(), localFolder, replicaFolder, replicateIPAddr);
                             System.out.println("Modification handled");
                         } catch (Exception e) {
                             System.out.println("Modification Error: " + e.getMessage() + " File:" + file.getName());
                         }
+                        break;
+                    case "ENTRY_DELETE":
                         break;
                 }
 
