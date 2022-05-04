@@ -27,7 +27,6 @@ public class FileManager extends Thread {
         super("FileManager");
         this.node = node;
         this.setDaemon(true);
-        this.startup();
         this.start();
     }
 
@@ -170,6 +169,7 @@ public class FileManager extends Thread {
 
     @Override
     public void run() {
+        this.startup();
         try {
             checkDirectory();
         } catch (IOException e) {
