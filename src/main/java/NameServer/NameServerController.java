@@ -337,7 +337,9 @@ public class NameServerController {
                     json.put("id", Id);
                     json.put("ip", previousIp);
                     System.out.println(previousIp+":8081/files");
-                    Unirest.post("http://" + previousIp+":8081/files").body(json.toJSONString()).asString().getStatus();
+                    System.out.println("Status:"
+                            +Unirest.post("http://" + previousIp+":8081/files").body(json.toJSONString()).asString().getStatus()
+                    );
                     this.nameServerController.nameServer.getIpMapLock().readLock().unlock();
                 }
             }
