@@ -325,20 +325,21 @@ public class NameServerController {
                     this.nameServerController.socket.send(responsePacket);
 
 
-                    //notify previous node from the newly added node to update his replication table
-                    if (success) {
-                        //notify the previous node that a new node has been created
-                        this.nameServerController.nameServer.getIpMapLock().readLock().lock();
-                        String previousIp = this.nameServerController.nameServer.getPrevNodeIP(Id);
-                        JSONObject json = new JSONObject();
-                        json.put("id", Id);
-                        json.put("ip", previousIp);
-                        System.out.println(previousIp+":8081/files");
-                        Unirest.post("http://" + previousIp+":8081/files").body(json.toJSONString()).asString();
-                        this.nameServerController.nameServer.getIpMapLock().readLock().unlock();
-                    }
+
                 }
                 catch (ParseException | IOException ignored) {}
+                //notify previous node from the newly added node to update his replication table
+                if (success) {
+                    //notify the previous node that a new node has been created
+                    this.nameServerController.nameServer.getIpMapLock().readLock().lock();
+                    String previousIp = this.nameServerController.nameServer.getPrevNodeIP(Id);
+                    JSONObject json = new JSONObject();
+                    json.put("id", Id);
+                    json.put("ip", previousIp);
+                    System.out.println(previousIp+":8081/files");
+                    Unirest.post("http://" + previousIp+":8081/files").body(json.toJSONString()).asString().getStatus();
+                    this.nameServerController.nameServer.getIpMapLock().readLock().unlock();
+                }
             }
         }
 
