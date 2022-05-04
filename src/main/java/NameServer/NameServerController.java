@@ -327,8 +327,6 @@ public class NameServerController {
 
                     //notify previous node from the newly added node to update his replication table
                     if (success) {
-                        this.nameServerController.nameServer.getIpMapLock().writeLock().unlock();
-
                         //notify the previous node that a new node has been created
                         this.nameServerController.nameServer.getIpMapLock().readLock().lock();
                         String previousIp = this.nameServerController.nameServer.getPrevNodeIP(Id);
