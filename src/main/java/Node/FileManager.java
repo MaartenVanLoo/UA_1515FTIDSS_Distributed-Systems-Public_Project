@@ -238,6 +238,10 @@ public class FileManager extends Thread {
         File dir2 = new File(launchDirectory + "/" + replicaFolder);
         System.out.println("Directory: " + dir2.getCanonicalPath());
         File[] files2 = dir2.listFiles();
+        if (files2 == null || files2.length == 0) {
+            System.out.println("No files in local folder");
+            return;
+        }
         for (File file : files2) {
             fileList.add(file.getName());
             //send fileName to NameServer
