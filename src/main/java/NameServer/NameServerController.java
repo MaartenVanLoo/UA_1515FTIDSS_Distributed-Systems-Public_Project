@@ -296,6 +296,7 @@ public class NameServerController {
                     if (name == null) {
                         this.nameServerController.logger.info("Adding node failed");
                         response = "{\"status\":\"Access Denied\"}";
+                        success= false;
                     }else {
                         Id = Hashing.hash(name);
                         System.out.println("Name: " + name);
@@ -310,7 +311,6 @@ public class NameServerController {
                                     "\"node\":" + this.nameServerController.nameServer.nodeToJson(Id) + "}";
                             success = true;
                             this.nameServerController.nameServer.getIpMapLock().readLock().unlock();
-
                         } else {
                             //adding unsuccessful
                             this.nameServerController.logger.info("Adding node failed");
@@ -334,7 +334,7 @@ public class NameServerController {
                         json.put("id", Id);
                         json.put("ip", previousIp);
                         System.out.println(previousIp+":8081/files");
-                        Unirest.post(previousIp+":8081/files").body(json.toJSONString());
+                        Unirest.post("http://" + previousIp+":8081/files").body(json.toJSONString()).asString();
                         this.nameServerController.nameServer.getIpMapLock().readLock().unlock();
                     }
                 }
