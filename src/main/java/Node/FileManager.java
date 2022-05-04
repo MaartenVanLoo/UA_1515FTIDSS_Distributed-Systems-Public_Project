@@ -57,9 +57,11 @@ public class FileManager extends Thread {
                     if (Objects.equals(replicateIPAddr, node.getIP())) {
                         replicateIPAddr = this.node.getPrevNodeIP();
                     }
-                    System.out.println("Replicating " + file.getName() + " to " + replicateIPAddr); //vieze ai zeg
 
-                    //startReplication(file, replicateIPAddr);
+                    System.out.println("Replicating " + file.getName() + " to " + replicateIPAddr); //vieze ai zeg
+                    //send file to replica
+                    FileTransfer.sendFile(file.getName(), localFolder, replicaFolder, replicateIPAddr);
+                    
                 }
                 catch (Exception e) {
                     System.out.println("Error: " + e.getMessage());
