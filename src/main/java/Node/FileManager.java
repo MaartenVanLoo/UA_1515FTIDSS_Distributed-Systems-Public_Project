@@ -117,6 +117,7 @@ public class FileManager extends Thread {
      * @param ipAddr the IP address to send the file to
      * @throws IOException
      */
+    //TODO: not used???????????
     public void startReplication(File file, String ipAddr) throws IOException {
         Socket replicateSocket = new Socket(ipAddr, 8004);
 
@@ -212,9 +213,8 @@ public class FileManager extends Thread {
         for (File file : files) {
             System.out.println("File: " + file.getName());
         }
-        // Get the names of the files by using the .getName() method
+        // Remove replications of local files
         for (File file : files) {
-            fileList.add(file.getName());
             //send fileName to NameServer
             try {
                 String deleteIPAddr = Unirest.get("/ns/files/{filename}")
@@ -225,44 +225,29 @@ public class FileManager extends Thread {
                     deleteIPAddr = this.node.getPrevNodeIP();
                 }
 
-                System.out.println("Deleting " + file.getName() + " to " + deleteIPAddr); //vieze ai zeg
-                //send file to replica
+                System.out.println("Deleting " + file.getName() + " to " + deleteIPAddr);
+                //delete file to replica
                 FileTransfer.deleteFile(file.getName(), replicaFolder, deleteIPAddr);
 
             } catch (Exception e) {
                 System.out.println("Error: " + e.getMessage());
             }
         }
-        //check which files need to be deleted
+
         //send replica files to prev node
-        File dir2 = new File(launchDirectory + "/" + replicaFolder);
-        System.out.println("Directory: " + dir2.getCanonicalPath());
-        File[] files2 = dir2.listFiles();
-        if (files2 == null || files2.length == 0) {
+        dir = new File(launchDirectory + "/" + replicaFolder);
+        System.out.println("Directory: " + dir.getCanonicalPath());
+        files = dir.listFiles();
+        if (files == null || files.length == 0) {
             System.out.println("No files in local folder");
             return;
         }
-        for (File file : files2) {
-            fileList.add(file.getName());
+        for (File file : files) {
             //send fileName to NameServer
-            try {
-                String replicateIPAddr = Unirest.get("/ns/files/{filename}")
-                        .routeParam("filename", file.getName()).asString().getBody();
-                // if the IP addr the NS sent back is the same as the one of this node, get the prev node IP address
-                // check example 3 doc3.pdf
-                if (Objects.equals(replicateIPAddr, node.getIP())) {
-                    replicateIPAddr = this.node.getPrevNodeIP();
-                }
-
-                System.out.println("Replicating " + file.getName() + " to " + replicateIPAddr); //vieze ai zeg
-                //send file to replica
-                FileTransfer.sendFile(file.getName(), localFolder, replicaFolder, replicateIPAddr);
-
-
-            }
-            catch (Exception e) {
-                System.out.println("Error: " + e.getMessage());
-            }
+            String replicateIPAddr = this.node.getPrevNodeIP();
+            System.out.println("Replicating " + file.getName() + " to " + replicateIPAddr);
+            //send file to replica
+            FileTransfer.sendFile(file.getName(), replicaFolder, replicaFolder, replicateIPAddr);
         }
 
     }
