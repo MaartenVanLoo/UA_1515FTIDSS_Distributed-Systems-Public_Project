@@ -172,7 +172,7 @@ public class FileManager extends Thread {
                         break;
 
                     case "ENTRY_MODIFY":
-                        File file = new File(localFolder + event.context().toString());
+                        File file = new File(event.context().toString());
                         int filehash = Hashing.hash(file.getName());
                         try {
                             String replicateIPAddr = Unirest.get("/ns/files/{filename}")
@@ -185,7 +185,7 @@ public class FileManager extends Thread {
 
                             System.out.println("Replicating " + file.getName() + " to " + replicateIPAddr); //vieze ai zeg
                             //send file to replica
-                            FileTransfer.sendFile(file.getName(), localFolder, replicaFolder, replicateIPAddr);
+                            FileTransfer.sendFile(file.getName(),localFolder , replicaFolder, replicateIPAddr);
                             System.out.println("Modification handled");
                         } catch (Exception e) {
                             System.out.println("Modification Error: " + e.getMessage() + " File:" + file.getName());
