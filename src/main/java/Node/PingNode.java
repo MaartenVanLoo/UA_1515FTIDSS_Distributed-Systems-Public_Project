@@ -8,8 +8,8 @@ import java.nio.charset.StandardCharsets;
 
 public class PingNode extends Thread{
     private Node node;
-    private int nextUnanswerd = 0;
-    private int prevUnanswerd = 0;
+    private int nextUnanswered = 0;
+    private int prevUnanswered = 0;
     private int delay = 5000;
     private boolean running = false;
 
@@ -19,16 +19,16 @@ public class PingNode extends Thread{
     }
 
     public void nextAnswered() {
-        this.nextUnanswerd --;
+        this.nextUnanswered--;
     }
     public void prevAnswered() {
-        this.prevUnanswerd --;
+        this.prevUnanswered--;
     }
     public void resetNext(){
-        this.nextUnanswerd = 0;
+        this.nextUnanswered = 0;
     }
     public void resetPrev(){
-        this.prevUnanswerd = 0;
+        this.prevUnanswered = 0;
     }
     public void shutdown(){
         this.running = false;
@@ -65,11 +65,10 @@ public class PingNode extends Thread{
 
             try {
                 this.node.getListeningSocket().send(pingNext);
-                this.nextUnanswerd++;
+                this.nextUnanswered++;
                 this.node.getListeningSocket().send(pingPrev);
-                this.prevUnanswerd++;
+                this.prevUnanswered++;
             } catch (IOException e) {
-                //TODO: failure detection?
                 if (this.node.getListeningSocket() != null && this.node.getListeningSocket().isClosed()){
                     //socket closed => node is dead
                     this.running = false;
@@ -77,11 +76,11 @@ public class PingNode extends Thread{
                 }
                 e.printStackTrace();
             }
-            if (this.nextUnanswerd >3) {
-                this.node.failureHandler((int)this.node.getNextNodeId());
+            if (this.nextUnanswered >3) {
+                this.node.reportFailure((int)this.node.getNextNodeId());
             }
-            if (this.prevUnanswerd >3) {
-                this.node.failureHandler((int)this.node.getPrevNodeId());
+            if (this.prevUnanswered >3) {
+                this.node.reportFailure((int)this.node.getPrevNodeId());
             }
         }
     }
