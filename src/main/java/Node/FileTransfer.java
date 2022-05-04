@@ -17,6 +17,7 @@ import java.util.Random;
 public class FileTransfer extends Thread {
     private ServerSocket serverSocket;
     private static final int LISTENING_PORT = 8001;
+    private final Node node;
 
     public static boolean sendFile(String fileName, String sourceFolder, String targetFolder, String host, int port) {
         PrintWriter out;
@@ -36,7 +37,7 @@ public class FileTransfer extends Thread {
             byte[] buffer = new byte[1024];
             JSONObject jsonObject = new JSONObject();
             Random rn = new Random();
-            jsonObject.put("fileName", targetFilePath + "_copy" + rn.nextInt(100));
+            jsonObject.put("fileName", targetFilePath);// + "_copy" + rn.nextInt(100));
             jsonObject.put("fileSize", fileSize);
             jsonObject.put("action", "create");
             out.println(jsonObject.toJSONString());
@@ -167,8 +168,31 @@ public class FileTransfer extends Thread {
         return deleteFile(fileName, host, LISTENING_PORT);
     }
 
-    public static String getFileLocation(String fileName,String targetFolder,String host, int port){
+    public static String getFileLocation(String fileName, String targetFolder, String host, int port, long TTL){
+        System.out.println("getFile location not implemented yet");
+        String targetFilePath = Objects.equals(targetFolder, "") ?fileName : targetFolder + "/" + fileName;
+        PrintWriter out;
+        BufferedReader in;
+        try{
+            Socket socket = new Socket(host, port);
+            out = new PrintWriter(socket.getOutputStream(), true);
+            in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("fileName", targetFilePath);
+            jsonObject.put("fileSize", -1);
+            jsonObject.put("action", "getLocation");
+            jsonObject.put("TTL", TTL);
+            out.println(jsonObject.toJSONString());
+            out.flush();
+            String response = in.readLine();
+            return response;
+        }catch (IOException e){
+            e.printStackTrace();
+        }
         return "";
+    }
+    public static String getFileLocation(String fileName,String targetFolder,String host, int port){
+        return getFileLocation(fileName, targetFolder, host, port, 64);
     }
     public static String getFileLocation(String fileName,String targetFolder,String host){
         return getFileLocation(fileName, targetFolder, host, LISTENING_PORT);
@@ -179,7 +203,11 @@ public class FileTransfer extends Thread {
     public static String getFileLocation(String fileName, String host){
         return getFileLocation(fileName, host, LISTENING_PORT);
     }
-    public FileTransfer() {
+    public static String getFileLocation(String fileName, String host, long TTL){
+        return getFileLocation(fileName, "", host, LISTENING_PORT, TTL);
+    }
+    public FileTransfer(Node node) {
+        this.node = node;
         this.start(); //start the thread;
     }
 
@@ -187,7 +215,7 @@ public class FileTransfer extends Thread {
         serverSocket = new ServerSocket(port);
         while (true) {
             try {
-                new NodeHandler(serverSocket.accept()).start();
+                new NodeHandler(serverSocket.accept(),this.node).start();
             } catch (IOException exception) {
                 exception.printStackTrace();
                 break;
@@ -206,9 +234,11 @@ public class FileTransfer extends Thread {
         private final Socket clientSocket;
         private PrintWriter out;
         private BufferedReader in;
+        private Node node;
 
-        public NodeHandler(Socket clientSocket) {
+        public NodeHandler(Socket clientSocket, Node node) {
             this.clientSocket = clientSocket;
+            this.node = node;
         }
 
         @Override
@@ -247,7 +277,7 @@ public class FileTransfer extends Thread {
                     }
                     return;
                 }
-                if (action.equals("create")) {
+                else if (action.equals("create")) {
                     //send fileneame recieved
                     out.println("ACK");
                     out.flush();
@@ -265,6 +295,29 @@ public class FileTransfer extends Thread {
                     }
                     bufferedOutputStream.flush();
                     bufferedOutputStream.close();
+                }
+                else if (action.equals("getFileLocation")) {
+                    out.println("");
+                    /*
+                    //check if file exists
+                    File file = new File(fileName);
+                    String location;
+                    if (!file.exists()) {
+                        long ttl = (long) metaData.get("TTL");
+                        ttl--;
+                        if (ttl <= 0){
+                            location = "";
+                        }else{
+                            //search file in my own next neighbour
+                            System.out.println("File not found in my files, ask my neighbour");
+                            location = FileTransfer.getFileLocation(fileName, this.node.getNextNodeIP(),ttl);
+                        }
+                    }else{
+                        location = this.node.getIP();
+                    }
+                    out.println(location);
+
+                    */
                 }
                 in.close();
                 out.close();

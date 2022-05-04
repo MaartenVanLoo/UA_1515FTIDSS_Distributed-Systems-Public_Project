@@ -18,7 +18,7 @@ public class FileManager extends Thread {
     private ArrayList<String> fileList = new ArrayList<>();
 
     WatchService watchService = FileSystems.getDefault().newWatchService();
-    Path path = Paths.get("local");
+    Path path = Paths.get("./local");
 
     private static final int SENDING_PORT = 8004;
 
@@ -72,6 +72,41 @@ public class FileManager extends Thread {
             }
         } catch (Exception e) {
             System.err.println(e.getMessage());
+        }
+    }
+
+    public void updateFileCheck(String fileName) {
+        try {
+            File dir = new File(localFolder);
+            File[] files = dir.listFiles();
+            if (files == null || files.length == 0) {
+                System.out.println("No files in local folder");
+                return;
+            }
+            // Get the names of the files by using the .getName() method
+            // check if file is not in the list
+            for (File file : files) {
+                if (!fileList.contains(file.getName())) {
+                    int filehash = Hashing.hash(file.getName());
+                    fileList.add(file.getName());
+                    //send fileName to NameServer
+                    try {
+                        String replicateIPAddr = Unirest.get("/ns/files/{filename}")
+                                .routeParam("filename", file.getName()).asString().getBody();
+                        // if the IP addr the NS sent back is the same as the one of this node, get the prev node IP address
+                        // check example 3 doc3.pdf
+                        if (Objects.equals(replicateIPAddr, node.getIP())) {
+                            replicateIPAddr = this.node.getPrevNodeIP();
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
+                }
+            }
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+
         }
     }
 
@@ -131,7 +166,6 @@ public class FileManager extends Thread {
                     case "ENTRY_CREATE":
                     case "ENTRY_MODIFY":
                         File file = new File(event.context().toString());
-                        int filehash = Hashing.hash(file.getName());
                         try {
                             String replicateIPAddr = Unirest.get("/ns/files/{filename}")
                                     .routeParam("filename", file.getName()).asString().getBody();
@@ -140,7 +174,6 @@ public class FileManager extends Thread {
                             if (Objects.equals(replicateIPAddr, node.getIP())) {
                                 replicateIPAddr = this.node.getPrevNodeIP();
                             }
-
                             System.out.println("Replicating " + file.getName() + " to " + replicateIPAddr); //vieze ai zeg
                             //send file to replica
                             FileTransfer.sendFile(file.getName(), localFolder, replicaFolder, replicateIPAddr);
@@ -150,8 +183,19 @@ public class FileManager extends Thread {
                         }
                         break;
                     case "ENTRY_DELETE":
+                        File deletedFile = new File(event.context().toString());
+                        try {
+                            String replicateIPAddr = Unirest.get("/ns/files/{filename}")
+                                    .routeParam("filename", deletedFile.getName()).asString().getBody();
+                            if (Objects.equals(replicateIPAddr, node.getIP())) {
+                                replicateIPAddr = this.node.getPrevNodeIP();
+                            }
 
-                    default:
+                            FileTransfer.deleteFile(deletedFile.getName(), replicaFolder, replicateIPAddr);
+                            System.out.println("Deletion handled");
+                        }catch(Exception e){
+                            System.out.println("Deletion Error: " + e.getMessage() + " File:" + deletedFile.getName());
+                        }
                         break;
                 }
 
@@ -161,6 +205,58 @@ public class FileManager extends Thread {
             }
             key.reset();
         }
+    }
+
+    public void shutDown(Node node) throws IOException {
+        String launchDirectory = System.getProperty("user.dir");
+        System.out.println("Current directory: " + launchDirectory);
+        File dir = new File(launchDirectory + "/" + localFolder);
+        System.out.println("Directory: " + dir.getCanonicalPath());
+        File[] files = dir.listFiles();
+        if (files == null || files.length == 0) {
+            System.out.println("No files in local folder");
+            return;
+        }
+        for (File file : files) {
+            System.out.println("File: " + file.getName());
+        }
+        // Remove replications of local files
+        for (File file : files) {
+            //send fileName to NameServer
+            try {
+                String deleteIPAddr = Unirest.get("/ns/files/{filename}")
+                        .routeParam("filename", file.getName()).asString().getBody();
+                // if the IP addr the NS sent back is the same as the one of this node, get the prev node IP address
+                // check example 3 doc3.pdf
+                if (Objects.equals(deleteIPAddr, node.getIP())) {
+                    deleteIPAddr = this.node.getPrevNodeIP();
+                }
+
+                System.out.println("Deleting " + file.getName() + " to " + deleteIPAddr);
+                //delete file to replica
+                FileTransfer.deleteFile(file.getName(), replicaFolder, deleteIPAddr);
+
+            } catch (Exception e) {
+                System.out.println("Error: " + e.getMessage());
+            }
+        }
+
+        //send replica files to prev node
+        dir = new File(launchDirectory + "/" + replicaFolder);
+        System.out.println("Directory: " + dir.getCanonicalPath());
+        files = dir.listFiles();
+        if (files == null || files.length == 0) {
+            System.out.println("No files in local folder");
+            return;
+        }
+        for (File file : files) {
+            //send fileName to NameServer
+            String replicateIPAddr = this.node.getPrevNodeIP();
+            System.out.println("Replicating " + file.getName() + " to " + replicateIPAddr);
+            //send file to replica
+            FileTransfer.sendFile(file.getName(), replicaFolder, replicaFolder, replicateIPAddr);
+        }
+
     }
 
     /**
