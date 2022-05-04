@@ -120,7 +120,7 @@ public class FileManager extends Thread {
             File dir = new File(replicaFolder);
             File[] files = dir.listFiles();
             if (files == null || files.length == 0) {
-                System.out.println("No files in local folder");
+                System.out.println("No files in replica folder");
                 return;
             }
             // Get the names of the files by using the .getName() method
