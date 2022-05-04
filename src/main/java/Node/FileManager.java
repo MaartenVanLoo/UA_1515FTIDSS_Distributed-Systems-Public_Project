@@ -165,14 +165,8 @@ public class FileManager extends Thread {
 
                 switch (event.kind().toString()) {
                     case "ENTRY_CREATE":
-
-                        break;
-
-                    case "ENTRY_DELETE":
-                        break;
-
                     case "ENTRY_MODIFY":
-                        File file = new File(localFolder + event.context().toString());
+                        File file = new File(event.context().toString());
                         int filehash = Hashing.hash(file.getName());
                         try {
                             String replicateIPAddr = Unirest.get("/ns/files/{filename}")
@@ -190,6 +184,8 @@ public class FileManager extends Thread {
                         } catch (Exception e) {
                             System.out.println("Modification Error: " + e.getMessage() + " File:" + file.getName());
                         }
+                        break;
+                    case "ENTRY_DELETE":
                         break;
                 }
 
