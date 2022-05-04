@@ -118,7 +118,7 @@ public class FileManager extends Thread {
      * @throws IOException
      */
     public void startReplication(File file, String ipAddr) throws IOException {
-        Socket replicateSocket = new Socket(ipAddr, 8004);
+        Socket replicateSocket = new Socket(ipAddr, SENDING_PORT);
 
         FileInputStream fis = null;
         BufferedInputStream bis = null;

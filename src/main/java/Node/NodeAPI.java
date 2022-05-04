@@ -13,11 +13,12 @@ public class NodeAPI {
 
     private HttpServer server;
     private Node node;
+    private static final int HTTP_PORT = 8081;
 
     public NodeAPI(Node node) {
         this.node = node;
         try {
-            this.server = HttpServer.create(new InetSocketAddress(8081), 0);
+            this.server = HttpServer.create(new InetSocketAddress(HTTP_PORT), 0);
             this.server.createContext("/node", (exchange) -> {
                 exchange.getResponseHeaders().add("Content-Type", "application/json");
                 exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
