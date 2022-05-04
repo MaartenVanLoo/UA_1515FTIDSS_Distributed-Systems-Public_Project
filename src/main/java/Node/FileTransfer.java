@@ -53,10 +53,12 @@ public class FileTransfer extends Thread {
 
             //Now we send the file
             long current = 0;
+            long total = 0;
             long startTime = System.currentTimeMillis();
             while((current = bufferedInputStream.read(buffer)) > 0){
                 socket.getOutputStream().write(buffer, 0, (int)current);
-                System.out.print("Sending file... " + (current * 100) / fileSize + "% complete!\r");
+                total += current;
+                System.out.print("Sending file... " + (total * 100) / fileSize + "% complete!\r");
             }
             socket.getOutputStream().flush();
             bufferedInputStream.close();
@@ -65,7 +67,7 @@ public class FileTransfer extends Thread {
             out.close();
             in.close();
             socket.close();
-            System.out.println("\nFile sent successfully!");
+            System.out.println("\nFile sent successfully in "+ (System.currentTimeMillis() - startTime) +" ms!");
             return true;
         } catch (IOException e) {
             e.printStackTrace();
