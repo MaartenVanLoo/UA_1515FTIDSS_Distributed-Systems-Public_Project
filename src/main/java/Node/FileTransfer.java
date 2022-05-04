@@ -302,7 +302,7 @@ public class FileTransfer extends Thread {
                         //show progress bar in %
                         System.out.print("Receiving file... " + (totalBytesRead * 100L) / fileSize + "% complete!\r");
                     }
-                    System.out.println("100%");
+                    System.out.println("Receiving file... 100% complete!");
                     bufferedOutputStream.flush();
                     bufferedOutputStream.close();
                 }
