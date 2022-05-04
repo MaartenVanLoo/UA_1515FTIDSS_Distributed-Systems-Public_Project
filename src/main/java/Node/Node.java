@@ -37,6 +37,7 @@ public class Node {
     private final N2NListener n2NListener;
     private final NodeAPI nodeAPI;
     private final FileTransfer fileTransfer;
+    private final FileManager fileManager;
 
     private DatagramSocket listeningSocket;
 
@@ -59,10 +60,9 @@ public class Node {
         }
 
         this.n2NListener = new N2NListener(this);
-        this.n2NListener.start();
         this.nodeAPI = new NodeAPI(this);
-        this.nodeAPI.start();
         this.fileTransfer = new FileTransfer();
+        this.fileManager = new FileManager(this);
     }
 
 
@@ -72,7 +72,7 @@ public class Node {
         InetAddress broadcastIp = InetAddress.getByName("255.255.255.255");
         String message = "{\"type\":\"Discovery\",\"name\":\"" + name + "\"}";
         boolean received = false;
-        boolean resend = false;
+        boolean resend = true;
 
 
         DatagramSocket socket = new DatagramSocket(8000);
@@ -336,7 +336,6 @@ public class Node {
      */
     public static void launchNode(String name) throws IOException, InterruptedException{
         Node node = new Node(name);
-        FileManager fm = new FileManager(node);
         try {
             node.discoverNameServer();
         } catch (AccessDeniedException e) {
@@ -358,7 +357,7 @@ public class Node {
         };
         executorService.scheduleAtFixedRate(validator, 1, 5, TimeUnit.SECONDS);
         Thread.sleep(10000);
-        FileTransfer.sendFile("local/ItWorks.jpg","192.168.48.4");
+        //FileTransfer.sendFile("local/ItWorks.jpg","192.168.48.4");
         Thread.sleep(6000000 + 2 * (long) ((Math.random() - 0.5) * 30000)); // sleep for 60±30 seconds
         executorService.shutdownNow();
         node.shutdown();
@@ -382,6 +381,4 @@ public class Node {
             Thread.sleep((long) (Math.random() * 10000)); // sleep for a value between 0-10 seconds
         }
     }
-
-
 }

@@ -23,8 +23,10 @@ public class N2NListener extends Thread {
     public N2NListener(Node node) {
         this.setDaemon(true); //make sure the thread dies when the main thread dies
         this.node = node;
+        this.start();
         this.pingNode = new PingNode(node);
         pingNode.start();
+
     }
 
     @Override

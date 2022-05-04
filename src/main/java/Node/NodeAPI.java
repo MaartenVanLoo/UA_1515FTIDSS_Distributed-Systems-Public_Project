@@ -41,7 +41,7 @@ public class NodeAPI {
             this.server = null;
             System.out.println("Error creating http server");
         }
-
+        this.start();
     }
 
     public void start() {

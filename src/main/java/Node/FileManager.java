@@ -13,8 +13,8 @@ import java.util.TreeMap;
 
 public class FileManager extends Thread {
     private Node node;
-    final String localFolder= "/local";
-    final String replicaFolder = "/replica";
+    final String localFolder = "local";
+    final String replicaFolder = "replica";
     private ArrayList<String> fileList = new ArrayList<>();
 
     WatchService watchService = FileSystems.getDefault().newWatchService();
@@ -27,22 +27,26 @@ public class FileManager extends Thread {
         super("FileManager");
         this.node = node;
         this.setDaemon(true);
-        this.startup();
         this.start();
     }
 
     public void startup() {
         try {
+            while (!this.node.isSetUp()) {
+                Thread.sleep(100);
+            }
             String launchDirectory = System.getProperty("user.dir");
             System.out.println("Current directory: " + launchDirectory);
-            File dir = new File(launchDirectory+localFolder);
+            File dir = new File(launchDirectory + "/" + localFolder);
             System.out.println("Directory: " + dir.getCanonicalPath());
             File[] files = dir.listFiles();
             if (files == null || files.length == 0) {
                 System.out.println("No files in local folder");
                 return;
             }
-            System.out.println("Files in local folder:" + Arrays.toString(files));
+            for (File file : files) {
+                System.out.println("File: " + file.getName());
+            }
             // Get the names of the files by using the .getName() method
             for (File file : files) {
                 //System.out.println(file.getName());
@@ -57,18 +61,18 @@ public class FileManager extends Thread {
                     if (Objects.equals(replicateIPAddr, node.getIP())) {
                         replicateIPAddr = this.node.getPrevNodeIP();
                     }
-                    System.out.println("Replicating " + file.getName() + " to " + replicateIPAddr); //vieze ai zeg
 
-                    //startReplication(file, replicateIPAddr);
-                }
-                catch (Exception e) {
+                    System.out.println("Replicating " + file.getName() + " to " + replicateIPAddr); //vieze ai zeg
+                    //send file to replica
+                    FileTransfer.sendFile(file.getName(), localFolder, replicaFolder, replicateIPAddr);
+
+                } catch (Exception e) {
                     System.out.println("Error: " + e.getMessage());
                 }
             }
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
         }
-        catch (Exception e) {
-                System.err.println(e.getMessage());
-            }
     }
 
     public void updateFileCheck(String fileName) {
@@ -105,9 +109,11 @@ public class FileManager extends Thread {
 
         }
     }
+
     /**
      * Sends a given file to a given IP address.
-     * @param file the file to be sent
+     *
+     * @param file   the file to be sent
      * @param ipAddr the IP address to send the file to
      * @throws IOException
      */
@@ -130,11 +136,9 @@ public class FileManager extends Thread {
             os.write(buffer, 0, buffer.length);
             os.flush();
             System.out.println("Request processed: " + time);
-        }
-            catch (Exception e) {
+        } catch (Exception e) {
             System.err.println(e.getMessage());
-        }
-        finally {
+        } finally {
             if (os != null) os.close();
             if (bis != null) bis.close();
             if (fis != null) fis.close();
@@ -161,28 +165,55 @@ public class FileManager extends Thread {
 
                 switch (event.kind().toString()) {
                     case "ENTRY_CREATE":
-
-                        break;
-
-                    case "ENTRY_DELETE":
-                        break;
-
                     case "ENTRY_MODIFY":
+                        File file = new File(event.context().toString());
+                        int filehash = Hashing.hash(file.getName());
+                        try {
+                            String replicateIPAddr = Unirest.get("/ns/files/{filename}")
+                                    .routeParam("filename", file.getName()).asString().getBody();
+                            // if the IP addr the NS sent back is the same as the one of this node, get the prev node IP address
+                            // check example 3 doc3.pdf
+                            if (Objects.equals(replicateIPAddr, node.getIP())) {
+                                replicateIPAddr = this.node.getPrevNodeIP();
+                            }
+
+                            System.out.println("Replicating " + file.getName() + " to " + replicateIPAddr); //vieze ai zeg
+                            //send file to replica
+                            FileTransfer.sendFile(file.getName(), localFolder, replicaFolder, replicateIPAddr);
+                            System.out.println("Modification handled");
+                        } catch (Exception e) {
+                            System.out.println("Modification Error: " + e.getMessage() + " File:" + file.getName());
+                        }
+                        break;
+                    case "ENTRY_DELETE":
                         break;
                 }
 
                 System.out.println(
                         "Event kind:" + event.kind()
                                 + ". File affected: " + event.context() + ".");
-
             }
-
             key.reset();
+        }
+    }
+
+    void createDirectories() {
+        //check if local directory exists
+        File dir = new File(localFolder);
+        if (!dir.exists()) {
+            dir.mkdir();
+        }
+        //check if replica directory exists
+        dir = new File(replicaFolder);
+        if (!dir.exists()) {
+            dir.mkdir();
         }
     }
 
     @Override
     public void run() {
+        this.createDirectories();
+        this.startup();
         try {
             checkDirectory();
         } catch (IOException e) {

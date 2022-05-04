@@ -38,6 +38,7 @@ public class FileTransfer extends Thread {
             Random rn = new Random();
             jsonObject.put("fileName", targetFilePath + "_copy" + rn.nextInt(100));
             jsonObject.put("fileSize", fileSize);
+            jsonObject.put("action", "create");
             out.println(jsonObject.toJSONString());
             out.flush();
 
@@ -53,10 +54,12 @@ public class FileTransfer extends Thread {
 
             //Now we send the file
             long current = 0;
+            long total = 0;
             long startTime = System.currentTimeMillis();
             while((current = bufferedInputStream.read(buffer)) > 0){
                 socket.getOutputStream().write(buffer, 0, (int)current);
-                System.out.print("Sending file... " + (current * 100) / fileSize + "% complete!\r");
+                total += current;
+                System.out.print("Sending file... " + (total * 100) / fileSize + "% complete!\r");
             }
             socket.getOutputStream().flush();
             bufferedInputStream.close();
@@ -65,7 +68,7 @@ public class FileTransfer extends Thread {
             out.close();
             in.close();
             socket.close();
-            System.out.println("\nFile sent successfully!");
+            System.out.println("\nFile sent successfully in "+ (System.currentTimeMillis() - startTime) +" ms!");
             return true;
         } catch (IOException e) {
             e.printStackTrace();
@@ -132,6 +135,50 @@ public class FileTransfer extends Thread {
         return sendFile(fileName, host, LISTENING_PORT);
     }
 
+    public static boolean deleteFile(String fileName,String targetFolder, String host, int port){
+        PrintWriter out;
+        BufferedReader in;
+        String targetFilePath = Objects.equals(targetFolder, "") ?fileName : targetFolder + "/" + fileName;
+        try{
+            Socket socket = new Socket(host, port);
+            out = new PrintWriter(socket.getOutputStream(), true);
+            in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            JSONObject jsonObject = new JSONObject();
+            Random rn = new Random();
+            jsonObject.put("fileName", targetFilePath);
+            jsonObject.put("fileSize", -1);
+            jsonObject.put("action", "delete");
+            out.println(jsonObject.toJSONString());
+            out.flush();
+        }
+        catch (IOException e){
+            e.printStackTrace();
+        }
+
+        return true;
+    }
+    public static boolean deleteFile(String fileName, String targetFolder, String host) {
+        return deleteFile(fileName, targetFolder, host, LISTENING_PORT);
+    }
+    public static boolean deleteFile(String fileName, String host, int port) {
+        return deleteFile(fileName, "", host, port);
+    }
+    public static boolean deleteFile(String fileName, String host){
+        return deleteFile(fileName, host, LISTENING_PORT);
+    }
+
+    public static String getFileLocation(String fileName,String targetFolder,String host, int port){
+        return "";
+    }
+    public static String getFileLocation(String fileName,String targetFolder,String host){
+        return getFileLocation(fileName, targetFolder, host, LISTENING_PORT);
+    }
+    public static String getFileLocation(String fileName, String host, int port){
+        return getFileLocation(fileName, "", host, port);
+    }
+    public static String getFileLocation(String fileName, String host){
+        return getFileLocation(fileName, host, LISTENING_PORT);
+    }
     public FileTransfer() {
         this.start(); //start the thread;
     }
@@ -187,27 +234,38 @@ public class FileTransfer extends Thread {
                 JSONObject metaData = (JSONObject) parser.parse(inputLine);
                 String fileName = (String) metaData.get("fileName");
                 long fileSize = (long) metaData.get("fileSize");
-
+                String action = (String) metaData.get("action");
                 System.out.println("Received file name: " + fileName);
                 System.out.println("Received file size: " + fileSize);
+                System.out.println("Received action: " + action);
 
-                //send fileneame recieved
-                out.println("ACK");
-                out.flush();
-                System.out.println("Sent ACK");
-
-                // receive file
-                byte[] buffer = new byte[1024];
-                int bytesRead;
-                int totalBytesRead = 0;
-                FileOutputStream fileOutputStream = new FileOutputStream(fileName);
-                BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(fileOutputStream);
-                while ((bytesRead = clientSocket.getInputStream().read(buffer)) != -1 && totalBytesRead < fileSize) {
-                    bufferedOutputStream.write(buffer, 0, bytesRead);
-                    totalBytesRead += bytesRead;
+                if (action.equals("delete")) {
+                    System.out.println("Deleting file...");
+                    File file = new File(fileName);
+                    if (file.exists()) {
+                        file.delete();
+                    }
+                    return;
                 }
-                bufferedOutputStream.flush();
-                bufferedOutputStream.close();
+                if (action.equals("create")) {
+                    //send fileneame recieved
+                    out.println("ACK");
+                    out.flush();
+                    System.out.println("Sent ACK");
+
+                    // receive file
+                    byte[] buffer = new byte[1024];
+                    int bytesRead;
+                    int totalBytesRead = 0;
+                    FileOutputStream fileOutputStream = new FileOutputStream(fileName);
+                    BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(fileOutputStream);
+                    while ((bytesRead = clientSocket.getInputStream().read(buffer)) != -1 && totalBytesRead < fileSize) {
+                        bufferedOutputStream.write(buffer, 0, bytesRead);
+                        totalBytesRead += bytesRead;
+                    }
+                    bufferedOutputStream.flush();
+                    bufferedOutputStream.close();
+                }
                 in.close();
                 out.close();
                 clientSocket.close();
