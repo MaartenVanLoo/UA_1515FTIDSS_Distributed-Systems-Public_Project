@@ -119,9 +119,9 @@ public class N2NListener extends Thread {
         //discovery message
         String name = (String) jsonObject.get("name");
         if (name.equals(this.node.getName())) return; //no answer!
-        System.out.println("Name: " + name);
+        //System.out.println("Name: " + name);
         int neighbourId = Hashing.hash(name);
-        System.out.println("NeighbourId: " + neighbourId);
+        //System.out.println("NeighbourId: " + neighbourId);
 
         // if the old prevId and NextId are equal to the currentId, then the new node is the second node in the
         // network, and the prevId and nextId should be updated to the new node's Id
@@ -181,11 +181,11 @@ public class N2NListener extends Thread {
             //new node is to the left
             updatePrevNode(neighbourId, receivedPacket);
         } else {
-            System.out.println("Received discovery message from " + receivedPacket.getAddress().getHostAddress() + " but it is not a neighbour");
+            //System.out.println("Received discovery message from " + receivedPacket.getAddress().getHostAddress() + " but it is not a neighbour");
             //no answer!, never send an empty response!
         }
-        this.node.printStatus();
-        this.node.validateNode();
+        //this.node.printStatus();
+        //this.node.validateNode();
     }
     private void shutdownHandler(DatagramPacket receivedPacket,JSONObject jsonObject){
         if (this.node.getNextNodeId() == this.node .getId() && this.node.getPrevNodeId() == this.node.getId()){
