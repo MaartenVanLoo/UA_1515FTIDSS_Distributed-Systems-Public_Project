@@ -77,6 +77,9 @@ public class FileManager extends Thread {
 
     public void updateFileCheck(String fileName) {
         try {
+            while (!this.node.isSetUp()){
+                Thread.sleep(100);
+            }
             File dir = new File(localFolder);
             File[] files = dir.listFiles();
             if (files == null || files.length == 0) {

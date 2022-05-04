@@ -37,6 +37,7 @@ public class Node {
     private final N2NListener n2NListener;
     private final NodeAPI nodeAPI;
     private final FileTransfer fileTransfer;
+    private final FileManager fileManager;
 
     private DatagramSocket listeningSocket;
 
@@ -59,10 +60,9 @@ public class Node {
         }
 
         this.n2NListener = new N2NListener(this);
-        this.n2NListener.start();
         this.nodeAPI = new NodeAPI(this);
-        this.nodeAPI.start();
         this.fileTransfer = new FileTransfer();
+        this.fileManager = new FileManager(this);
     }
 
 
@@ -336,7 +336,7 @@ public class Node {
      */
     public static void launchNode(String name) throws IOException, InterruptedException{
         Node node = new Node(name);
-        FileManager fm = new FileManager(node);
+
         try {
             node.discoverNameServer();
         } catch (AccessDeniedException e) {
