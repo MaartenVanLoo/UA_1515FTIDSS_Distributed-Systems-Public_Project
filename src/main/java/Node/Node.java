@@ -61,7 +61,7 @@ public class Node {
 
         this.n2NListener = new N2NListener(this);
         this.nodeAPI = new NodeAPI(this);
-        this.fileTransfer = new FileTransfer();
+        this.fileTransfer = new FileTransfer(this);
         this.fileManager = new FileManager(this);
     }
 
@@ -358,6 +358,8 @@ public class Node {
         executorService.scheduleAtFixedRate(validator, 1, 5, TimeUnit.SECONDS);
         Thread.sleep(10000);
         //FileTransfer.sendFile("local/ItWorks.jpg","192.168.48.4");
+        System.out.println(FileTransfer.getFileLocation("ItWorks.jpg","local","host1.group1.6dist"));
+        System.out.println(FileTransfer.getFileLocation("ItWorks.jpg","local_5","host1.group1.6dist"));
         Thread.sleep(6000000 + 2 * (long) ((Math.random() - 0.5) * 30000)); // sleep for 60±30 seconds
         executorService.shutdownNow();
         node.shutdown();
