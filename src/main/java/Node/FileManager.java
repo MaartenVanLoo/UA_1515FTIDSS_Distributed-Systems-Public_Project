@@ -168,7 +168,6 @@ public class FileManager extends Thread {
                     case "ENTRY_CREATE":
                     case "ENTRY_MODIFY":
                         File file = new File(event.context().toString());
-                        int filehash = Hashing.hash(file.getName());
                         try {
                             String replicateIPAddr = Unirest.get("/ns/files/{filename}")
                                     .routeParam("filename", file.getName()).asString().getBody();
@@ -177,7 +176,6 @@ public class FileManager extends Thread {
                             if (Objects.equals(replicateIPAddr, node.getIP())) {
                                 replicateIPAddr = this.node.getPrevNodeIP();
                             }
-
                             System.out.println("Replicating " + file.getName() + " to " + replicateIPAddr); //vieze ai zeg
                             //send file to replica
                             FileTransfer.sendFile(file.getName(), localFolder, replicaFolder, replicateIPAddr);
@@ -187,6 +185,19 @@ public class FileManager extends Thread {
                         }
                         break;
                     case "ENTRY_DELETE":
+                        File deletedFile = new File(event.context().toString());
+                        try {
+                            String replicateIPAddr = Unirest.get("/ns/files/{filename}")
+                                    .routeParam("filename", deletedFile.getName()).asString().getBody();
+                            if (Objects.equals(replicateIPAddr, node.getIP())) {
+                                replicateIPAddr = this.node.getPrevNodeIP();
+                            }
+
+                            FileTransfer.deleteFile(deletedFile.getName(), replicaFolder, replicateIPAddr);
+                            System.out.println("Deletion handled");
+                        }catch(Exception e){
+                            System.out.println("Deletion Error: " + e.getMessage() + " File:" + deletedFile.getName());
+                        }
                         break;
                 }
 
