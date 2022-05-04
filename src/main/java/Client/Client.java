@@ -46,20 +46,46 @@ public class Client {
     public static void main(String[] args) throws IOException {
         //TCP
         Client client = new Client();
-        client.sendTCPMessage();
-        /*System.out.println("Client Started");
-        System.out.println("Node0\t" + Hashing.hash("Node0"));
-        System.out.println("Node1\t" + Hashing.hash("Node1"));
-        System.out.println("Node2\t" + Hashing.hash("Node2"));
-        System.out.println("Node3\t" + Hashing.hash("Node3"));
-        System.out.println("Node4\t" + Hashing.hash("Node4"));
-        System.out.println("Node5\t" + Hashing.hash("Node5"));
-        System.out.println("Node6\t" + Hashing.hash("Node6"));
-        System.out.println("Node7\t" + Hashing.hash("Node7"));
-        System.out.println("Node8\t" + Hashing.hash("Node8"));
-        System.out.println("Node9\t" + Hashing.hash("Node9"));
-        System.out.println("Node10\t" + Hashing.hash("Node10"));
+        //client.sendTCPMessage();
+        //initilize arraylist with possible hostnames
+        String[] hostnames = new String[]{
+                "Node0",
+                "Node1",
+                "Node2",
+                "Node3",
+                "Node4",
+                "Host0",
+                "Host1",
+                "Host2",
+                "Host3",
+                "Host4",
+                "node0",
+                "node1",
+                "node2",
+                "node3",
+                "node4",
+                "host0",
+                "host1",
+                "host2",
+                "host3",
+                "host4"
+        };
+        String[] filenames = new String[]{
+                "magicCode.jpg",
+                "MagicCode.jpg",
+                "NoPlaceLik127.jpg",
+                "NoPlaceLik127.0.0.1.jpg",
+        };
 
+        String prefix = ".6dist";
+        for (String hostname : hostnames) {
+            System.out.println(hostname + prefix + "\t" + Hashing.hash(hostname+prefix));
+        }
+        for (String filename : filenames) {
+            System.out.println(filename + "\t" + Hashing.hash(filename));
+        }
+        ;
+       /*
         String test = "Node0";
         for (byte theByte : test.getBytes(StandardCharsets.UTF_8))
         {
@@ -76,8 +102,8 @@ public class Client {
         ArrayList<InetAddress> arrayList =  IPUtils.getIpv4BroadcastAdresses();
         for (InetAddress address : arrayList) {
             System.out.println(address.getHostAddress());
-        }
-    }*/
+        }*/
+    
     }
 
 }

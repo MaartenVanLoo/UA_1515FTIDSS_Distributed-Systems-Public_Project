@@ -8,7 +8,7 @@ public class Hashing {
     synchronized public static int hash(String string) {
         MessageDigest messageDigest;
         try {
-            messageDigest = MessageDigest.getInstance("SHA-256");
+            messageDigest = MessageDigest.getInstance("MD5");
             messageDigest.update(string.getBytes());
         } catch (NoSuchAlgorithmException e){return -1;}
         byte[] digest = messageDigest.digest();
