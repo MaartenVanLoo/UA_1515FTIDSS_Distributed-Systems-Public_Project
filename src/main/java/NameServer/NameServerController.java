@@ -1,6 +1,7 @@
 package NameServer;
 
 import Utils.Hashing;
+import kong.unirest.Unirest;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -165,6 +166,16 @@ public class NameServerController {
         }
         String response = "{\"link\":\"/ns/nodes/"+id+"\"}";
         this.nameServer.getIpMapLock().writeLock().unlock();
+
+        //notify the previous node that a new node has been created
+        this.nameServer.getIpMapLock().readLock().lock();
+        String previousIp = this.nameServer.getPrevNodeIP(id);
+        JSONObject json = new JSONObject();
+        json.put("id", id);
+        json.put("ip", ip);
+        Unirest.post(previousIp+"/files").body(json.toJSONString());
+        this.nameServer.getIpMapLock().readLock().unlock();
+
         return response;
     }
 

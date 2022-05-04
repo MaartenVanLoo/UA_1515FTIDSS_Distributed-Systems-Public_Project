@@ -37,13 +37,52 @@ public class NodeAPI {
                     exchange.sendResponseHeaders(501, -1);
                 }
             });
+            this.server.createContext("/files", (exchange) -> {
+                exchange.getResponseHeaders().add("Content-Type", "application/json");
+                exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
+                exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "GET");
+                exchange.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type");
+                if (!this.node.isSetUp()) {
+                    exchange.sendResponseHeaders(400, -1);
+                }
+                if ("GET".equals(exchange.getRequestMethod())) {
+                    exchange.sendResponseHeaders(501, -1);
+                }
+                else if ("POST".equals(exchange.getRequestMethod())) {
+                    //update file locations
+                    boolean response = this.updateFileLocations(exchange.getRequestBody().toString());
+                    if (response) {
+                        exchange.sendResponseHeaders(200, -1);
+                    }else{
+                        exchange.sendResponseHeaders(400, -1);
+                    }
+                }
+                else if ("DELETE".equals(exchange.getRequestMethod())) {
+                    exchange.sendResponseHeaders(501, -1);
+                }
+                else if ("PUT".equals(exchange.getRequestMethod())) {
+                    exchange.sendResponseHeaders(501, -1);
+                }
+            });
         } catch (Exception e) {
             this.server = null;
             System.out.println("Error creating http server");
         }
         this.start();
     }
-
+    public boolean updateFileLocations(String requestBody) {
+        try{
+            System.out.println("Updating replicated file locations");
+            JSONObject jsonObject = (JSONObject) this.node.getParser().parse(requestBody);
+            long newNodeId = (long) jsonObject.get("id");
+            String newNodeIp = (String) jsonObject.get("ip");
+            this.node.getFileManager().updateFileLocations(newNodeId, newNodeIp);
+            System.out.println("Update replicated file locations complete");
+        }catch(Exception e) {
+            return false;
+        }
+        return true;
+    }
     public void start() {
         if (this.server != null) {
             this.server.setExecutor(Executors.newCachedThreadPool());

@@ -75,6 +75,7 @@ public class FileManager extends Thread {
         }
     }
 
+    //TODO: remove?????????
     public void updateFileCheck(String fileName) {
         try {
             File dir = new File(localFolder);
@@ -107,6 +108,37 @@ public class FileManager extends Thread {
         } catch (Exception e) {
             System.err.println(e.getMessage());
 
+        }
+    }
+
+    public void updateFileLocations(long nodeId,String nodeIp){
+        // new node with given ID is inserted in the network, check the hash of every replicated file.
+        // If the hash > the nodeId => the file must be send to this new node and removed from this one.
+
+        // get the list of files in replicated folder
+        try {
+            File dir = new File(replicaFolder);
+            File[] files = dir.listFiles();
+            if (files == null || files.length == 0) {
+                System.out.println("No files in local folder");
+                return;
+            }
+            // Get the names of the files by using the .getName() method
+            for (File file : files) {
+                int fileHash = Hashing.hash(file.getName());
+                if (fileHash > nodeId) {
+                    //send fileName to new node
+                    try {
+                        String replicateIPAddr = Unirest.get("/ns/files/{filename}").routeParam("filename", file.getName()).asString().getBody();
+                        FileTransfer.sendFile(file.getName(), replicaFolder, replicaFolder, replicateIPAddr);
+                        file.delete();
+                    }catch(Exception e){
+                        e.printStackTrace();
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
         }
     }
 

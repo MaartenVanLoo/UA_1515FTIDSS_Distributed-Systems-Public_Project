@@ -270,6 +270,9 @@ public class Node {
         return name;
     }
 
+    public FileManager getFileManager() {
+        return fileManager;
+    }
     /**
      * This algorithm is activated in every exception thrown during communication with other nodes.
      * This allows distributed detection of node failure.
