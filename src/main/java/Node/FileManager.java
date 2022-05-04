@@ -75,41 +75,6 @@ public class FileManager extends Thread {
         }
     }
 
-    public void updateFileCheck(String fileName) {
-        try {
-            File dir = new File(localFolder);
-            File[] files = dir.listFiles();
-            if (files == null || files.length == 0) {
-                System.out.println("No files in local folder");
-                return;
-            }
-            // Get the names of the files by using the .getName() method
-            // check if file is not in the list
-            for (File file : files) {
-                if (!fileList.contains(file.getName())) {
-                    int filehash = Hashing.hash(file.getName());
-                    fileList.add(file.getName());
-                    //send fileName to NameServer
-                    try {
-                        String replicateIPAddr = Unirest.get("/ns/files/{filename}")
-                                .routeParam("filename", file.getName()).asString().getBody();
-                        // if the IP addr the NS sent back is the same as the one of this node, get the prev node IP address
-                        // check example 3 doc3.pdf
-                        if (Objects.equals(replicateIPAddr, node.getIP())) {
-                            replicateIPAddr = this.node.getPrevNodeIP();
-                        }
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-
-                }
-            }
-        } catch (Exception e) {
-            System.err.println(e.getMessage());
-
-        }
-    }
-
     /**
      * Sends a given file to a given IP address.
      *
@@ -155,7 +120,6 @@ public class FileManager extends Thread {
                 StandardWatchEventKinds.ENTRY_MODIFY);
 
         WatchKey key;
-        ArrayList fileEvents = new ArrayList();
         while ((key = watchService.take()) != null) {
 
             //sleep(50);
@@ -186,6 +150,8 @@ public class FileManager extends Thread {
                         }
                         break;
                     case "ENTRY_DELETE":
+
+                    default:
                         break;
                 }
 
@@ -197,6 +163,9 @@ public class FileManager extends Thread {
         }
     }
 
+    /**
+     * If the "./local" and "./replica" folders don't exist yet, then this method will create them to avoid future errors.
+     */
     void createDirectories() {
         //check if local directory exists
         File dir = new File(localFolder);

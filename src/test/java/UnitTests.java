@@ -127,4 +127,10 @@ public class UnitTests {
         fm.checkDirectory();
     }
 
+    @Test
+    public void status() throws IOException {
+        Node n = new Node("def");
+        n.printStatus();
+    }
+
 }

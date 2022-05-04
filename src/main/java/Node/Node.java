@@ -207,6 +207,16 @@ public class Node {
             System.out.println("Node next id:\t" + this.nextNodeId);
             System.out.println("Node next ip:\t" + this.nextNodeIP);
             System.out.println("Node nodeCount:\t" + this.nodeCount);
+            System.out.print("Local files: ");
+            File local = new File("./local");
+            File[] localFiles = local.listFiles();
+            for (File file: localFiles) System.out.print(file.getName() + "\t");
+            System.out.println("");
+            System.out.print("Replicated files: ");
+            File replica = new File("./replica");
+            File[] replicaFiles = replica.listFiles();
+            for (File file: replicaFiles) System.out.print(file.getName() + "\t");
+            System.out.println("");
         }
     }
 
