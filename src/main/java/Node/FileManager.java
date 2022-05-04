@@ -161,6 +161,9 @@ public class FileManager extends Thread {
             for (WatchEvent<?> event : key.pollEvents()) {
                 //sleep(50);
                 //fileEvents.add(event.kind().toString() + " " + event.context().toString());
+                System.out.println(
+                        "Event kind:" + event.kind()
+                                + ". File affected: " + event.context() + ".");
 
                 switch (event.kind().toString()) {
                     case "ENTRY_CREATE":
@@ -198,10 +201,6 @@ public class FileManager extends Thread {
                         }
                         break;
                 }
-
-                System.out.println(
-                        "Event kind:" + event.kind()
-                                + ". File affected: " + event.context() + ".");
             }
             key.reset();
         }
