@@ -165,18 +165,6 @@ public class NameServerController {
             throw new NodeAlreadyExistsException(id,ip); // return HttpStatus.CONFLICT 409
         }
         String response = "{\"link\":\"/ns/nodes/"+id+"\"}";
-        this.nameServer.getIpMapLock().writeLock().unlock();
-
-        //notify the previous node that a new node has been created
-        this.nameServer.getIpMapLock().readLock().lock();
-        String previousIp = this.nameServer.getPrevNodeIP(id);
-        JSONObject json = new JSONObject();
-        json.put("id", id);
-        json.put("ip", ip);
-        System.out.println(previousIp+":8081/files");
-        Unirest.post(previousIp+":8081/files").body(json.toJSONString());
-        this.nameServer.getIpMapLock().readLock().unlock();
-
         return response;
     }
 
@@ -285,6 +273,8 @@ public class NameServerController {
 
             this.running = true;
             while (this.running) {
+                boolean success = false;
+                int Id = -1;
                 try {
                     byte[] receiveBuffer = new byte[512]; //make a new buffer for every request (to overwrite the old one)
                     DatagramPacket receivePacket = new DatagramPacket(receiveBuffer, receiveBuffer.length);
@@ -302,11 +292,12 @@ public class NameServerController {
                     System.out.println("Discovery package received! -> " + receivePacket.getAddress() + ":" + receivePacket.getPort());
 
                     String name = (String) jsonObject.get("name");
+
                     if (name == null) {
                         this.nameServerController.logger.info("Adding node failed");
                         response = "{\"status\":\"Access Denied\"}";
                     }else {
-                        int Id = Hashing.hash(name);
+                        Id = Hashing.hash(name);
                         System.out.println("Name: " + name);
                         System.out.println("Hashed name: " + Id);
                         if (this.nameServerController.nameServer.addNode(Id, ip)) {
@@ -317,6 +308,7 @@ public class NameServerController {
                                     "\"status\":\"OK\"," +
                                     "\"nodeCount\":" + this.nameServerController.nameServer.getIpMapping().size() + "," +
                                     "\"node\":" + this.nameServerController.nameServer.nodeToJson(Id) + "}";
+                            success = true;
                             this.nameServerController.nameServer.getIpMapLock().readLock().unlock();
 
                         } else {
@@ -326,10 +318,27 @@ public class NameServerController {
                                     "\"type\":\"NS-offer\"," +
                                     "\"status\":\"Access Denied\"" +
                                     "}";
+                            success = false;
                         }
                     }
                     DatagramPacket responsePacket = new DatagramPacket(response.getBytes(StandardCharsets.UTF_8), response.length(), receivePacket.getAddress(), receivePacket.getPort());
                     this.nameServerController.socket.send(responsePacket);
+
+
+                    //notify previous node from the newly added node to update his replication table
+                    if (success) {
+                        this.nameServerController.nameServer.getIpMapLock().writeLock().unlock();
+
+                        //notify the previous node that a new node has been created
+                        this.nameServerController.nameServer.getIpMapLock().readLock().lock();
+                        String previousIp = this.nameServerController.nameServer.getPrevNodeIP(Id);
+                        JSONObject json = new JSONObject();
+                        json.put("id", Id);
+                        json.put("ip", previousIp);
+                        System.out.println(previousIp+":8081/files");
+                        Unirest.post(previousIp+":8081/files").body(json.toJSONString());
+                        this.nameServerController.nameServer.getIpMapLock().readLock().unlock();
+                    }
                 }
                 catch (ParseException | IOException ignored) {}
             }
