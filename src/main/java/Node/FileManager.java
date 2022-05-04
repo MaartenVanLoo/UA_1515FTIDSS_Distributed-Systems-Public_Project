@@ -13,8 +13,8 @@ import java.util.TreeMap;
 
 public class FileManager extends Thread {
     private Node node;
-    final String localFolder= "/local";
-    final String replicaFolder = "/replica";
+    final String localFolder= "local";
+    final String replicaFolder = "replica";
     private ArrayList<String> fileList = new ArrayList<>();
 
     WatchService watchService = FileSystems.getDefault().newWatchService();
