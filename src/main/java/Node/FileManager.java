@@ -167,8 +167,21 @@ public class FileManager extends Thread {
         }
     }
 
+    void createDirectories(){
+        //check if local directory exists
+        File dir = new File(localFolder);
+        if (!dir.exists()) {
+            dir.mkdir();
+        }
+        //check if replica directory exists
+        dir = new File(replicaFolder);
+        if (!dir.exists()) {
+            dir.mkdir();
+        }
+    }
     @Override
     public void run() {
+        this.createDirectories();
         this.startup();
         try {
             checkDirectory();
