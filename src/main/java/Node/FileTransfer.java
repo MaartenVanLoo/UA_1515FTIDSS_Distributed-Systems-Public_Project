@@ -30,7 +30,7 @@ public class FileTransfer extends Thread {
             in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
             File file = new File(sourceFilePath);
-            System.out.println("File exists:" + file.exists());
+            //System.out.println("File exists:" + file.exists());
             long fileSize = file.length();
             BufferedInputStream bufferedInputStream = new BufferedInputStream(new FileInputStream(file));
 
@@ -43,10 +43,10 @@ public class FileTransfer extends Thread {
             out.println(jsonObject.toJSONString());
             out.flush();
 
-            System.out.println("Sending: " + jsonObject.get("fileName")+" "+ fileSize);
+            //System.out.println("Sending: " + jsonObject.get("fileName")+" "+ fileSize);
             //receive acknowledgement of receiving file data
             String response = in.readLine();
-            System.out.println("Received: " + response);
+            //System.out.println("Received: " + response);
             if(!response.equals("ACK")){
                 System.out.println("Error sending file data");
                 socket.close();
@@ -69,7 +69,7 @@ public class FileTransfer extends Thread {
             out.close();
             in.close();
             socket.close();
-            System.out.println("\nFile sent successfully in "+ (System.currentTimeMillis() - startTime) +" ms!");
+            //System.out.println("\nFile sent successfully in "+ (System.currentTimeMillis() - startTime) +" ms!");
             return true;
         } catch (IOException e) {
             e.printStackTrace();
@@ -266,16 +266,16 @@ public class FileTransfer extends Thread {
                     clientSocket.close();
                     throw new IOException("File name not received!");
                 }
-                System.out.println("Raw: " + inputLine);
-                System.out.println("Parsing");
+                //System.out.println("Raw: " + inputLine);
+                //System.out.println("Parsing");
                 JSONParser parser = new JSONParser();
                 JSONObject metaData = (JSONObject) parser.parse(inputLine);
                 String fileName = (String) metaData.get("fileName");
                 long fileSize = (long) metaData.get("fileSize");
                 String action = (String) metaData.get("action");
-                System.out.println("Received file name: " + fileName);
-                System.out.println("Received file size: " + fileSize);
-                System.out.println("Received action: " + action);
+                //System.out.println("Received file name: " + fileName);
+                //System.out.println("Received file size: " + fileSize);
+                //System.out.println("Received action: " + action);
 
                 if (action.equals("delete")) {
                     System.out.println("Deleting file...");
@@ -289,7 +289,7 @@ public class FileTransfer extends Thread {
                     //send fileneame recieved
                     out.println("ACK");
                     out.flush();
-                    System.out.println("Sent ACK");
+                    //System.out.println("Sent ACK");
 
                     // receive file
                     byte[] buffer = new byte[1024];
