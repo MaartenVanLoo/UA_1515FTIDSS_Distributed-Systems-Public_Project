@@ -43,7 +43,7 @@ public class FileTransfer extends Thread {
             out.println(jsonObject.toJSONString());
             out.flush();
 
-            //System.out.println("Sending: " + jsonObject.get("fileName")+" "+ fileSize);
+            System.out.println("Sending: " + jsonObject.get("fileName")+" size: "+ fileSize);
             //receive acknowledgement of receiving file data
             String response = in.readLine();
             //System.out.println("Received: " + response);
@@ -252,7 +252,6 @@ public class FileTransfer extends Thread {
         @Override
         public void run() {
             try {
-                System.out.println("Receiving file...");
                 out = new PrintWriter(clientSocket.getOutputStream(), true);
                 in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
                 String inputLine;
@@ -289,7 +288,7 @@ public class FileTransfer extends Thread {
                     //send fileneame recieved
                     out.println("ACK");
                     out.flush();
-                    //System.out.println("Sent ACK");
+                    System.out.println("Receiving file: " + fileName);
 
                     // receive file
                     byte[] buffer = new byte[1024];
@@ -300,7 +299,10 @@ public class FileTransfer extends Thread {
                     while ((bytesRead = clientSocket.getInputStream().read(buffer)) != -1 && totalBytesRead < fileSize) {
                         bufferedOutputStream.write(buffer, 0, bytesRead);
                         totalBytesRead += bytesRead;
+                        //show progress bar in %
+                        System.out.print("Receiving file... " + (totalBytesRead * 100L) / fileSize + "% complete!\r");
                     }
+                    System.out.println("100%");
                     bufferedOutputStream.flush();
                     bufferedOutputStream.close();
                 }

@@ -130,6 +130,10 @@ public class FileManager extends Thread {
                     //send fileName to new node
                     try {
                         String replicateIPAddr = Unirest.get("/ns/files/{filename}").routeParam("filename", file.getName()).asString().getBody();
+                        if (Objects.equals(replicateIPAddr, node.getIP())) {
+                            //don't send it, file is correctly placed
+                            continue;
+                        }
                         FileTransfer.sendFile(file.getName(), replicaFolder, replicaFolder, replicateIPAddr);
                         file.delete();
                     }catch(Exception e){

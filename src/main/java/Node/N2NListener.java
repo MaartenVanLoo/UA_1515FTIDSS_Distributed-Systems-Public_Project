@@ -46,7 +46,7 @@ public class N2NListener extends Thread {
                 if (!this.node.isSetUp()) continue; //Do not answer packets till the node is set up
 
                 String data = new String(receivedPacket.getData()).trim();
-                System.out.println("Received: " + data);
+                //System.out.println("Received: " + data);
                 String sourceIp = receivedPacket.getAddress().getHostAddress();
 
                 //what type is the received packet?
