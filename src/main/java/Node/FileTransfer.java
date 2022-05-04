@@ -169,6 +169,7 @@ public class FileTransfer extends Thread {
     }
 
     public static String getFileLocation(String fileName, String targetFolder, String host, int port, long TTL){
+        System.out.println("getFile location not implemented yet");
         String targetFilePath = Objects.equals(targetFolder, "") ?fileName : targetFolder + "/" + fileName;
         PrintWriter out;
         BufferedReader in;
@@ -296,6 +297,8 @@ public class FileTransfer extends Thread {
                     bufferedOutputStream.close();
                 }
                 else if (action.equals("getFileLocation")) {
+                    out.println("");
+                    /*
                     //check if file exists
                     File file = new File(fileName);
                     String location;
@@ -313,6 +316,8 @@ public class FileTransfer extends Thread {
                         location = this.node.getIP();
                     }
                     out.println(location);
+
+                    */
                 }
                 in.close();
                 out.close();
