@@ -37,7 +37,7 @@ public class FileTransfer extends Thread {
             byte[] buffer = new byte[1024];
             JSONObject jsonObject = new JSONObject();
             Random rn = new Random();
-            jsonObject.put("fileName", targetFilePath + "_copy" + rn.nextInt(100));
+            jsonObject.put("fileName", targetFilePath);// + "_copy" + rn.nextInt(100));
             jsonObject.put("fileSize", fileSize);
             jsonObject.put("action", "create");
             out.println(jsonObject.toJSONString());
