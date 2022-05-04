@@ -37,7 +37,7 @@ public class FileManager extends Thread {
             }
             String launchDirectory = System.getProperty("user.dir");
             System.out.println("Current directory: " + launchDirectory);
-            File dir = new File(launchDirectory+localFolder);
+            File dir = new File(launchDirectory+ "/" + localFolder);
             System.out.println("Directory: " + dir.getCanonicalPath());
             File[] files = dir.listFiles();
             if (files == null || files.length == 0) {
