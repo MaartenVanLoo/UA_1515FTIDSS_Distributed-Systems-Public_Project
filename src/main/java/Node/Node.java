@@ -358,7 +358,7 @@ public class Node {
         };
         executorService.scheduleAtFixedRate(validator, 1, 5, TimeUnit.SECONDS);
         Thread.sleep(10000);
-        FileTransfer.sendFile("local/ItWorks.jpg","192.168.48.4");
+        //FileTransfer.sendFile("local/ItWorks.jpg","192.168.48.4");
         Thread.sleep(6000000 + 2 * (long) ((Math.random() - 0.5) * 30000)); // sleep for 60±30 seconds
         executorService.shutdownNow();
         node.shutdown();
