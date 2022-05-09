@@ -2,6 +2,10 @@ package Node;
 
 import Utils.Hashing;
 import kong.unirest.Unirest;
+import org.apache.tomcat.util.http.fileupload.FileUtils;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 
 import java.io.*;
 import java.net.Socket;
@@ -10,11 +14,13 @@ import java.util.Arrays;
 import java.util.Objects;
 import java.nio.file.*;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 public class FileManager extends Thread {
     private Node node;
     final String localFolder = "local";
     final String replicaFolder = "replica";
+    final String logFolder = "log";
     private ArrayList<String> fileList = new ArrayList<>();
 
     WatchService watchService = FileSystems.getDefault().newWatchService();
@@ -136,6 +142,10 @@ public class FileManager extends Thread {
                             continue;
                         }
                         FileTransfer.sendFile(file.getName(), replicaFolder, replicaFolder, replicateIPAddr);
+                        //update log file
+                        updateLogFile(file.getName(),this.node.getPrevNodeId(), replicateIPAddr);
+                        //send log file
+                        FileTransfer.sendFile("log_" + file.getName(), logFolder,logFolder, replicateIPAddr);
                         file.delete();
                     }catch(Exception e){
                         e.printStackTrace();
@@ -204,6 +214,24 @@ public class FileManager extends Thread {
 
                 switch (event.kind().toString()) {
                     case "ENTRY_CREATE":
+                        //Create log file
+                        JSONObject owner  = new JSONObject();
+                        owner.put("id", this.node.getId());
+                        owner.put("ip", this.node.getIP());
+                        JSONObject origin = new JSONObject();
+                        origin.put("id", this.node.getId());
+                        origin.put("ip", this.node.getIP());
+                        JSONArray downloads = new JSONArray();
+
+                        JSONObject logfile = new JSONObject();
+                        logfile.put("owner", owner);
+                        logfile.put("origin", origin);
+                        logfile.put("Downloads", downloads);
+
+                        FileWriter writer = new FileWriter("log_" + event.context().toString());
+                        writer.write(logfile.toJSONString());
+                        writer.close();
+                        //[fallthrough]
                     case "ENTRY_MODIFY":
                         File file = new File(event.context().toString());
                         try {
@@ -291,6 +319,10 @@ public class FileManager extends Thread {
             System.out.println("Replicating " + file.getName() + " to " + replicateIPAddr);
             //send file to replica
             FileTransfer.sendFile(file.getName(), replicaFolder, replicaFolder, replicateIPAddr);
+            //update log file
+            updateLogFile(file.getName(),this.node.getPrevNodeId(), replicateIPAddr);
+            //send log file
+            FileTransfer.sendFile("log_" + file.getName(), logFolder,logFolder, replicateIPAddr);
         }
 
     }
@@ -332,6 +364,28 @@ public class FileManager extends Thread {
     public File[] getReplicatedFiles() {
         File local = new File("./replica");
         return local.listFiles();
+    }
+
+    public void updateLogFile(String fileName, long newOwner, String newIP) {
+        try {
+            //load log file
+            File logFile = new File(logFolder + "/log_" + fileName);
+            String logFileContent = "";
+            BufferedReader reader = new BufferedReader(new FileReader(logFile));
+            JSONParser parser = new JSONParser();
+            JSONObject jsonObject = (JSONObject) parser.parse(reader.lines().collect(Collectors.joining(System.lineSeparator())));
+            reader.close();
+            //update log file
+            JSONObject owner = (JSONObject) jsonObject.get("owner");
+            owner.put("id", newOwner);
+            owner.put("ip", newIP);
+            //write log file
+            FileWriter writer = new FileWriter(logFile);
+            writer.write(jsonObject.toJSONString());
+            writer.close();
+        } catch (Exception e){
+            e.printStackTrace();
+        }
     }
 }
 

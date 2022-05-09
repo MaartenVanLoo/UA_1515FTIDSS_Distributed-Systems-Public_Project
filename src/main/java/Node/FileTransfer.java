@@ -285,7 +285,7 @@ public class FileTransfer extends Thread {
                     return;
                 }
                 else if (action.equals("create")) {
-                    //send fileneame recieved
+                    //send filename received
                     out.println("ACK");
                     out.flush();
                     System.out.println("Receiving file: " + fileName);

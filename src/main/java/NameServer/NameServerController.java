@@ -347,6 +347,8 @@ public class NameServerController {
                         );
                     }catch (UnirestException e) {
                         System.out.println("Unable to contact previous node");
+                        //report failure of this node
+                        failNode(Id);
                     }
                     this.nameServerController.nameServer.getIpMapLock().readLock().unlock();
                 }
