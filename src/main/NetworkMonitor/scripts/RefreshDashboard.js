@@ -114,6 +114,8 @@ function updateDetailsTable(){
         document.getElementById("node-details-next-ip").innerHTML = "-";
         document.getElementById("node-details-prev-id").innerHTML = "-";
         document.getElementById("node-details-prev-ip").innerHTML = "-";
+        document.getElementByid("local").innerHTML = "-";
+        document.getElementById("replica").innerHTML = "-";
     }else{
         document.getElementById("node-details-name").innerHTML = nodeData[selectedID].node.name;
         document.getElementById("node-details-status").innerHTML = nodeLastPing[selectedID]  + Math.max(parseInt(document.getElementById("nsRefreshRate").value)*2,10000) > Date.now() ?
@@ -125,6 +127,8 @@ function updateDetailsTable(){
         document.getElementById("node-details-next-ip").innerHTML = nodeData[selectedID].next.ip;
         document.getElementById("node-details-prev-id").innerHTML = nodeData[selectedID].prev.id;
         document.getElementById("node-details-prev-ip").innerHTML = nodeData[selectedID].prev.ip;
+        document.getElementById("local").innerHTML = nodeData[selectedID].local;
+        docuemnt.getEleemntById("replica").innerHTML = nodeData[selectedID].replica;
     }
 
 }

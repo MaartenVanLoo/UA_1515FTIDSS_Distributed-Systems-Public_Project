@@ -139,7 +139,7 @@ public class NodeAPI {
         response.put("next", next);
         response.put("prev", prev);
         response.put("local", local);
-        response.put("replicated", replicated);
+        response.put("replica", replicated);
 
         return response.toJSONString();
     }
