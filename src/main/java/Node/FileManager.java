@@ -331,7 +331,7 @@ public class FileManager extends Thread {
 
     public File[] getReplicatedFiles() {
         File local = new File("./replica");
-        File[] localFiles = local.listFiles();
+        return local.listFiles();
     }
 }
 
