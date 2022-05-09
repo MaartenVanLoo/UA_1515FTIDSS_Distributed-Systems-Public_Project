@@ -2,10 +2,12 @@ package Node;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import javax.swing.*;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
@@ -124,9 +126,20 @@ public class NodeAPI {
         prev.put("id", this.node.getPrevNodeId());
         prev.put("ip", this.node.getPrevNodeIP());
 
+        JSONArray local = new JSONArray();
+        for (File file : this.node.getFileManager().getLocalFiles()) {
+            local.add(file.getName());
+        }
+
+        JSONArray replicated = new JSONArray();
+        for (File file : this.node.getFileManager().getReplicatedFiles()){
+            replicated.add(file.getName());
+        }
         response.put("node", node);
         response.put("next", next);
         response.put("prev", prev);
+        response.put("local", local);
+        response.put("replicated", replicated);
 
         return response.toJSONString();
     }

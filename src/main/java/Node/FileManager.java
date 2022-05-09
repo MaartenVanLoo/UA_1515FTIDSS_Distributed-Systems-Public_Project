@@ -323,6 +323,16 @@ public class FileManager extends Thread {
             e.printStackTrace();
         }
     }
+
+    public File[] getLocalFiles() {
+        File local = new File("./local");
+        return local.listFiles();
+    }
+
+    public File[] getReplicatedFiles() {
+        File local = new File("./replica");
+        File[] localFiles = local.listFiles();
+    }
 }
 
 
