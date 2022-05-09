@@ -243,11 +243,11 @@ public class FileManager extends Thread {
         }
     }
 
-    public void shutDown(Node node) throws IOException {
+    public void shutDown() {
         String launchDirectory = System.getProperty("user.dir");
         System.out.println("Current directory: " + launchDirectory); //vieze ai zeg
         File dir = new File(launchDirectory + "/" + localFolder); //get the local folder
-        System.out.println("Directory: " + dir.getCanonicalPath()); //vieze ai zeg
+        //System.out.println("Directory: " + dir.getCanonicalPath()); //vieze ai zeg
         File[] files = dir.listFiles(); //get all files in the directory
         if (files == null || files.length == 0) {
             System.out.println("No files in local folder"); //vieze ai zeg
@@ -279,7 +279,7 @@ public class FileManager extends Thread {
 
         //send replica files to prev node
         dir = new File(launchDirectory + "/" + replicaFolder);
-        System.out.println("Directory: " + dir.getCanonicalPath());
+        //System.out.println("Directory: " + dir.getCanonicalPath());
         files = dir.listFiles();
         if (files == null || files.length == 0) {
             System.out.println("No files in local folder");

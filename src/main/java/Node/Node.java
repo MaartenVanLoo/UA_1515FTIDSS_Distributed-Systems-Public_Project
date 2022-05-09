@@ -190,6 +190,7 @@ public class Node {
         } catch (Exception e) {
             e.printStackTrace();
         }
+        this.fileManager.shutDown();
         this.listeningSocket.close(); //close the listening socket, this will cause the N2N to exit
         this.nodeAPI.stop();
         System.out.println("Shutdown complete");
@@ -372,7 +373,7 @@ public class Node {
         executorService.scheduleAtFixedRate(validator, 1, 5, TimeUnit.SECONDS);
         Thread.sleep(10000);
 
-        Thread.sleep(6000000 + 2 * (long) ((Math.random() - 0.5) * 30000)); // sleep for 60±30 seconds
+        Thread.sleep(35000 + 2 * (long) ((Math.random() - 0.5) * 30000)); // sleep for 60±30 seconds
         executorService.shutdownNow();
         node.shutdown();
     }
