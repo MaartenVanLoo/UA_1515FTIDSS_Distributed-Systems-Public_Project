@@ -2,6 +2,7 @@ package NameServer;
 
 import Utils.Hashing;
 import kong.unirest.Unirest;
+import kong.unirest.UnirestException;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -330,6 +331,7 @@ public class NameServerController {
                 catch (ParseException | IOException ignored) {
 
                 }
+
                 //notify previous node from the newly added node to update his replication table
                 if (success) {
                     //notify the previous node that a new node has been created
@@ -339,9 +341,13 @@ public class NameServerController {
                     json.put("id", Id);
                     json.put("ip", previousIp);
                     System.out.println(previousIp+":8081/files");
-                    System.out.println("Status:"
-                            +Unirest.post("http://" + previousIp+":8081/files").body(json.toJSONString()).asString().getStatus()
-                    );
+                    try {
+                        System.out.println("Status:"
+                                + Unirest.post("http://" + previousIp + ":8081/files").body(json.toJSONString()).asString().getStatus()
+                        );
+                    }catch (UnirestException e) {
+                        System.out.println("Unable to contact previous node");
+                    }
                     this.nameServerController.nameServer.getIpMapLock().readLock().unlock();
                 }
             }

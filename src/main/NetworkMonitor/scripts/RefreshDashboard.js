@@ -127,8 +127,8 @@ function updateDetailsTable(){
         document.getElementById("node-details-next-ip").innerHTML = nodeData[selectedID].next.ip;
         document.getElementById("node-details-prev-id").innerHTML = nodeData[selectedID].prev.id;
         document.getElementById("node-details-prev-ip").innerHTML = nodeData[selectedID].prev.ip;
-        document.getElementById("local").innerHTML = nodeData[selectedID].local;
-        docuemnt.getEleemntById("replica").innerHTML = nodeData[selectedID].replica;
+        document.getElementById("local").innerHTML = arrayToString(nodeData[selectedID].local);
+        document.getElementById("replica").innerHTML = arrayToString(nodeData[selectedID].replica);
     }
 
 }
@@ -154,5 +154,11 @@ function addRowHandler(row,node) {
         };
     };
     row.onclick = createClickHandler(node);
-
+}
+function arrayToString(array){
+    var str = "";
+    for (var i = 0; i < array.length; i++){
+        str += array[i] + "<br>";
+    }
+    return str;
 }
