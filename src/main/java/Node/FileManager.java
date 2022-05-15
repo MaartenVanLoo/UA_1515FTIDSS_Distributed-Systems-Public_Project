@@ -144,6 +144,7 @@ public class FileManager extends Thread {
                         FileTransfer.sendFile(file.getName(), replicaFolder, replicaFolder, replicateIPAddr);
                         //update log file
                         updateLogFile(file.getName(),this.node.getPrevNodeId(), replicateIPAddr);
+                        System.out.println("LogFile updated" );
                         //send log file
                         FileTransfer.sendFile("log_" + file.getName(), logFolder,logFolder, replicateIPAddr);
                         file.delete();
