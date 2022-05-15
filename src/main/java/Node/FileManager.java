@@ -64,8 +64,10 @@ public class FileManager extends Thread {
                 }
                 JSONObject source = new JSONObject();
                 JSONObject owner = new JSONObject();
+                source.put("title", "source");
                 source.put("ip", this.node.getIP());
                 source.put("id", this.node.getId());
+                owner.put("title", "owner");
                 owner.put("ip", this.node.getIP());
                 owner.put("id", this.node.getId());
                 //put the JSONObject in the file
