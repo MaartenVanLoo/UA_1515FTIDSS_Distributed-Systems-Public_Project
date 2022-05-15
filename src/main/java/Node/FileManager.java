@@ -43,7 +43,7 @@ public class FileManager extends Thread {
             }
             String launchDirectory = System.getProperty("user.dir"); // get the current directory
             System.out.println("Current directory: " + launchDirectory); // print the current directory
-            File dir = new File(launchDirectory + "/" + localFolder); // get the  new directory
+            File dir = new File(launchDirectory + "/" + localFolder); // get the  new directory(/local)
             System.out.println("Directory: " + dir.getCanonicalPath()); // print the directory
             File[] files = dir.listFiles(); // get the files in the directory
             if (files == null || files.length == 0) {// if there are no files in the directory
@@ -56,8 +56,25 @@ public class FileManager extends Thread {
             // Get the names of the files by using the .getName() method
             for (File file : files) {
                 //System.out.println(file.getName());
-                int filehash = Hashing.hash(file.getName()); // get the hash of the file
+                //int filehash = Hashing.hash(file.getName()); //  nameserver doet dit
                 fileList.add(file.getName());
+                File logFile = new File(launchDirectory + "/"+ logFolder + "/log_" + file.getName());
+                if (!logFile.exists()) {
+                    logFile.createNewFile();
+                }
+                JSONObject source = new JSONObject();
+                JSONObject owner = new JSONObject();
+                source.put("ip", this.node.getIP());
+                source.put("id", this.node.getId());
+                owner.put("ip", this.node.getIP());
+                owner.put("id", this.node.getId());
+                //put the JSONObject in the file
+                try (PrintWriter out = new PrintWriter(new FileWriter(logFile, true))){
+                    out.write(source.toString());
+                    out.write(owner.toString());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
                 //send fileName to NameServer
                 try {
                     String replicateIPAddr = Unirest.get("/ns/files/{filename}")
@@ -71,6 +88,8 @@ public class FileManager extends Thread {
                     System.out.println("Replicating " + file.getName() + " to " + replicateIPAddr); //vieze ai zeg
                     //send file to replica
                     FileTransfer.sendFile(file.getName(), localFolder, replicaFolder, replicateIPAddr);//
+                    //send file to log
+
 
                 } catch (Exception e) {
                     System.out.println("Error: " + e.getMessage());
@@ -329,7 +348,7 @@ public class FileManager extends Thread {
     }
 
     /**
-     * If the "./local" and "./replica" folders don't exist yet, then this method will create them to avoid future errors.
+     * If the "./local" and "./replica" folders don't exist yet, then this method will create them to avoid future errors. Also checks if the logfolder exists and creates it if it doesn't.
      */
     void createDirectories() {
         //check if local directory exists
@@ -339,6 +358,11 @@ public class FileManager extends Thread {
         }
         //check if replica directory exists
         dir = new File(replicaFolder);
+        if (!dir.exists()) {
+            dir.mkdir();
+        }
+        //check if log directory exists
+        dir = new File(logFolder);
         if (!dir.exists()) {
             dir.mkdir();
         }
@@ -370,7 +394,7 @@ public class FileManager extends Thread {
     public void updateLogFile(String fileName, long newOwner, String newIP) {
         try {
             //load log file
-            File logFile = new File(logFolder + "/log_" + fileName);
+            File logFile = new File( logFolder + "/log_" + fileName);
             String logFileContent = "";
             BufferedReader reader = new BufferedReader(new FileReader(logFile));
             JSONParser parser = new JSONParser();
