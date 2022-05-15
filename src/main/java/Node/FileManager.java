@@ -70,6 +70,11 @@ public class FileManager extends Thread {
                 owner.put("title", "owner");
                 owner.put("ip", this.node.getIP());
                 owner.put("id", this.node.getId());
+                JSONObject logfile = new JSONObject();
+                JSONArray downloads = new JSONArray();
+                logfile.put("owner", owner);
+                logfile.put("origin", source);
+                logfile.put("Downloads", downloads);
                 //put the JSONObject in the file
                 try (PrintWriter out = new PrintWriter(new FileWriter(logFile, true))){
                     out.write(source.toString());
