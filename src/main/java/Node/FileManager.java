@@ -77,8 +77,7 @@ public class FileManager extends Thread {
                 logfile.put("Downloads", downloads);
                 //put the JSONObject in the file
                 try (PrintWriter out = new PrintWriter(new FileWriter(logFile, false))){
-                    out.write(source.toString());
-                    out.write(owner.toString());
+                    out.write(logfile.toString());
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
