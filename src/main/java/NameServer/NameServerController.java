@@ -233,6 +233,14 @@ public class NameServerController {
     @ResponseStatus(HttpStatus.NOT_IMPLEMENTED) // 501
     @DeleteMapping("/ns/files/{fileName}")
     public void deleteFile(@PathVariable String fileName){}
+
+    @ResponseStatus(HttpStatus.OK) // 200
+    @GetMapping("/ns/files/{fileName}/id")
+    public int getFileId(@PathVariable String fileName){
+        this.logger.info("Request for file: " + fileName);
+        int hash = Hashing.hash(fileName);
+        return this.nameServer.getPrevNode(hash);
+    }
     //</editor-fold>
 
 
