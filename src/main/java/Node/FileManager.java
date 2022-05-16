@@ -166,7 +166,7 @@ public class FileManager extends Thread {
                             //don't send it, file is correctly placed
                             continue;
                         }
-                        String replicateID = Unirest.get("/ns/files/{fileName}/id").routeParam("fileName", file.getName()).asString().getBody();
+                        int replicateID = Integer.parseInt(Unirest.get("/ns/files/{fileName}/id").routeParam("fileName", file.getName()).asString().getBody());
                         FileTransfer.sendFile(file.getName(), replicaFolder, replicaFolder, replicateIPAddr);
                         file.delete();
                         //update log file
