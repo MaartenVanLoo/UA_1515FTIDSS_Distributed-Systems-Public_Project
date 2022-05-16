@@ -406,6 +406,7 @@ public class FileManager extends Thread {
             JSONObject owner = (JSONObject) jsonObject.get("owner");
             owner.put("id", newOwner);
             owner.put("ip", newIP);
+            jsonObject.put("owner", owner);
             //write log file
             FileWriter writer = new FileWriter(logFile);
             writer.write(jsonObject.toJSONString());
