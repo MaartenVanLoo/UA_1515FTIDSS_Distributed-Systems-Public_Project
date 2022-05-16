@@ -58,7 +58,7 @@ public class FileManager extends Thread {
                 //System.out.println(file.getName());
                 //int filehash = Hashing.hash(file.getName()); //  nameserver doet dit
                 fileList.add(file.getName());
-                File logFile = new File(launchDirectory + "/"+ logFolder + "/log_" + file.getName());
+                File logFile = new File(launchDirectory + "/"+ logFolder + "/" + file.getName() + ".log");
                 if (!logFile.exists()) {
                     logFile.createNewFile();
                 }
@@ -172,7 +172,7 @@ public class FileManager extends Thread {
                         updateLogFile(file.getName(),this.node.getPrevNodeId(), replicateIPAddr);
                         System.out.println("LogFile updated" );
                         //send log file
-                        FileTransfer.sendFile("log_" + file.getName(), logFolder,logFolder, replicateIPAddr);
+                        FileTransfer.sendFile(file.getName() + ".log", logFolder,logFolder, replicateIPAddr);
                         file.delete();
                     }catch(Exception e){
                         e.printStackTrace();
