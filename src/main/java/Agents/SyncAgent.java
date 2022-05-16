@@ -1,10 +1,11 @@
 package Agents;
 
-<<<<<<< HEAD
 import java.io.IOException;
 import java.util.ArrayList;
 import Node.*;
 import java.io.File;
+import jade.core.*;
+import jade.core.behaviours.*;
 
 public class SyncAgent {
     // go over every node and make a list of all files in localfolder
@@ -40,12 +41,8 @@ public class SyncAgent {
             e.printStackTrace();
         }
     }
-=======
-import jade.core.*;
-import jade.core.behaviours.*;
+
 
 public class SyncAgent extends Agent {
-   
 
->>>>>>> testAgentBranch
 }
