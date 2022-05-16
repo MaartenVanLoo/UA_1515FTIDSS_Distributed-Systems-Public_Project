@@ -238,6 +238,7 @@ public class FileManager extends Thread {
 
     //https://www.baeldung.com/java-nio2-watchservice
     public void checkDirectory() throws IOException, InterruptedException {
+        //TODO: add log file handling
         path.register(
                 watchService,
                 StandardWatchEventKinds.ENTRY_CREATE,
@@ -334,6 +335,8 @@ public class FileManager extends Thread {
                 System.out.println("Deleting " + file.getName() + " to " + deleteIPAddr);
                 //delete file to replica
                 FileTransfer.deleteFile(file.getName(), replicaFolder, deleteIPAddr);
+                //delete log file
+                FileTransfer.deleteFile(file.getName() + ".log", logFolder, deleteIPAddr);
 
             } catch (Exception e) {
                 System.out.println("Error: " + e.getMessage());
