@@ -167,12 +167,16 @@ public class FileManager extends Thread {
                             continue;
                         }
                         FileTransfer.sendFile(file.getName(), replicaFolder, replicaFolder, replicateIPAddr);
+                        file.delete();
                         //update log file
                         updateLogFile(file.getName(),this.node.getPrevNodeId(), replicateIPAddr);
                         System.out.println("LogFile updated" );
                         //send log file
                         FileTransfer.sendFile(file.getName() + ".log", logFolder,logFolder, replicateIPAddr);
-                        file.delete();
+                        //delete log file
+                        File logFile = new File(logFolder + "/" + file.getName() + ".log");
+                        logFile.delete();
+
                     }catch(Exception e){
                         e.printStackTrace();
                     }
