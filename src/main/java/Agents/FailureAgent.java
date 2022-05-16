@@ -1,8 +1,8 @@
-package Node;
+package Agents;
 
 import jade.core.Agent;
 
-public class FailureAgent {
+public class FailureAgent extends Agent{
 
 
 }

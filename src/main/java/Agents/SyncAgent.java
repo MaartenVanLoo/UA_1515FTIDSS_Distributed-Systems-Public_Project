@@ -1,5 +1,6 @@
 package Agents;
 
+<<<<<<< HEAD
 import java.io.IOException;
 import java.util.ArrayList;
 import Node.*;
@@ -39,4 +40,12 @@ public class SyncAgent {
             e.printStackTrace();
         }
     }
+=======
+import jade.core.*;
+import jade.core.behaviours.*;
+
+public class SyncAgent extends Agent {
+   
+
+>>>>>>> testAgentBranch
 }
