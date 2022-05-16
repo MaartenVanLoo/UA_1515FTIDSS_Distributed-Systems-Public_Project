@@ -259,8 +259,11 @@ public class FileManager extends Thread {
                 File file = new File(event.context().toString());
                 String replicateIPAddr = Unirest.get("/ns/files/{filename}")
                         .routeParam("filename", file.getName()).asString().getBody();
+                long replicateId = Long.parseLong(Unirest.get("/ns/files/{filename}/id")
+                        .routeParam("filename", file.getName()).asString().getBody());
                 if (Objects.equals(replicateIPAddr, node.getIP())) {
                     replicateIPAddr = this.node.getPrevNodeIP();
+                    replicateId = this.node.getPrevNodeId();
                 }
                 switch (event.kind().toString()) {
                     case "ENTRY_CREATE":
@@ -281,6 +284,7 @@ public class FileManager extends Thread {
                         FileWriter writer = new FileWriter(event.context().toString() + ".log");
                         writer.write(logfile.toJSONString());
                         writer.close();
+                        this.updateLogFile(file.getName(),replicateId,replicateIPAddr);
                         FileTransfer.sendFile(file.getName(),logFolder,logFolder, replicateIPAddr + ".log");
                         //[fallthrough]
                     case "ENTRY_MODIFY":
@@ -296,6 +300,7 @@ public class FileManager extends Thread {
                     case "ENTRY_DELETE":
                        try {
                             FileTransfer.deleteFile(file.getName(), replicaFolder, replicateIPAddr);
+                            FileTransfer.deleteFile(file.getName() + ".log", logFolder, replicateIPAddr);
                             System.out.println("Deletion handled");
                         }catch(Exception e){
                             System.out.println("Deletion Error: " + e.getMessage() + " File:" + file.getName());
@@ -355,7 +360,22 @@ public class FileManager extends Thread {
             //send fileName to NameServer
             String replicateIPAddr = this.node.getPrevNodeIP();
             long replicateId = this.node.getPrevNodeId();
+
+            //check edge case
+            if (this.targetIsOrigin(file.getName(), replicateIPAddr)) {
+                try {
+                    //get target node information
+                    JSONParser parser = new JSONParser();
+
+                    JSONObject targetNode = (JSONObject) parser.parse(Unirest.get("/ns/nodes/{id}").routeParam("id", String.valueOf(replicateId)).asString().getBody());
+                    replicateIPAddr = (String) ((JSONObject) targetNode.get("prev")).get("ip");
+                    replicateId = (long) ((JSONObject) targetNode.get("prev")).get("id");
+                }catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
             System.out.println("Replicating " + file.getName() + " to " + replicateIPAddr);
+
             //send file to replica
             FileTransfer.sendFile(file.getName(), replicaFolder, replicaFolder, replicateIPAddr);
             //update log file
