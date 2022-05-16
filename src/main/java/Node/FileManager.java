@@ -76,7 +76,7 @@ public class FileManager extends Thread {
                 logfile.put("origin", source);
                 logfile.put("Downloads", downloads);
                 //put the JSONObject in the file
-                try (PrintWriter out = new PrintWriter(new FileWriter(logFile, true))){
+                try (PrintWriter out = new PrintWriter(new FileWriter(logFile, false))){
                     out.write(source.toString());
                     out.write(owner.toString());
                 } catch (IOException e) {
@@ -96,7 +96,7 @@ public class FileManager extends Thread {
                     //send file to replica
                     FileTransfer.sendFile(file.getName(), localFolder, replicaFolder, replicateIPAddr);//
                     //send file to log
-
+                    FileTransfer.sendFile(file.getName() + ".log", logFolder, logFolder, replicateIPAddr);
 
                 } catch (Exception e) {
                     System.out.println("Error: " + e.getMessage());
@@ -315,9 +315,9 @@ public class FileManager extends Thread {
                     deleteIPAddr = this.node.getPrevNodeIP();
                 }
 
-                System.out.println("Deleting " + file.getName() + " to " + deleteIPAddr); //vieze ai zeg
+                System.out.println("Deleting " + file.getName() + " to " + deleteIPAddr);
                 //delete file to replica
-                FileTransfer.deleteFile(file.getName(), replicaFolder, deleteIPAddr); //vieze ai zeg
+                FileTransfer.deleteFile(file.getName(), replicaFolder, deleteIPAddr);
 
             } catch (Exception e) {
                 System.out.println("Error: " + e.getMessage());
