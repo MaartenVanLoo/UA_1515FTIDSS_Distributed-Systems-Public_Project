@@ -166,10 +166,11 @@ public class FileManager extends Thread {
                             //don't send it, file is correctly placed
                             continue;
                         }
+                        String replicateID = Unirest.get("/ns/files/{fileName}/id").routeParam("fileName", file.getName()).asString().getBody();
                         FileTransfer.sendFile(file.getName(), replicaFolder, replicaFolder, replicateIPAddr);
                         file.delete();
                         //update log file
-                        updateLogFile(file.getName(),this.node.getPrevNodeId(), replicateIPAddr);
+                        updateLogFile(file.getName(),replicateID, replicateIPAddr);
                         System.out.println("LogFile updated" );
                         //send log file
                         FileTransfer.sendFile(file.getName() + ".log", logFolder,logFolder, replicateIPAddr);
@@ -338,11 +339,12 @@ public class FileManager extends Thread {
         for (File file : files) {
             //send fileName to NameServer
             String replicateIPAddr = this.node.getPrevNodeIP();
+            long replicateId = this.node.getPrevNodeId();
             System.out.println("Replicating " + file.getName() + " to " + replicateIPAddr);
             //send file to replica
             FileTransfer.sendFile(file.getName(), replicaFolder, replicaFolder, replicateIPAddr);
             //update log file
-            updateLogFile(file.getName(),this.node.getPrevNodeId(), replicateIPAddr);
+            updateLogFile(file.getName(),replicateId, replicateIPAddr);
             //send log file
             FileTransfer.sendFile(file.getName() + ".log", logFolder,logFolder, replicateIPAddr);
         }
