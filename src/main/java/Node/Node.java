@@ -371,7 +371,7 @@ public class Node {
             //node.validateNode();
         };
         executorService.scheduleAtFixedRate(validator, 1, 5, TimeUnit.SECONDS);
-        Thread.sleep(10000);
+        Thread.sleep(1000000);
 
         Thread.sleep(35000 + 2 * (long) ((Math.random() - 0.5) * 30000)); // sleep for 60±30 seconds
         executorService.shutdownNow();

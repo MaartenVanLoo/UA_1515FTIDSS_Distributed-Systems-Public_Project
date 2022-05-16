@@ -239,6 +239,12 @@ public class FileManager extends Thread {
                         "Event kind:" + event.kind()
                                 + ". File affected: " + event.context() + ".");
 
+                File file = new File(event.context().toString());
+                String replicateIPAddr = Unirest.get("/ns/files/{filename}")
+                        .routeParam("filename", file.getName()).asString().getBody();
+                if (Objects.equals(replicateIPAddr, node.getIP())) {
+                    replicateIPAddr = this.node.getPrevNodeIP();
+                }
                 switch (event.kind().toString()) {
                     case "ENTRY_CREATE":
                         //Create log file
@@ -255,20 +261,13 @@ public class FileManager extends Thread {
                         logfile.put("origin", origin);
                         logfile.put("Downloads", downloads);
 
-                        FileWriter writer = new FileWriter("log_" + event.context().toString());
+                        FileWriter writer = new FileWriter(event.context().toString() + ".log");
                         writer.write(logfile.toJSONString());
                         writer.close();
+                        FileTransfer.sendFile(file.getName(),logFolder,logFolder, replicateIPAddr + ".log");
                         //[fallthrough]
                     case "ENTRY_MODIFY":
-                        File file = new File(event.context().toString());
                         try {
-                            String replicateIPAddr = Unirest.get("/ns/files/{filename}")
-                                    .routeParam("filename", file.getName()).asString().getBody();
-                            // if the IP addr the NS sent back is the same as the one of this node, get the prev node IP address
-                            // check example 3 doc3.pdf
-                            if (Objects.equals(replicateIPAddr, node.getIP())) {
-                                replicateIPAddr = this.node.getPrevNodeIP();
-                            }
                             System.out.println("Replicating " + file.getName() + " to " + replicateIPAddr); //vieze ai zeg
                             //send file to replica
                             FileTransfer.sendFile(file.getName(), localFolder, replicaFolder, replicateIPAddr);
@@ -278,18 +277,11 @@ public class FileManager extends Thread {
                         }
                         break;
                     case "ENTRY_DELETE":
-                        File deletedFile = new File(event.context().toString());
-                        try {
-                            String replicateIPAddr = Unirest.get("/ns/files/{filename}")
-                                    .routeParam("filename", deletedFile.getName()).asString().getBody();
-                            if (Objects.equals(replicateIPAddr, node.getIP())) {
-                                replicateIPAddr = this.node.getPrevNodeIP();
-                            }
-
-                            FileTransfer.deleteFile(deletedFile.getName(), replicaFolder, replicateIPAddr);
+                       try {
+                            FileTransfer.deleteFile(file.getName(), replicaFolder, replicateIPAddr);
                             System.out.println("Deletion handled");
                         }catch(Exception e){
-                            System.out.println("Deletion Error: " + e.getMessage() + " File:" + deletedFile.getName());
+                            System.out.println("Deletion Error: " + e.getMessage() + " File:" + file.getName());
                         }
                         break;
                 }
@@ -349,7 +341,7 @@ public class FileManager extends Thread {
             //update log file
             updateLogFile(file.getName(),this.node.getPrevNodeId(), replicateIPAddr);
             //send log file
-            FileTransfer.sendFile("log_" + file.getName(), logFolder,logFolder, replicateIPAddr);
+            FileTransfer.sendFile(file.getName() + ".log", logFolder,logFolder, replicateIPAddr);
         }
 
     }
@@ -401,7 +393,7 @@ public class FileManager extends Thread {
     public void updateLogFile(String fileName, long newOwner, String newIP) {
         try {
             //load log file
-            File logFile = new File( logFolder + "/log_" + fileName);
+            File logFile = new File( logFolder + "/"+ fileName + ".log");
             String logFileContent = "";
             BufferedReader reader = new BufferedReader(new FileReader(logFile));
             JSONParser parser = new JSONParser();
