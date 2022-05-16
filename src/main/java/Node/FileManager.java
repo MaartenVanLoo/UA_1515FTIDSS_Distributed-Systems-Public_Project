@@ -85,15 +85,20 @@ public class FileManager extends Thread {
                 try {
                     String replicateIPAddr = Unirest.get("/ns/files/{filename}")
                             .routeParam("filename", file.getName()).asString().getBody();
+                    long replicateId = Integer.parseInt(Unirest.get("/ns/files/{filename}/Id").routeParam("filename", file.getName()).asString().getBody());
                     // if the IP addr the NS sent back is the same as the one of this node, get the prev node IP address
                     // check example 3 doc3.pdf
                     if (Objects.equals(replicateIPAddr, node.getIP())) {
                         replicateIPAddr = this.node.getPrevNodeIP();
+                        replicateId = this.node.getPrevNodeId();
                     }
 
-                    System.out.println("Replicating " + file.getName() + " to " + replicateIPAddr); //vieze ai zeg
+
+                    System.out.println("Replicating " + file.getName() + " to " + replicateIPAddr);
                     //send file to replica
                     FileTransfer.sendFile(file.getName(), localFolder, replicaFolder, replicateIPAddr);//
+                    //update log file
+                    this.updateLogFile(file.getName(), replicateId, replicateIPAddr);
                     //send file to log
                     FileTransfer.sendFile(file.getName() + ".log", logFolder, logFolder, replicateIPAddr);
 
@@ -167,6 +172,13 @@ public class FileManager extends Thread {
                             continue;
                         }
                         int replicateID = Integer.parseInt(Unirest.get("/ns/files/{fileName}/id").routeParam("fileName", file.getName()).asString().getBody());
+
+                        // check if the target of the file is the origin of the file
+                        if (this.targetIsOrigin(file.getName(), replicateIPAddr)) {
+                            //do nothing, if the new node is the origin, this node is the previous node, the file is correctly placed
+                            continue;
+                        }
+
                         FileTransfer.sendFile(file.getName(), replicaFolder, replicaFolder, replicateIPAddr);
                         file.delete();
                         //update log file
@@ -416,6 +428,29 @@ public class FileManager extends Thread {
         } catch (Exception e){
             e.printStackTrace();
         }
+    }
+
+    public boolean targetIsOrigin(String fileName, String targetIP) {
+        try {
+            //read file
+            File logFile = new File(logFolder + "/" + fileName + ".log");
+            String logFileContent = "";
+            BufferedReader reader = new BufferedReader(new FileReader(logFile));
+            //parse json file
+            JSONParser parser = new JSONParser();
+            JSONObject jsonObject = (JSONObject) parser.parse(reader.lines().collect(Collectors.joining(System.lineSeparator())));
+            reader.close();
+            //check if target is owner
+            JSONObject origin = (JSONObject) jsonObject.get("origin");
+            if (origin.get("ip").equals(targetIP)) {
+                System.out.println("Target is origin");
+                return true;
+            }
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }
+        return false;
     }
 }
 
