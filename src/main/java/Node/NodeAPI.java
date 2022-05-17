@@ -44,10 +44,12 @@ public class NodeAPI {
                     try {
                         JSONObject jsonObject = (JSONObject) this.node.getParser().parse(content);
                         if (jsonObject.get("method").equals("shutdown")) {
+                            System.out.println("Shutting down node");
                             this.node.shutdown();
                             exchange.sendResponseHeaders(200, -1);
                             System.exit(0);
                         } else if (jsonObject.get("method").equals("terminate")) {
+                            System.out.println("Terminating node");
                             System.exit(0);
                             exchange.sendResponseHeaders(200, -1);
                         } else {
