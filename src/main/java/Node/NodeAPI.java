@@ -29,10 +29,6 @@ public class NodeAPI {
                 exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
                 exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "*");
                 exchange.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type");
-                System.out.println("Request: " + exchange.getRequestURI().toString());
-                System.out.println("Method: " + exchange.getRequestMethod());
-                System.out.println("Headers: " + exchange.getRequestHeaders());
-
                 if (!this.node.isSetUp()) {
                     exchange.sendResponseHeaders(400, -1);
                 }
@@ -64,7 +60,7 @@ public class NodeAPI {
                         exchange.sendResponseHeaders(400, -1);
                     }
                 }else if ("OPTIONS".equals(exchange.getRequestMethod())) {
-                    //cross origin request
+                    //cross origin preflight request
                     exchange.sendResponseHeaders(200, -1);
                 }
                 else {
@@ -97,6 +93,10 @@ public class NodeAPI {
                 }
                 else if ("PUT".equals(exchange.getRequestMethod())) {
                     exchange.sendResponseHeaders(501, -1);
+                }
+                else if ("OPTIONS".equals(exchange.getRequestMethod())) {
+                    //cross origin preflight request
+                    exchange.sendResponseHeaders(200, -1);
                 }
                 else{
                     exchange.sendResponseHeaders(501, -1);
