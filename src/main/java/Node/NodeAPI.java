@@ -27,7 +27,7 @@ public class NodeAPI {
             this.server.createContext("/node", (exchange) -> {
                 exchange.getResponseHeaders().add("Content-Type", "application/json");
                 exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
-                exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "GET");
+                exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "*");
                 exchange.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type");
                 if (!this.node.isSetUp()) {
                     exchange.sendResponseHeaders(400, -1);
@@ -67,7 +67,7 @@ public class NodeAPI {
             this.server.createContext("/files", (exchange) -> {
                 exchange.getResponseHeaders().add("Content-Type", "application/json");
                 exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
-                exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "GET");
+                exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "*");
                 exchange.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type");
                 if (!this.node.isSetUp()) {
                     exchange.sendResponseHeaders(402, -1);
