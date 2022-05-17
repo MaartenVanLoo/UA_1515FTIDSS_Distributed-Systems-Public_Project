@@ -363,14 +363,17 @@ public class FileManager extends Thread {
 
             //check edge case
             if (this.targetIsOrigin(file.getName(), replicateIPAddr)) {
+                String target = "";
                 try {
                     //get target node information
                     JSONParser parser = new JSONParser();
 
-                    JSONObject targetNode = (JSONObject) parser.parse(Unirest.get("/ns/nodes/{id}").routeParam("id", String.valueOf(replicateId)).asString().getBody());
+                    target = Unirest.get("/ns/nodes/{id}").routeParam("id", String.valueOf(replicateId)).asString().getBody();
+                    JSONObject targetNode = (JSONObject) parser.parse(target);
                     replicateIPAddr = (String) ((JSONObject) targetNode.get("prev")).get("ip");
                     replicateId = (long) ((JSONObject) targetNode.get("prev")).get("id");
                 }catch (Exception e) {
+                    System.out.println("Error in parsing target node information" + target);
                     e.printStackTrace();
                 }
             }
