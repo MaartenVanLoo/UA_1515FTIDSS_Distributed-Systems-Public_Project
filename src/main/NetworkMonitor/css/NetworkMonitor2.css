@@ -268,7 +268,7 @@ input[type="text"]{
   font-weight: 700;
   justify-content: center;
   line-height: 30px;
-  padding: .4em 0.5em;
+  padding: 8px; 10px;
   text-align: center;
   text-decoration: none;
   text-decoration-skip-ink: auto;
@@ -279,22 +279,14 @@ input[type="text"]{
   -webkit-user-select: none;
   touch-action: manipulation;
   width: 100%;
+  height: 45px;
   word-break: break-word;
   border: 0;
 }
-
-.terminate :active,
-.terminate :focus {
-  border-bottom-style: none;
-  border-color: #dadada;
-  box-shadow: rgba(0, 0, 0, .3) 0 3px 3px inset;
-  outline: 0;
+.terminate:hover {
+  box-shadow: 0px 0px 10px #ffcd19;
 }
 
-.shutdown :hover {
-  border-bottom-style: none;
-  border-color: #dadada;
-}
 .shutdown {
   background: #e62143;
   border-radius: 2px;
