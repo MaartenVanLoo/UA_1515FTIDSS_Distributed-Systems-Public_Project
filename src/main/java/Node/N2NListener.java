@@ -17,7 +17,7 @@ import java.nio.charset.StandardCharsets;
 public class N2NListener extends Thread {
     private PingNode pingNode;
     private final Node node;
-    private boolean volatile running = false;
+    private volatile boolean running = false;
 
 
     public N2NListener(Node node) {

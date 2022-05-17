@@ -39,25 +39,24 @@ public class NodeAPI {
                     outputStream.write(response.getBytes());
                     outputStream.flush();
                     outputStream.close();
-                else if ("DELETE".equals(exchange.getRequestMethod())) {
+                }else if ("DELETE".equals(exchange.getRequestMethod())) {
                     String content = this.readContent(exchange);
-                    JSONObject jsonObject = (JSONObject) this.node.getParser().parse(content);
-                    if (jsonObject.get("method").equals("shutdown")) {
-                        this.node.shutdown();
-                        exchange.sendResponseHeaders(200, -1);
-                        exit(0);
-                    } else if (jsonObject.get("method").equals("terminate")) {
-                        exit(0);
-                        exchange.sendResponseHeaders(200, -1);
-                    } else {
+                    try {
+                        JSONObject jsonObject = (JSONObject) this.node.getParser().parse(content);
+                        if (jsonObject.get("method").equals("shutdown")) {
+                            this.node.shutdown();
+                            exchange.sendResponseHeaders(200, -1);
+                            System.exit(0);
+                        } else if (jsonObject.get("method").equals("terminate")) {
+                            System.exit(0);
+                            exchange.sendResponseHeaders(200, -1);
+                        } else {
+                            exchange.sendResponseHeaders(400, -1);
+                        }
+                    }
+                    catch(Exception e) {
                         exchange.sendResponseHeaders(400, -1);
                     }
-                    else {
-                        exchange.sendResponseHeaders(400, -1);
-                    }
-                    this.node.shutdown();
-                    exchange.sendResponseHeaders(200, -1);
-                }
                 } else {
                     exchange.sendResponseHeaders(501, -1);
                 }
