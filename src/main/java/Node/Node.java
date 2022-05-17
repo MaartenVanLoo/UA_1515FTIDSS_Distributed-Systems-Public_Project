@@ -156,7 +156,7 @@ public class Node {
     }
 
     // exit the network
-    public void shutdown(){
+    public void shutdown(boolean remoteShutdown){
         try {
             System.out.println("Shutting down...");
             this.setUpComplete = false;
@@ -192,8 +192,13 @@ public class Node {
         }
         this.fileManager.shutDown();
         this.listeningSocket.close(); //close the listening socket, this will cause the N2N to exit
-        this.nodeAPI.stop();
+        if (!remoteShutdown) { //remote shutdown = shutdown initiated by REST, do not stop the api!
+            this.nodeAPI.stop();
+        }
         System.out.println("Shutdown complete");
+    }
+    public void shutdown(){
+        this.shutdown(false);
     }
 
 

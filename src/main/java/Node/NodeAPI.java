@@ -45,7 +45,7 @@ public class NodeAPI {
                         JSONObject jsonObject = (JSONObject) this.node.getParser().parse(content);
                         if (jsonObject.get("method").equals("shutdown")) {
                             System.out.println("Shutting down node");
-                            this.node.shutdown();
+                            this.node.shutdown(true);
                             exchange.sendResponseHeaders(200, -1);
                             System.out.println("Node shut down, exiting...");
                             System.exit(0);
@@ -136,7 +136,7 @@ public class NodeAPI {
 
     public void stop() {
         if (this.server != null) {
-            this.server.stop(2);
+            this.server.stop(1);
         }
     }
 
