@@ -29,6 +29,7 @@ public class NodeAPI {
                 exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
                 exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "*");
                 exchange.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type");
+                System.out.println("Request: " + exchange.getRequestURI().toString());
                 if (!this.node.isSetUp()) {
                     exchange.sendResponseHeaders(400, -1);
                 }
