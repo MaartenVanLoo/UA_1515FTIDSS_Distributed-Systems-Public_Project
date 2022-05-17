@@ -196,6 +196,7 @@ public class Node {
         System.out.println("Shutdown complete");
     }
 
+
     // print the variables of the node to the console
     public void printStatus(){
         synchronized (SynchronizedPrint.lock) {

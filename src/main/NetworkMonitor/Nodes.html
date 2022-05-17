@@ -8,7 +8,7 @@
 
 
   <script src="scripts/utils.js"></script>
-  <script src="scripts/RefreshNodeTable.js"></script>
+  <script src="scripts/RefreshNodeTable.js" defer></script>
   <script src="scripts/GetData.js" defer></script> <!-- defer is used to load the script after the page is loaded -->
   <title>Network monitor</title>
 
@@ -128,7 +128,12 @@
           <div class="scrollable-wrapper">
             <table class ="table-dark table-scroll-fixed-headers">
               <thead></thead>
-              <tbody style = "max-height: 200px;"></tbody>
+              <tbody style = "max-height: 200px;">
+                <tr style = "min-width: 100px;">
+                  <td><button class="terminate" onclick=terminateNode(5)><img src="images/terminate.png" width="30px" height="30px"></button></td>
+                  <td><button class="shutdown" onclick=shutdownNode(5)><img src="images/shutdown.png" width="30px" height="30px"></button></td>
+                </tr>
+              </tbody>
             </table>
           </div>
         </div>

@@ -125,19 +125,52 @@ async function DeleteData(url = '') {
         return undefined;
     }
 }
-async function DeleteData(url = '') {
-    // Default options are marked with *
-    try {
+async function sendTerminateNode(url = ''){
+    try{
         const response = await fetch(url, {
             method: 'DELETE', // *GET, POST, PUT, DELETE, etc.
+
+        body: JSON.stringify({method:'terminate'}),
         })
-        return await response.status; // parses JSON response into native JavaScript object
+        return await response.json(); // parses JSON response into native JavaScript object
     }
     catch(e){
         //console.log(e);
         return undefined;
     }
 }
+async function sendShutdownNode(url = ''){
+    try{
+        const response = await fetch(url, {
+            method: 'DELETE', // *GET, POST, PUT, DELETE, etc.
+            body: JSON.stringify({method:'shutdown'}),
+        })
+        return await response.json(); // parses JSON response into native JavaScript object
+    }
+    catch(e){
+        //console.log(e);
+        return undefined;
+    }
+}
+
+async function terminateNode(id){
+    if (nodeData[id].ip == undefined) return;
+    let ip = nodeData[id].ip;
+    let port = translateSSHTunnelPort(ip,ipPort);
+    ip = translateSSHTunnelIP(ip);
+    let url = "http://"+ip+":"+port+"/node";
+    await sendTerminateNode(url);
+}
+
+async function shutdownNode(id){
+    if (nodeData[id].ip == undefined) return;
+    let ip = nodeData.get[id].ip;
+    let port = translateSSHTunnelPort(ip,ipPort);
+    ip = translateSSHTunnelIP(ip);
+    let url = "http://"+ip+":"+port+"/node";
+    await sendShutdownNode(url);
+}
+
 const getNodeData = async (ips) =>{
     if (nodeRequest > 2* ips.length){
         return null;
