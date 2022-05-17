@@ -175,6 +175,9 @@ const getNodeData = async (ips) =>{
     if (nodeRequest > 2* ips.length){
         return null;
     }
+    if (ips.length == 0){
+        return null;
+    }
     const nodes = ips.map(async ip =>{
         if (ip == "Unknown") return undefined;
         nodeRequest++;
