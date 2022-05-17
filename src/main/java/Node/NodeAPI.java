@@ -63,7 +63,11 @@ public class NodeAPI {
                     catch(Exception e) {
                         exchange.sendResponseHeaders(400, -1);
                     }
-                } else {
+                }else if ("OPTIONS".equals(exchange.getRequestMethod())) {
+                    //cross origin request
+                    exchange.sendResponseHeaders(200, -1);
+                }
+                else {
                     exchange.sendResponseHeaders(501, -1);
                 }
                 exchange.close();
