@@ -434,13 +434,15 @@ public class FileManager extends Thread {
     }
 
     public void updateLogFile(String fileName, long newOwner, String newIP) {
+        String logFileContent = "";
         try {
             //load log file
             File logFile = new File( logFolder + "/"+ fileName + ".log");
-            String logFileContent = "";
+
             BufferedReader reader = new BufferedReader(new FileReader(logFile));
             JSONParser parser = new JSONParser();
-            JSONObject jsonObject = (JSONObject) parser.parse(reader.lines().collect(Collectors.joining(System.lineSeparator())));
+            logFileContent = reader.lines().collect(Collectors.joining(System.lineSeparator()));
+            JSONObject jsonObject = (JSONObject) parser.parse(logFileContent);
             reader.close();
             //update log file
             JSONObject owner = (JSONObject) jsonObject.get("owner");
@@ -452,6 +454,7 @@ public class FileManager extends Thread {
             writer.write(jsonObject.toJSONString());
             writer.close();
         } catch (Exception e){
+            System.out.println("Error in updating log file\n" + logFileContent);
             e.printStackTrace();
         }
     }
