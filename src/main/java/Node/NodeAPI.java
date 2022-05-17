@@ -136,7 +136,7 @@ public class NodeAPI {
 
     public void stop() {
         if (this.server != null) {
-            this.server.stop(0);
+            this.server.stop(2);
         }
     }
 
