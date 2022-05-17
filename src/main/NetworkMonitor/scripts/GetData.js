@@ -164,7 +164,7 @@ async function terminateNode(id){
 
 async function shutdownNode(id){
     if (nodeData[id].node.ip == undefined) return;
-    let ip = nodeData.get[id].node.ip;
+    let ip = nodeData[id].node.ip;
     let port = translateSSHTunnelPort(ip,ipPort);
     ip = translateSSHTunnelIP(ip);
     let url = "http://"+ip+":"+port+"/node";

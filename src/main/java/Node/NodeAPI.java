@@ -47,6 +47,7 @@ public class NodeAPI {
                             System.out.println("Shutting down node");
                             this.node.shutdown();
                             exchange.sendResponseHeaders(200, -1);
+                            System.out.println("Node shut down, exiting...");
                             System.exit(0);
                         } else if (jsonObject.get("method").equals("terminate")) {
                             System.out.println("Terminating node");
