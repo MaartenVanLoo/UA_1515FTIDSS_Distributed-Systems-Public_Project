@@ -85,7 +85,7 @@ public class FileManager extends Thread {
                 try {
                     String replicateIPAddr = Unirest.get("/ns/files/{filename}")
                             .routeParam("filename", file.getName()).asString().getBody();
-                    long replicateId = Integer.parseInt(Unirest.get("/ns/files/{filename}/Id").routeParam("filename", file.getName()).asString().getBody());
+                    long replicateId = Integer.parseInt(Unirest.get("/ns/files/{filename}/id").routeParam("filename", file.getName()).asString().getBody());
                     // if the IP addr the NS sent back is the same as the one of this node, get the prev node IP address
                     // check example 3 doc3.pdf
                     if (Objects.equals(replicateIPAddr, node.getIP())) {
