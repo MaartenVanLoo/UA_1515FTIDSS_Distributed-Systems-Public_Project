@@ -66,12 +66,16 @@ public class SyncAgent extends Thread {
         this.server.start();
         while (running){
             try {
-                getNeighbourList();
                 Thread.sleep(1000);
-
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
+            if (! this.node.isSetUp()){
+                continue;
+            }
+
+            getNeighbourList();
+
         }
         this.server.stop(0);
     }
