@@ -1,11 +1,7 @@
 package Agents;
 
 import Node.Node;
-import jade.core.Agent;
-import jade.core.behaviours.Behaviour;
-import NameServer.*;
-import jade.core.behaviours.OneShotBehaviour;
-import kong.unirest.Unirest;
+
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
@@ -33,6 +29,7 @@ public class FailureAgent implements Runnable, Serializable {
 
     public FailureAgent(Node node) {
         this.node = node;
+
         setup();
     }
 
