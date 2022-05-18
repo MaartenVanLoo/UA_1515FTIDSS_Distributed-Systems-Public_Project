@@ -44,12 +44,7 @@ public class FailureAgent extends Agent {
             }
             @Override
             public boolean done() {
-                if (node.getIP().equals(starterNodeIP)) {
-                    return true;
-                }
-                else {
-                    return false;
-                }
+                return node.getIP().equals(starterNodeIP);
             }
         });
 
