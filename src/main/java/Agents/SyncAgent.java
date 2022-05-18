@@ -8,10 +8,42 @@ import java.io.File;
 import jade.core.*;
 import jade.core.behaviours.*;
 
-public class SyncAgent extends Agent implements Runnable, Serializable {
+import javax.sound.midi.Receiver;
+
+public class SyncAgent extends Agent {
+
+    private Node.Node node;
+    private String nextNodeIP;
+    private long nextNodeId;
+
+    public SyncAgent(Node.Node node) {
+        this.setup(node);
+    }
+
+    public void setup(Node.Node node) {
+        this.node = node;
+        this.nextNodeIP = node.getNextNodeIP();
+        this.nextNodeId = node.getNextNodeId();
+        addBehaviour(new BehaviourSync(this));
+    }
+
+    public Node.Node getNode(){
+        return this.node;
+    }
 
     private class BehaviourSync extends CyclicBehaviour {
+
+        String localFolder = "local";
+        Node.Node node;
+        private BehaviourSync(Agent a) {
+            super(a);
+            this.node = ((SyncAgent) a).getNode();
+        }
+
         public void action() {
+
+        }
+        public void createLocalList(){
             ArrayList<String> localFiles = new ArrayList<>();
 
 
@@ -43,6 +75,42 @@ public class SyncAgent extends Agent implements Runnable, Serializable {
                 e.printStackTrace();
             }
         }
+
+
+    }
+
+    private class LockBehaviour extends OneShotBehaviour {
+
+        private ReceiverBehaviour receiver;
+
+        private LockBehaviour(Agent a) {
+            super(a);
+        }
+
+        public void action() {
+            // TODO Auto-generated method stub
+        receiver = new ReceiverBehaviour(myAgent, -1, null);//waits untill any message arrives
+            if(receiver.done()){
+                try{
+
+                }
+            }
+
+        }
+
+    }
+
+    private class UnlockBehaviour extends OneShotBehaviour {
+
+        private UnlockBehaviour(Agent a) {
+            super(a);
+        }
+
+        public void action() {
+            // TODO Auto-generated method stub
+
+        }
+
     }
 
 }
