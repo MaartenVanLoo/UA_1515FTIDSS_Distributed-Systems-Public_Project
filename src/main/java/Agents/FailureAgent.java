@@ -1,14 +1,14 @@
 package Agents;
 
 import Node.Node;
-
+import Utils.Hashing;
+import kong.unirest.Unirest;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.Serializable;
+import java.io.*;
+import java.util.ArrayList;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import Node.FileManager;
@@ -16,8 +16,9 @@ import Node.FileManager;
 public class FailureAgent implements Runnable, Serializable {
     private static final long serialVersionUID = 1L;
 
-    private Node node;
-    private Node failureNode;
+    private  Node node;
+    private long failedNodeId;
+
 
     String starterNodeIP;
 
@@ -27,34 +28,50 @@ public class FailureAgent implements Runnable, Serializable {
     }
 
 
-    public FailureAgent(Node node) {
+    public FailureAgent(Node node, long failedNodeId) {
         this.node = node;
-
-        setup();
+        this.failedNodeId = failedNodeId;
+        run();
     }
 
     public void setup() {
-            //get list of log files in the list from current node
-            //if failing node is owner of the file replicate elsewhere
-            try {
-                File dir = new File(FileManager.logFolder);
-                File[] files = dir.listFiles();
-                for (File file : files) {
-                    BufferedReader reader = new BufferedReader(new FileReader(file));
-                    //parse json file
-                    JSONParser parser = new JSONParser();
-                    JSONObject jsonObject = (JSONObject) parser.parse(reader.lines().collect(Collectors.joining(System.lineSeparator())));
-                    reader.close();
-                    //check if target is owner
-                    JSONObject origin = (JSONObject) jsonObject.get("origin");
+        FileManager fM;
+        //get list of local files in the list from SyncAgent
+        //if failing node is owner of the file replicate elsewhere
+        ArrayList<String> arrayList = this.node.getSyncAgent().getFileList();
+        for (String fileName : arrayList) {
+            int fileHash = Hashing.hash(fileName);
+            // ask the namingserver for the location of the file
+            int nodeIDofFile = Integer.parseInt(Unirest.get("/ns/files/" + fileName + "/id").asString().getBody()); //vieze ai zeg
+            // if the the failing node is the owner or the failing node was the owner,...
+            String allNodes = Unirest.get("/ns/nodes").asString().getBody();
+            allNodes = allNodes.replace("{", "").replace("}","");
+            String[] allNodesList = allNodes.split("\n");
+            TreeMap<Long, String> map = new TreeMap<>();
+            for (String e: allNodesList){
+                String[] temp = e.trim().split("=>");
+                map.put(Long.parseLong(temp[0]),temp[1]);
+            }
+            if (!map.containsKey(failedNodeId)) map.put(failedNodeId, "temp");
+            if (map.floorKey((long) fileHash) == failedNodeId) {
+                // failed node was owner
+            }
+
+
+
+            //get the Id before and after the failed node Id if node isnt lastKey
+                if (map.lastKey()==failedNodeId) {
+                    // check if the fileHash is bigger than the biggest NodeId but smaller than the failed node id
+                    if (fileHash > nodeIDofFile && fileHash < failedNodeId) {
+                        //file must be replicated
+                    }
 
                 }
 
 
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+
         }
+    }
 
     @Override
     public void run() {
