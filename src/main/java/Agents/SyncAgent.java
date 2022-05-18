@@ -13,6 +13,7 @@ import com.sun.net.httpserver.HttpServer;
 
 import kong.unirest.Unirest;
 import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
 
@@ -41,11 +42,13 @@ public class SyncAgent extends Thread {
             this.server.createContext("/fileList", (exchange) -> {
                 if (exchange.getRequestMethod().equals("GET")) {
                     //send file list in body
+                    JSONObject json = new JSONObject();
                     JSONArray jsonArray = new JSONArray();
                     for (String file: this.files){
                         jsonArray.add(file);
                     }
-                    String response = jsonArray.toJSONString();
+                    json.put("fileList", jsonArray);
+                    String response = json.toJSONString();
                     OutputStream outputStream = exchange.getResponseBody();
                     outputStream.write(response.getBytes());
                     outputStream.flush();
