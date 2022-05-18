@@ -1,18 +1,19 @@
 package Agents;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import Node.*;
 import java.io.File;
 import jade.core.*;
 import jade.core.behaviours.*;
 
-public class SyncAgent extends Agent {
+public class SyncAgent extends Agent implements Runnable, Serializable {
 
     private class BehaviourSync extends CyclicBehaviour {
         public void action() {
             ArrayList<String> localFiles = new ArrayList<>();
-            ;
+
 
             try {
                 while (!this.node.isSetUp()) {
@@ -42,6 +43,6 @@ public class SyncAgent extends Agent {
                 e.printStackTrace();
             }
         }
-        }
+    }
 
 }
