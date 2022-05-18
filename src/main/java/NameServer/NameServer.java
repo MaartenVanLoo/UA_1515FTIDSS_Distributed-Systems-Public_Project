@@ -127,10 +127,16 @@ public class NameServer {
      * @param ip ip address of the node.
      * @return True when the node was registered, false when the node was already registered
      */
-    public boolean addNode(int id, String ip){
+    public boolean addNode(int id, String ip) {
         ipMapLock.writeLock().lock();
         if (ipMapping.containsKey(id)) { ipMapLock.writeLock().unlock(); return false; }
         ipMapping.put(id, ip);
+        try {
+            saveMapping("allNodes.json");
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
         ipMapLock.writeLock().unlock();
         return true;
     }
