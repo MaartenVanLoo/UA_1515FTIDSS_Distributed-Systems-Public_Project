@@ -6,22 +6,17 @@ import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import Node.*;
 import java.io.File;
-import java.util.concurrent.Executor;
 
 import com.sun.net.httpserver.HttpServer;
-import jade.core.*;
-import jade.core.behaviours.*;
-import jade.domain.introspection.ACLMessage;
-import javassist.Loader;
+
 import kong.unirest.Unirest;
 import org.json.simple.JSONArray;
 import org.json.simple.parser.JSONParser;
 
-import javax.sound.midi.Receiver;
 
 public class SyncAgent extends Thread {
 
-    private Node.Node node;
+    private Node node;
     private String nextNodeIP;
     private long nextNodeId;
     private ArrayList<String> files;
@@ -31,7 +26,7 @@ public class SyncAgent extends Thread {
 
     private volatile boolean running = false;
 
-    public SyncAgent(Node.Node node) {
+    public SyncAgent(Node node) {
         this.setDaemon(true);
         this.node = node;
         this.nextNodeIP = node.getNextNodeIP();
