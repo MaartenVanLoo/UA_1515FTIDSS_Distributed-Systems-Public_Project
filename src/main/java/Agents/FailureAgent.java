@@ -34,6 +34,9 @@ public class FailureAgent implements Runnable, Serializable {
         run();
     }
 
+    /**
+     * Initialization of the agent
+     */
     public void setup() {
         FileManager fM;
         //get list of local files in the list from SyncAgent

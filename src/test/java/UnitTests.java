@@ -133,4 +133,16 @@ public class UnitTests {
         n.printStatus();
     }
 */
+    /*
+    @Test
+    public void getAllNodes() {
+        NameServerController ns = new NameServerController();
+        ns.getNameServer().addNode(1000, "192.168.2.1");
+        ns.getNameServer().addNode(2000, "192.168.2.2");
+        ns.getNameServer().addNode(3000, "192.168.2.3");
+        ns.getNameServer().addNode(4000, "192.168.2.4");
+        ns.getNameServer().addNode(5000, "192.168.2.5");
+        System.out.println(ns.getAllNodes());
+    }
+    */
 }
