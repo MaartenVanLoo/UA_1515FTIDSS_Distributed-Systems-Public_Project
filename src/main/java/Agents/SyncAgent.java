@@ -55,7 +55,15 @@ public class SyncAgent extends Thread {
                     outputStream.write(response.getBytes());
                     outputStream.flush();
                     outputStream.close();
-
+                }
+                else if (exchange.getRequestMethod().equals("DELETE")){
+                    //delete file from files
+                    String fileName = exchange.getRequestURI().getQuery().replace("/fileList","");
+                    if (this.files.contains(fileName)){
+                        this.files.remove(fileName);
+                        Unirest.delete("http://" + this.node.getNextNodeIP() + ":8082/fileList/" + fileName).asString();
+                    }
+                    exchange.sendResponseHeaders(200, -1);
                 }
                 else{
                     exchange.sendResponseHeaders(501, -1);
@@ -120,6 +128,15 @@ public class SyncAgent extends Thread {
         else{
             System.out.println("File duplicate!!");//enkel debug..
         }
+    }
+
+    public void deleteLocalfile(String filename){
+        if (!this.files.contains(filename)){
+            System.out.println("File not found!!");//enkel debug..
+            return;
+        }
+        this.files.remove(filename);
+        Unirest.delete("http://" + this.node.getNextNodeIP() + ":8082/fileList/" + filename).asString();
     }
 
     public void getNeighbourList(){
