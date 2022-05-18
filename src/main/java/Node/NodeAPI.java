@@ -51,8 +51,8 @@ public class NodeAPI {
                             System.exit(0);
                         } else if (jsonObject.get("method").equals("terminate")) {
                             System.out.println("Terminating node");
-                            System.exit(0);
                             exchange.sendResponseHeaders(200, -1);
+                            System.exit(0);
                         } else {
                             exchange.sendResponseHeaders(400, -1);
                         }
@@ -104,6 +104,7 @@ public class NodeAPI {
                 }
                 exchange.close();
             });
+
         } catch (Exception e) {
             this.server = null;
             System.out.println("Error creating http server");
