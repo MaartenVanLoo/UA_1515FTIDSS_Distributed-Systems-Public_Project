@@ -26,7 +26,7 @@ public class SyncAgent extends Thread {
 
     private volatile boolean running = false;
 
-    public SyncAgent(Node.Node node) {
+    public SyncAgent(Node node) {
         this.setDaemon(true);
         this.node = node;
         this.nextNodeIP = node.getNextNodeIP();
