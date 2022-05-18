@@ -2,14 +2,12 @@ package Node;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
+import jade.core.Agent;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import javax.swing.*;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.InetSocketAddress;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -117,6 +115,10 @@ public class NodeAPI {
                     runAgent(exchange);
                     exchange.sendResponseHeaders(200, -1);
                 }
+                else{
+                    exchange.sendResponseHeaders(501, -1);
+                }
+                exchange.close();
             };
 
         } catch (Exception e) {
@@ -156,7 +158,16 @@ public class NodeAPI {
     }
 
     private void runAgent(HttpExchange exchange) {
-
+        //TODO add agent;
+        try {
+            //read body with agent
+            ObjectInputStream ois = new ObjectInputStream(exchange.getRequestBody());
+            Agent agent = (Agent) ois.readObject();
+            Thread agentThread = new Thread(agent);
+            agentThread.start();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
     private String getNodeInfo() {
         JSONObject response = new JSONObject();
