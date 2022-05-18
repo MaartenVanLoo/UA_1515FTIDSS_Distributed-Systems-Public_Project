@@ -7,6 +7,7 @@ import Node.*;
 import java.io.File;
 import jade.core.*;
 import jade.core.behaviours.*;
+import javassist.Loader;
 
 import javax.sound.midi.Receiver;
 
@@ -15,6 +16,7 @@ public class SyncAgent extends Agent {
     private Node.Node node;
     private String nextNodeIP;
     private long nextNodeId;
+    private ArrayList<String> Files;
 
     public SyncAgent(Node.Node node) {
         this.setup(node);
@@ -24,7 +26,8 @@ public class SyncAgent extends Agent {
         this.node = node;
         this.nextNodeIP = node.getNextNodeIP();
         this.nextNodeId = node.getNextNodeId();
-        addBehaviour(new BehaviourSync(this));
+        addBehaviour(new BehaviourSync(this));//adds behaviour after which it runs.
+        this.Files =
     }
 
     public Node.Node getNode(){
@@ -33,24 +36,24 @@ public class SyncAgent extends Agent {
 
     private class BehaviourSync extends CyclicBehaviour {
 
-        String localFolder = "local";
-        Node.Node node;
+        private String localFolder = "local";
+        private Node.Node node;
+        private ArrayList<String> localFiles;
         private BehaviourSync(Agent a) {
             super(a);
             this.node = ((SyncAgent) a).getNode();
+            this.action();
         }
 
-        public void action() {
-
+        public void action() { //first run createLocalList to get local files, then get the files from the next node
+            createLocalList();
         }
         public void createLocalList(){
-            ArrayList<String> localFiles = new ArrayList<>();
-
-
             try {
                 while (!this.node.isSetUp()) {
                     Thread.sleep(100); // wait for the node to be set up
                 }
+                localFiles = new ArrayList<String>();
                 String launchDirectory = System.getProperty("user.dir"); // get the current directory
                 System.out.println("Current directory: " + launchDirectory); // print the current directory
                 File dir = new File(launchDirectory + "/" + localFolder); // get the  new directory(/local)
@@ -79,12 +82,13 @@ public class SyncAgent extends Agent {
 
     }
 
-    private class LockBehaviour extends OneShotBehaviour {
+    private class LockBehaviour extends SimpleBehaviour {
 
         private ReceiverBehaviour receiver;
-
+        private boolean finished;
         private LockBehaviour(Agent a) {
             super(a);
+            finished = false;
         }
 
         public void action() {
@@ -93,15 +97,24 @@ public class SyncAgent extends Agent {
             if(receiver.done()){
                 try{
 
+                }catch(Exception e){
+                    e.printStackTrace();
                 }
             }
 
         }
 
+        @Override
+        public boolean done() {
+            finished = true;
+            return finished;
+        }
+
+
     }
 
-    private class UnlockBehaviour extends OneShotBehaviour {
-
+    private class UnlockBehaviour extends SimpleBehaviour {
+        private boolean finished;
         private UnlockBehaviour(Agent a) {
             super(a);
         }
@@ -109,6 +122,12 @@ public class SyncAgent extends Agent {
         public void action() {
             // TODO Auto-generated method stub
 
+        }
+
+        @Override
+        public boolean done() {
+            finished = true;
+            return finished;
         }
 
     }
