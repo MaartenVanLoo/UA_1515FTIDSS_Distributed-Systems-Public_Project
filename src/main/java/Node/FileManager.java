@@ -304,6 +304,7 @@ public class FileManager extends Thread {
                        try {
                             FileTransfer.deleteFile(file.getName(), replicaFolder, replicateIPAddr);
                             FileTransfer.deleteFile(file.getName() + ".log", logFolder, replicateIPAddr);
+                            this.node.getSyncAgent().deleteLocalFile(file.getName());
                             System.out.println("Deletion handled");
                         }catch(Exception e){
                             System.out.println("Deletion Error: " + e.getMessage() + " File:" + file.getName());

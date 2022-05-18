@@ -1,16 +1,19 @@
 package Agents;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.Serializable;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import Node.*;
 import java.io.File;
+import java.util.concurrent.Executors;
 
 import com.sun.net.httpserver.HttpServer;
 
 import kong.unirest.Unirest;
 import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
 
@@ -37,14 +40,34 @@ public class SyncAgent extends Thread {
         try {
             this.server = HttpServer.create(new InetSocketAddress(HTTP_PORT), 0);
             this.server.createContext("/fileList", (exchange) -> {
+                exchange.getResponseHeaders().add("Content-Type", "application/json");
                 if (exchange.getRequestMethod().equals("GET")) {
                     //send file list in body
+                    JSONObject json = new JSONObject();
                     JSONArray jsonArray = new JSONArray();
                     for (String file: this.files){
                         jsonArray.add(file);
                     }
-                    exchange.getResponseBody().write(jsonArray.toJSONString().getBytes());
-                    exchange.sendResponseHeaders(200, 0);
+                    json.put("fileList", jsonArray);
+                    String response = json.toJSONString();
+                    exchange.sendResponseHeaders(200, response.length());
+                    OutputStream outputStream = exchange.getResponseBody();
+                    outputStream.write(response.getBytes());
+                    outputStream.flush();
+                    outputStream.close();
+                }
+                else if (exchange.getRequestMethod().equals("DELETE")){
+                    //delete file from files
+                    System.out.println("DELETE");
+                    System.out.println(exchange.getRequestURI());
+                    String fileName = exchange.getRequestURI().getQuery().replace("/fileList/","");
+                    if (this.files.contains(fileName)){
+                        this.files.remove(fileName);
+                        System.out.println("Notify neighbours of deletion of file " + fileName);
+                        Unirest.delete("http://" + this.node.getNextNodeIP() + ":8082/fileList/" + fileName).asString();
+                        System.out.println("notified");
+                    }
+                    exchange.sendResponseHeaders(200, -1);
                 }
                 else{
                     exchange.sendResponseHeaders(501, -1);
@@ -52,6 +75,7 @@ public class SyncAgent extends Thread {
                 exchange.close();
             });
         } catch (IOException e) {
+
             e.printStackTrace();
         }
 
@@ -63,15 +87,20 @@ public class SyncAgent extends Thread {
     public void run() {
         running = true;
         this.makeLocalList();
+        this.server.setExecutor(Executors.newCachedThreadPool());
         this.server.start();
         while (running){
             try {
-                getNeighbourList();
                 Thread.sleep(1000);
-
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
+            if (!this.node.isSetUp()){
+                continue;
+            }
+
+            getNeighbourList();
+
         }
         this.server.stop(0);
     }
@@ -105,12 +134,24 @@ public class SyncAgent extends Thread {
         }
     }
 
+    public void deleteLocalFile(String filename){
+        if (!this.files.contains(filename)){
+            System.out.println("File not found!!");//enkel debug..
+            return;
+        }
+        this.files.remove(filename);
+        System.out.println("Notify neighbours file deleted");
+        Unirest.delete("http://" + this.node.getNextNodeIP() + ":8082/fileList/" + filename).asString();
+        System.out.println("Notification done");
+    }
+
     public void getNeighbourList(){
         JSONParser parser = new JSONParser();
         try {
-            JSONArray neighbourFiles = (JSONArray) parser.parse(Unirest.get("http://" + this.nextNodeIP + ":8082/fileList").asString().getBody());
-            for (Object file : neighbourFiles) {
-                if (!this.files.contains(file)) {
+            JSONObject neighbourFiles = (JSONObject) parser.parse(Unirest.get("http://" + this.node.getNextNodeIP() + ":8082/fileList").asString().getBody());
+            JSONArray fileList =  (JSONArray)neighbourFiles.get("fileList");
+            for (Object file : fileList) {
+                if (!this.files.contains((String)file)) {
                     this.files.add((String) file);
                 }
             }
