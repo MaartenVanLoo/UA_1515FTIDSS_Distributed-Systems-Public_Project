@@ -50,7 +50,7 @@ public class SyncAgent extends Thread {
                     outputStream.write(response.getBytes());
                     outputStream.flush();
                     outputStream.close();
-                    exchange.sendResponseHeaders(200, jsonArray.toJSONString().length());
+                    exchange.sendResponseHeaders(200, response.length());
                 }
                 else{
                     exchange.sendResponseHeaders(501, -1);
