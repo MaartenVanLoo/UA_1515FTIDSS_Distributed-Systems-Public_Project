@@ -1,8 +1,8 @@
 package Node;
 
+import Agents.FailureAgent;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
-import jade.core.Agent;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -162,7 +162,7 @@ public class NodeAPI {
         try {
             //read body with agent
             ObjectInputStream ois = new ObjectInputStream(exchange.getRequestBody());
-            Agent agent = (Agent) ois.readObject();
+            FailureAgent agent = (FailureAgent) ois.readObject();
             Thread agentThread = new Thread(agent);
             agentThread.start();
         } catch (Exception e) {
