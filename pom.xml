@@ -17,7 +17,6 @@
             <url>https://jade.tilab.com/maven/</url>
         </repository>
     </repositories>
-
     <build>
         <pluginManagement>
             <plugins>

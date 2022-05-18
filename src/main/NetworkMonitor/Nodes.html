@@ -8,7 +8,7 @@
 
 
   <script src="scripts/utils.js"></script>
-  <script src="scripts/RefreshNodeTable.js"></script>
+  <script src="scripts/RefreshNodeTable.js" defer></script>
   <script src="scripts/GetData.js" defer></script> <!-- defer is used to load the script after the page is loaded -->
   <title>Network monitor</title>
 
@@ -27,7 +27,7 @@
       <ul class ="navbar-nav ml-auto navbar-right-top">
         <li class="nav-item" style = "padding-top:10px;">
           <a class="nav-link" href="#">
-            <img src="images/refresh.png" alt="refresh" width="40px" height="40px" onclick=updateData();screenRefresh(); >
+            <img src="images/refresh.png" alt="refresh" width="40px" height="40px" onclick="updateData();screenRefresh(true);" >
           </a>
         </li>
         <li class="nav-item dropdown" style = "padding-top:10px;">
@@ -99,19 +99,23 @@
 
             <li class="nav-item">
               <a class="nav-link" href="Dashboard.html">
-                <i class="fa fa-home"></i>Dashboard</a>
+                <i class="fa fa-home" style="width:20px;"></i>Dashboard</a>
             </li>
             <li class="nav-item">
               <a class="nav-link" href="#">
-                <i class="fa fa-table"></i>Nodes</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="NetworkMap.html">
-                <i class="fa fa-map"></i>Network map</a>
+                <i class="fa fa-table" style="width:20px;"></i>Nodes</a>
             </li>
             <li class="nav-item" hidden>
+              <a class="nav-link" href="NetworkMap.html">
+                <i class="fa fa-map" style="width:20px;"></i>Network map</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="FileManager.html">
+                <i class="fa fa-file" style="width:20px;"></i>Files</a>
+            </li>
+            <li class="nav-item">
               <a class="nav-link" href="#" onclick=toggle_options()>
-              <i class="fa fa-bars"></i>Options</a>
+              <i class="fa fa-bars" style="width:20px;"></i>Options</a>
             </li>
           </ul>
         </div>
@@ -121,14 +125,35 @@
 </div>
 <div class="dashboard-wrapper">
   <div class="dashboard-content">
-    <div class="row">
+    <div class="row" id="card-overview">
       <div class="col-xl-3 col-lg-4 col-md-6 col-sm-12 col-12">
         <div class="card">
           <h1 class="card-header card-dark">Nodes</h1>
           <div class="scrollable-wrapper">
             <table class ="table-dark table-scroll-fixed-headers">
               <thead></thead>
-              <tbody style = "max-height: 200px;"></tbody>
+              <tbody style = "max-height: 200px;">
+                <tr>
+                  <td>Node name:</td>
+                  <td>host1.6dist</td>
+                </tr>
+                <tr>
+                  <td>Node id:</td>
+                  <td>4484</td>
+                </tr>
+                <tr>
+                  <td>Node ip:</td>
+                  <td>192.168.48.3</td>
+                </tr>
+                <tr>
+                  <td>Node status:</td>
+                  <td>online</td>
+                </tr>
+                <tr>
+                  <td width="50%"><button class="terminate" onclick=terminateNode(4484)><img src="images/terminate.png" width="30px" height="30px"></button></td>
+                  <td width="50%"><button class="shutdown" onclick=shutdownNode(4484)><img src="images/shutdown.png" width="30px" height="30px"></button></td>
+                </tr>
+              </tbody>
             </table>
           </div>
         </div>
@@ -237,6 +262,7 @@
       console.log(err);
     }
   }
+
 </script>
 </body>
 </html>

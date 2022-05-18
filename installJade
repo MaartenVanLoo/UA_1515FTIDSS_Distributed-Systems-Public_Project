@@ -1,0 +1,1 @@
+mvn install:install-file -Dfile=jade.jar -DgroupId=com.tilab.jade -DartifactId=jade -Dversion=4.5.0 -Dpackaging=jar -DgeneratePom=true

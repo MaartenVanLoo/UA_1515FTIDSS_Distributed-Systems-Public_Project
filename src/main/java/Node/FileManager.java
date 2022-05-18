@@ -85,15 +85,20 @@ public class FileManager extends Thread {
                 try {
                     String replicateIPAddr = Unirest.get("/ns/files/{filename}")
                             .routeParam("filename", file.getName()).asString().getBody();
+                    long replicateId = Integer.parseInt(Unirest.get("/ns/files/{filename}/id").routeParam("filename", file.getName()).asString().getBody());
                     // if the IP addr the NS sent back is the same as the one of this node, get the prev node IP address
                     // check example 3 doc3.pdf
                     if (Objects.equals(replicateIPAddr, node.getIP())) {
                         replicateIPAddr = this.node.getPrevNodeIP();
+                        replicateId = this.node.getPrevNodeId();
                     }
 
-                    System.out.println("Replicating " + file.getName() + " to " + replicateIPAddr); //vieze ai zeg
+
+                    System.out.println("Replicating " + file.getName() + " to " + replicateIPAddr);
                     //send file to replica
                     FileTransfer.sendFile(file.getName(), localFolder, replicaFolder, replicateIPAddr);//
+                    //update log file
+                    this.updateLogFile(file.getName(), replicateId, replicateIPAddr);
                     //send file to log
                     FileTransfer.sendFile(file.getName() + ".log", logFolder, logFolder, replicateIPAddr);
 
@@ -166,10 +171,18 @@ public class FileManager extends Thread {
                             //don't send it, file is correctly placed
                             continue;
                         }
+                        int replicateID = Integer.parseInt(Unirest.get("/ns/files/{fileName}/id").routeParam("fileName", file.getName()).asString().getBody());
+
+                        // check if the target of the file is the origin of the file
+                        if (this.targetIsOrigin(file.getName(), replicateIPAddr)) {
+                            //do nothing, if the new node is the origin, this node is the previous node, the file is correctly placed
+                            continue;
+                        }
+
                         FileTransfer.sendFile(file.getName(), replicaFolder, replicaFolder, replicateIPAddr);
                         file.delete();
                         //update log file
-                        updateLogFile(file.getName(),this.node.getPrevNodeId(), replicateIPAddr);
+                        updateLogFile(file.getName(),replicateID, replicateIPAddr);
                         System.out.println("LogFile updated" );
                         //send log file
                         FileTransfer.sendFile(file.getName() + ".log", logFolder,logFolder, replicateIPAddr);
@@ -225,6 +238,7 @@ public class FileManager extends Thread {
 
     //https://www.baeldung.com/java-nio2-watchservice
     public void checkDirectory() throws IOException, InterruptedException {
+        //TODO: add log file handling
         path.register(
                 watchService,
                 StandardWatchEventKinds.ENTRY_CREATE,
@@ -245,8 +259,11 @@ public class FileManager extends Thread {
                 File file = new File(event.context().toString());
                 String replicateIPAddr = Unirest.get("/ns/files/{filename}")
                         .routeParam("filename", file.getName()).asString().getBody();
+                long replicateId = Long.parseLong(Unirest.get("/ns/files/{filename}/id")
+                        .routeParam("filename", file.getName()).asString().getBody());
                 if (Objects.equals(replicateIPAddr, node.getIP())) {
                     replicateIPAddr = this.node.getPrevNodeIP();
+                    replicateId = this.node.getPrevNodeId();
                 }
                 switch (event.kind().toString()) {
                     case "ENTRY_CREATE":
@@ -267,6 +284,7 @@ public class FileManager extends Thread {
                         FileWriter writer = new FileWriter(event.context().toString() + ".log");
                         writer.write(logfile.toJSONString());
                         writer.close();
+                        this.updateLogFile(file.getName(),replicateId,replicateIPAddr);
                         FileTransfer.sendFile(file.getName(),logFolder,logFolder, replicateIPAddr + ".log");
                         //[fallthrough]
                     case "ENTRY_MODIFY":
@@ -282,6 +300,7 @@ public class FileManager extends Thread {
                     case "ENTRY_DELETE":
                        try {
                             FileTransfer.deleteFile(file.getName(), replicaFolder, replicateIPAddr);
+                            FileTransfer.deleteFile(file.getName() + ".log", logFolder, replicateIPAddr);
                             System.out.println("Deletion handled");
                         }catch(Exception e){
                             System.out.println("Deletion Error: " + e.getMessage() + " File:" + file.getName());
@@ -321,6 +340,8 @@ public class FileManager extends Thread {
                 System.out.println("Deleting " + file.getName() + " to " + deleteIPAddr);
                 //delete file to replica
                 FileTransfer.deleteFile(file.getName(), replicaFolder, deleteIPAddr);
+                //delete log file
+                FileTransfer.deleteFile(file.getName() + ".log", logFolder, deleteIPAddr);
 
             } catch (Exception e) {
                 System.out.println("Error: " + e.getMessage());
@@ -338,11 +359,30 @@ public class FileManager extends Thread {
         for (File file : files) {
             //send fileName to NameServer
             String replicateIPAddr = this.node.getPrevNodeIP();
+            long replicateId = this.node.getPrevNodeId();
+
+            //check edge case
+            if (this.targetIsOrigin(file.getName(), replicateIPAddr)) {
+                String target = "";
+                try {
+                    //get target node information
+                    JSONParser parser = new JSONParser();
+
+                    target = Unirest.get("/ns/nodes/{id}").routeParam("id", String.valueOf(replicateId)).asString().getBody();
+                    JSONObject targetNode = (JSONObject) parser.parse(target);
+                    replicateIPAddr = (String) ((JSONObject) targetNode.get("prev")).get("ip");
+                    replicateId = (long) ((JSONObject) targetNode.get("prev")).get("id");
+                }catch (Exception e) {
+                    System.out.println("Error in parsing target node information" + target);
+                    e.printStackTrace();
+                }
+            }
             System.out.println("Replicating " + file.getName() + " to " + replicateIPAddr);
+
             //send file to replica
             FileTransfer.sendFile(file.getName(), replicaFolder, replicaFolder, replicateIPAddr);
             //update log file
-            updateLogFile(file.getName(),this.node.getPrevNodeId(), replicateIPAddr);
+            updateLogFile(file.getName(),replicateId, replicateIPAddr);
             //send log file
             FileTransfer.sendFile(file.getName() + ".log", logFolder,logFolder, replicateIPAddr);
         }
@@ -394,13 +434,15 @@ public class FileManager extends Thread {
     }
 
     public void updateLogFile(String fileName, long newOwner, String newIP) {
+        String logFileContent = "";
         try {
             //load log file
             File logFile = new File( logFolder + "/"+ fileName + ".log");
-            String logFileContent = "";
+
             BufferedReader reader = new BufferedReader(new FileReader(logFile));
             JSONParser parser = new JSONParser();
-            JSONObject jsonObject = (JSONObject) parser.parse(reader.lines().collect(Collectors.joining(System.lineSeparator())));
+            logFileContent = reader.lines().collect(Collectors.joining(System.lineSeparator()));
+            JSONObject jsonObject = (JSONObject) parser.parse(logFileContent);
             reader.close();
             //update log file
             JSONObject owner = (JSONObject) jsonObject.get("owner");
@@ -412,8 +454,32 @@ public class FileManager extends Thread {
             writer.write(jsonObject.toJSONString());
             writer.close();
         } catch (Exception e){
+            System.out.println("Error in updating log file\n" + logFileContent);
             e.printStackTrace();
         }
+    }
+
+    public boolean targetIsOrigin(String fileName, String targetIP) {
+        try {
+            //read file
+            File logFile = new File(logFolder + "/" + fileName + ".log");
+            String logFileContent = "";
+            BufferedReader reader = new BufferedReader(new FileReader(logFile));
+            //parse json file
+            JSONParser parser = new JSONParser();
+            JSONObject jsonObject = (JSONObject) parser.parse(reader.lines().collect(Collectors.joining(System.lineSeparator())));
+            reader.close();
+            //check if target is owner
+            JSONObject origin = (JSONObject) jsonObject.get("origin");
+            if (origin.get("ip").equals(targetIP)) {
+                System.out.println("Target is origin");
+                return true;
+            }
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }
+        return false;
     }
 }
 
