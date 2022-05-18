@@ -25,6 +25,25 @@
     <a class="navbar-brand" href="#">Network Monitor</a>
     <div class="navbar-content">
       <ul class ="navbar-nav ml-auto navbar-right-top">
+        <li class="nav-item dropdwon" style = "padding-top:10px">
+          <div class="nav-options ">
+            <a class="nav-link" href="#" role="button" onclick=toggle_options()>
+              <img src="images/options.png" alt="options" width="40px" height="40px">
+            </a>
+            <ul class="dropdown-menu dropdown-menu-right connection-dropdown" id="dropdown-options">
+              <li class="connection-list">
+                <div class="row" style="padding-top:5px">
+                  <div class="col-5">
+                    <label>Name server ip</label>
+                  </div>
+                  <div class="col-5">
+                    <label>Test</label>
+                  </div>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </li>
         <li class="nav-item" style = "padding-top:10px;">
           <a class="nav-link" href="#">
             <img src="images/refresh.png" alt="refresh" width="40px" height="40px" onclick="updateData();screenRefresh(true);" >

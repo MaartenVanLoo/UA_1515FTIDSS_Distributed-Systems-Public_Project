@@ -104,6 +104,20 @@ public class NodeAPI {
                 }
                 exchange.close();
             });
+            this.server.createContext("/agent", (exchange) -> {
+                exchange.getResponseHeaders().add("Content-Type", "application/json");
+                exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
+                exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "*");
+                exchange.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type");
+                if (!this.node.isSetUp()) {
+                    exchange.sendResponseHeaders(402, -1);
+                }
+                if ("POST".equals(exchange.getRequestMethod())) {
+                    //run agent
+                    runAgent(exchange);
+                    exchange.sendResponseHeaders(200, -1);
+                }
+            };
 
         } catch (Exception e) {
             this.server = null;
@@ -141,6 +155,9 @@ public class NodeAPI {
         }
     }
 
+    private void runAgent(HttpExchange exchange) {
+
+    }
     private String getNodeInfo() {
         JSONObject response = new JSONObject();
         JSONObject node = new JSONObject();
