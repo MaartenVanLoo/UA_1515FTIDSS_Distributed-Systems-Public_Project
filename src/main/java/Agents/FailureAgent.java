@@ -6,13 +6,23 @@ import jade.core.behaviours.Behaviour;
 import NameServer.*;
 import jade.core.behaviours.OneShotBehaviour;
 import kong.unirest.Unirest;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.Serializable;
+import java.util.stream.Collectors;
 
-//sorry voor halve pseudocode
-public class FailureAgent extends Agent {
+import Node.FileManager;
+
+public class FailureAgent implements Runnable, Serializable {
     private static final long serialVersionUID = 1L;
 
     private Node node;
+    private Node failureNode;
+
     String starterNodeIP;
 
     {
@@ -27,30 +37,30 @@ public class FailureAgent extends Agent {
     }
 
     public void setup() {
-        addBehaviour(new Behaviour(this) {
-            private static final long serialVersionUID = 1L;
-            @Override
-            public void action() {
-                getList();
-                if (done()) {
-                    System.out.println("Failure Agent: " + node.getIP() + " has completed ring and has terminated");
-                    doDelete();
-                } else {
-                    //send agent to next node via REST
-                    System.out.println("Failure Agent: " + node.getIP() + " has NOT completed ring and has sent to next node");
-                    Unirest.post("node/agent");
+            //get list of log files in the list from current node
+            //if failing node is owner of the file replicate elsewhere
+            try {
+                File dir = new File(FileManager.logFolder);
+                File[] files = dir.listFiles();
+                for (File file : files) {
+                    BufferedReader reader = new BufferedReader(new FileReader(file));
+                    //parse json file
+                    JSONParser parser = new JSONParser();
+                    JSONObject jsonObject = (JSONObject) parser.parse(reader.lines().collect(Collectors.joining(System.lineSeparator())));
+                    reader.close();
+                    //check if target is owner
+                    JSONObject origin = (JSONObject) jsonObject.get("origin");
 
                 }
-            }
-            @Override
-            public boolean done() {
-                return node.getIP().equals(starterNodeIP);
-            }
-        });
 
-    }
-    
-    public void getList() {
-        //get list of files in the
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+    @Override
+    public void run() {
+        setup();
     }
 }
