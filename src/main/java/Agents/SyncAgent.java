@@ -45,6 +45,7 @@ public class SyncAgent extends Thread {
                         jsonArray.add(file);
                     }
                     exchange.getResponseBody().write(jsonArray.toJSONString().getBytes());
+                    exchange.getResponseBody().close();
                     exchange.sendResponseHeaders(200, 0);
                 }
                 else{
