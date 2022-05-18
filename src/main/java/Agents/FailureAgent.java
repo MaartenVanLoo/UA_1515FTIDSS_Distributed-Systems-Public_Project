@@ -12,7 +12,12 @@ public class FailureAgent extends Agent {
     private static final long serialVersionUID = 1L;
 
     private Node node;
-    String starterNodeIP = this.node.getIP();
+    String starterNodeIP;
+
+    {
+        assert false;
+        starterNodeIP = this.node.getIP();
+    }
 
 
     public FailureAgent(Node node) {
@@ -20,9 +25,8 @@ public class FailureAgent extends Agent {
         setup();
     }
 
-    //get failing node from Nameserver via REST
     public void setup() {
-        addBehaviour(new Behaviour() {
+        addBehaviour(new Behaviour(this) {
             private static final long serialVersionUID = 1L;
             @Override
             public void action() {
