@@ -130,7 +130,7 @@ public class SyncAgent extends Thread {
         }
     }
 
-    public void deleteLocalfile(String filename){
+    public void deleteLocalFile(String filename){
         if (!this.files.contains(filename)){
             System.out.println("File not found!!");//enkel debug..
             return;
