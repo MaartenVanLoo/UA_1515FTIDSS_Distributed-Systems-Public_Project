@@ -171,15 +171,19 @@ async function shutdownNode(id){
     await sendShutdownNode(url);
 }
 
-async function startNode(ip) {
-
-    const SSH = require('simple-ssh');
-    var ssh = new SSH({
-        host:   ip,
-        user:   'root',
-        pass:   'root'
-    })
-    ssh.exec('sh /root/launch.sh', { out: function (stdout) { console.log(stdout); } }).start();
+async function startNode(id) {
+    if (nodeData[id].node.ip == undefined) return;
+    let url = "http://"+ipNS+":8081/ns/nodes/"+id+"/start";
+    try{
+        const response = await fetch(url, {
+            method: 'GET'
+        })
+        return await response.json(); // parses JSON response into native JavaScript object
+    }
+    catch(e){
+        //console.log(e);
+        return undefined;
+    }
 }
 
 const getNodeData = async (ips) =>{
