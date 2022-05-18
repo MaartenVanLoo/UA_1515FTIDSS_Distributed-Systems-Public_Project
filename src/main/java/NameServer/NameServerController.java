@@ -207,8 +207,9 @@ public class NameServerController {
     }
 
     @ResponseStatus(HttpStatus.OK)
-    @GetMapping("/ns/nodes/{nodeId}/start")
-    public void startNode(@PathVariable int nodeId) {
+    @PostMapping("/ns/nodes/{nodeIp}/start")
+    public void startNode(@PathVariable String nodeIp) {
+        System.out.println("Starting node at ip="+nodeIp);
         String remoteShellScript = "/root/launch.sh";
         Session jschSession = null;
         try {
@@ -220,10 +221,11 @@ public class NameServerController {
                 long key = Long.parseLong((String) obj);
                 allNodes.put((int) key, (String) jsonObject.get(obj));
             }
+            if (!allNodes.containsValue(nodeIp)) return;
 
             JSch jsch = new JSch();
             jsch.setKnownHosts("/ssh/known_hosts");
-            jschSession = jsch.getSession("root", allNodes.get(nodeId), 22);
+            jschSession = jsch.getSession("root", nodeIp, 22);
             jschSession.setPassword("root");
             jschSession.connect(10000);     // session timeout = 10.000 ms
             ChannelExec channelExec = (ChannelExec) jschSession.openChannel("exec");
