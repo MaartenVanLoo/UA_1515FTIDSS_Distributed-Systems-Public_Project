@@ -1,15 +1,12 @@
 package Agents;
 
 import Node.Node;
-import jade.core.Agent;
-import jade.core.behaviours.Behaviour;
 import NameServer.*;
-import jade.core.behaviours.OneShotBehaviour;
 import kong.unirest.Unirest;
 
 
 //sorry voor halve pseudocode
-public class FailureAgent extends Agent {
+public class FailureAgent {
     private static final long serialVersionUID = 1L;
 
     private Node node;
