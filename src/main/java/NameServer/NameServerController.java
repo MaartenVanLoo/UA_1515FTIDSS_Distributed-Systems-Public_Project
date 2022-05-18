@@ -381,6 +381,7 @@ public class NameServerController {
                                     allNodesJson.clear();
                                     allNodesJson.put(key, allNodes.get(key));
                                 }
+                                System.out.println("Writing "+allNodesJson.toString()+" to allNodes.json");
                                 PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter("allNodes.json")));
                                 jsonObject.writeJSONString(out);
                                 out.flush();
