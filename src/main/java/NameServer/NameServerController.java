@@ -379,7 +379,7 @@ public class NameServerController {
 
                                 for (int key : allNodes.keySet()) {
                                     allNodesJson.clear();
-                                    allNodesJson.put(key, this.nameServerController.nameServer.getIpMapping().get(key));
+                                    allNodesJson.put(key, allNodes.get(key));
                                 }
                                 PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter("allNodes.json")));
                                 jsonObject.writeJSONString(out);
