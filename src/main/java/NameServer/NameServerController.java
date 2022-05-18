@@ -213,7 +213,7 @@ public class NameServerController {
         String remoteShellScript = "/root/launch.sh";
         Session jschSession = null;
         try {
-            BufferedReader reader = new BufferedReader(new FileReader("allNodes.json"));
+            /*BufferedReader reader = new BufferedReader(new FileReader("allNodes.json"));
             JSONParser parser = new JSONParser();
             JSONObject jsonObject = (JSONObject) parser.parse(reader.lines().collect(Collectors.joining(System.lineSeparator())));
             TreeMap<Integer,String> allNodes = new TreeMap<>();
@@ -221,7 +221,7 @@ public class NameServerController {
                 long key = Long.parseLong((String) obj);
                 allNodes.put((int) key, (String) jsonObject.get(obj));
             }
-            if (!allNodes.containsValue(nodeIp)) return;
+            if (!allNodes.containsValue(nodeIp)) return;*/
 
             JSch jsch = new JSch();
             jsch.setKnownHosts("/root/.ssh/authorized_keys");
