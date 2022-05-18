@@ -119,7 +119,7 @@ public class NodeAPI {
                     exchange.sendResponseHeaders(501, -1);
                 }
                 exchange.close();
-            };
+            });
 
         } catch (Exception e) {
             this.server = null;

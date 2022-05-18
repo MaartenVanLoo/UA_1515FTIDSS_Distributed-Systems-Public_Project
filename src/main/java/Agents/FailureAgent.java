@@ -62,7 +62,7 @@ public class FailureAgent extends Agent {
             {
                 //send agent to next node
                 System.out.println("Failure Agent: " + node.getIP() + " has NOT completed ring and has sent to next node");
-                doMove(node.getNextNodeIP());
+
 
             }
 
