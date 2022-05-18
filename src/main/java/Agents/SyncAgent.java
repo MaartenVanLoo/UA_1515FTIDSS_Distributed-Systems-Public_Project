@@ -112,7 +112,7 @@ public class SyncAgent extends Thread {
     public void getNeighbourList(){
         JSONParser parser = new JSONParser();
         try {
-            JSONArray neighbourFiles = (JSONArray) parser.parse(Unirest.get("http://" + this.nextNodeIP + ":8082/fileList").asString().getBody());
+            JSONArray neighbourFiles = (JSONArray) parser.parse(Unirest.get("http://" + this.node.getNextNodeIP() + ":8082/fileList").asString().getBody());
             for (Object file : neighbourFiles) {
                 if (!this.files.contains(file)) {
                     this.files.add((String) file);
