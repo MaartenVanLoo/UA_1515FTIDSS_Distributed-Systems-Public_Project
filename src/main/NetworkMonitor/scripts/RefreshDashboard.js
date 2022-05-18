@@ -114,7 +114,7 @@ function updateDetailsTable(){
         document.getElementById("node-details-next-ip").innerHTML = "-";
         document.getElementById("node-details-prev-id").innerHTML = "-";
         document.getElementById("node-details-prev-ip").innerHTML = "-";
-        document.getElementByid("local").innerHTML = "-";
+        document.getElementById("local").innerHTML = "-";
         document.getElementById("replica").innerHTML = "-";
     }else{
         document.getElementById("node-details-name").innerHTML = nodeData[selectedID].node.name;

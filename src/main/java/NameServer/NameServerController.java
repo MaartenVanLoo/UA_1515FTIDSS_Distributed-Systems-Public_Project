@@ -353,12 +353,13 @@ public class NameServerController {
                         System.out.println("Status:"
                                 + Unirest.post("http://" + previousIp + ":8081/files").body(json.toJSONString()).asString().getStatus()
                         );
+                        this.nameServerController.nameServer.getIpMapLock().readLock().unlock();
                     }catch (UnirestException e) {
                         System.out.println("Unable to contact previous node");
+                        this.nameServerController.nameServer.getIpMapLock().readLock().unlock();
                         //report failure of this node
                         failNode(Id);
                     }
-                    this.nameServerController.nameServer.getIpMapLock().readLock().unlock();
                 }
             }
         }

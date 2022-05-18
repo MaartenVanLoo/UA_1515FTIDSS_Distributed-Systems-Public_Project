@@ -30,7 +30,7 @@ public class FailureAgent extends Agent {
             private static final long serialVersionUID = 1L;
             @Override
             public void action() {
-                walk();
+                fly();
 
             }
 
@@ -46,21 +46,24 @@ public class FailureAgent extends Agent {
         });
 
     }
-
-
-    public void walk() {
+    
+    public void fly() {
         try {
             //send Agent to next node
-            String Address = node.getNextNodeIP();
-            // REST call to start failure on next node
-            // chack if the next node is the starter node
+            // check if the next node is the starter node
             // if it is starter node, terminate agent
             // else, send agent to next node
             if(node.getNextNodeIP().equals(starterNodeIP)){
                 //terminate agent
 
                 System.out.println("Failure Agent: " + node.getIP() + " has completed ring and has terminated");
-                Behaviour.done();
+                doDelete();
+            } else
+            {
+                //send agent to next node
+                System.out.println("Failure Agent: " + node.getIP() + " has NOT completed ring and has sent to next node");
+                doMove(node.getNextNodeIP());
+
             }
 
 

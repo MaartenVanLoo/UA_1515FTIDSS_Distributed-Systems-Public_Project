@@ -27,7 +27,7 @@ public class NodeAPI {
             this.server.createContext("/node", (exchange) -> {
                 exchange.getResponseHeaders().add("Content-Type", "application/json");
                 exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
-                exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "GET");
+                exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "*");
                 exchange.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type");
                 if (!this.node.isSetUp()) {
                     exchange.sendResponseHeaders(400, -1);
@@ -39,7 +39,32 @@ public class NodeAPI {
                     outputStream.write(response.getBytes());
                     outputStream.flush();
                     outputStream.close();
-                } else {
+                }else if ("DELETE".equals(exchange.getRequestMethod())) {
+                    String content = this.readContent(exchange);
+                    try {
+                        JSONObject jsonObject = (JSONObject) this.node.getParser().parse(content);
+                        if (jsonObject.get("method").equals("shutdown")) {
+                            System.out.println("Shutting down node");
+                            this.node.shutdown(true);
+                            exchange.sendResponseHeaders(200, -1);
+                            System.out.println("Node shut down, exiting...");
+                            System.exit(0);
+                        } else if (jsonObject.get("method").equals("terminate")) {
+                            System.out.println("Terminating node");
+                            exchange.sendResponseHeaders(200, -1);
+                            System.exit(0);
+                        } else {
+                            exchange.sendResponseHeaders(400, -1);
+                        }
+                    }
+                    catch(Exception e) {
+                        exchange.sendResponseHeaders(400, -1);
+                    }
+                }else if ("OPTIONS".equals(exchange.getRequestMethod())) {
+                    //cross origin preflight request
+                    exchange.sendResponseHeaders(200, -1);
+                }
+                else {
                     exchange.sendResponseHeaders(501, -1);
                 }
                 exchange.close();
@@ -47,7 +72,7 @@ public class NodeAPI {
             this.server.createContext("/files", (exchange) -> {
                 exchange.getResponseHeaders().add("Content-Type", "application/json");
                 exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
-                exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "GET");
+                exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "*");
                 exchange.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type");
                 if (!this.node.isSetUp()) {
                     exchange.sendResponseHeaders(402, -1);
@@ -70,11 +95,30 @@ public class NodeAPI {
                 else if ("PUT".equals(exchange.getRequestMethod())) {
                     exchange.sendResponseHeaders(501, -1);
                 }
+                else if ("OPTIONS".equals(exchange.getRequestMethod())) {
+                    //cross origin preflight request
+                    exchange.sendResponseHeaders(200, -1);
+                }
                 else{
                     exchange.sendResponseHeaders(501, -1);
                 }
                 exchange.close();
             });
+            this.server.createContext("/agent", (exchange) -> {
+                exchange.getResponseHeaders().add("Content-Type", "application/json");
+                exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
+                exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "*");
+                exchange.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type");
+                if (!this.node.isSetUp()) {
+                    exchange.sendResponseHeaders(402, -1);
+                }
+                if ("POST".equals(exchange.getRequestMethod())) {
+                    //run agent
+                    runAgent(exchange);
+                    exchange.sendResponseHeaders(200, -1);
+                }
+            };
+
         } catch (Exception e) {
             this.server = null;
             System.out.println("Error creating http server");
@@ -107,10 +151,13 @@ public class NodeAPI {
 
     public void stop() {
         if (this.server != null) {
-            this.server.stop(0);
+            this.server.stop(1);
         }
     }
 
+    private void runAgent(HttpExchange exchange) {
+
+    }
     private String getNodeInfo() {
         JSONObject response = new JSONObject();
         JSONObject node = new JSONObject();

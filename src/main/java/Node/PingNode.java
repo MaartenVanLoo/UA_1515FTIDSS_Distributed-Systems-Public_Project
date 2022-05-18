@@ -11,7 +11,7 @@ public class PingNode extends Thread{
     private int nextUnanswerd = 0;
     private int prevUnanswerd = 0;
     private int delay = 5000;
-    private boolean running = false;
+    private volatile boolean running = false;
 
     public PingNode(Node node){
         this.setDaemon(true); //make sure the thread dies when the main thread dies
