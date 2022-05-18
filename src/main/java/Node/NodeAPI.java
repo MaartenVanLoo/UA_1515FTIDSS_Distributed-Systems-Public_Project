@@ -117,7 +117,7 @@ public class NodeAPI {
                     runAgent(exchange);
                     exchange.sendResponseHeaders(200, -1);
                 }
-            };
+            });
 
         } catch (Exception e) {
             this.server = null;
