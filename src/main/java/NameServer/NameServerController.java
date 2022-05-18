@@ -224,7 +224,7 @@ public class NameServerController {
             if (!allNodes.containsValue(nodeIp)) return;
 
             JSch jsch = new JSch();
-            jsch.setKnownHosts("/ssh/known_hosts");
+            jsch.setKnownHosts("/root/.ssh/authorized_keys");
             jschSession = jsch.getSession("root", nodeIp, 22);
             jschSession.setPassword("root");
             jschSession.connect(10000);     // session timeout = 10.000 ms
