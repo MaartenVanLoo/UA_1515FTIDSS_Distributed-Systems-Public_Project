@@ -1,4 +1,4 @@
-package Agents;
+/*package Agents;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -202,3 +202,4 @@ public class SyncAgent extends Agent {
     }
 
 }
+*/

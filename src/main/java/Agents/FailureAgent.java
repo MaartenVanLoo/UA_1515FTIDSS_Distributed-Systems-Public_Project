@@ -1,4 +1,4 @@
-package Agents;
+/* package Agents;
 
 import Node.Node;
 import jade.core.Agent;
@@ -75,3 +75,4 @@ public class FailureAgent extends Agent {
 
     }
 }
+*/
