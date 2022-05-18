@@ -1,6 +1,7 @@
 package Agents;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.Serializable;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
@@ -44,9 +45,12 @@ public class SyncAgent extends Thread {
                     for (String file: this.files){
                         jsonArray.add(file);
                     }
-                    exchange.getResponseBody().write(jsonArray.toJSONString().getBytes());
-                    exchange.getResponseBody().close();
-                    exchange.sendResponseHeaders(200, jsonArray.toJSONString().getBytes().length);
+                    String response = jsonArray.toJSONString();
+                    OutputStream outputStream = exchange.getResponseBody();
+                    outputStream.write(response.getBytes());
+                    outputStream.flush();
+                    outputStream.close();
+                    exchange.sendResponseHeaders(200, jsonArray.toJSONString().length());
                 }
                 else{
                     exchange.sendResponseHeaders(501, -1);
