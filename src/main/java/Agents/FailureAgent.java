@@ -4,45 +4,48 @@ import Node.Node;
 import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
 import NameServer.*;
+import jade.core.behaviours.OneShotBehaviour;
 
-import java.io.Serializable;
 
-
-//vergeef de pseudocode wat
-public class FailureAgent implements Runnable, Serializable {
+//sorry voor halve pseudocode
+public class FailureAgent extends Agent {
+    private static final long serialVersionUID = 1L;
 
     private Node node;
     String starterNodeIP = this.node.getIP();
 
-    FailureAgent(Node node, Node thisNode) {
-        this.node = thisNode;
-        Node failingNode = node;
-       String starterNodeIP = this.node.getIP();
-        // get the file list of this node
-        thisNode.getFileList();
 
+    public FailureAgent(Node node) {
+        this.node = node;
+        setup();
     }
 
     //get failing node from Nameserver via REST
     public void setup() {
+        addBehaviour(new Behaviour() {
+            private static final long serialVersionUID = 1L;
+            @Override
+            public void action() {
+                walk();
+
+            }
+
+            @Override
+            public boolean done() {
+                if (node.getIP().equals(starterNodeIP)) {
+                    return true;
+                }
+                else {
+                    return false;
+                }
+            }
+        });
 
     }
-    private class behaviour extends Behaviour {
-        @Override
-        public void action() {
 
-        }
 
-        @Override
-        public boolean done() {
-            return false;
-        }
-    }
-
-    @Override
-    public void run() {
+    public void walk() {
         try {
-
             //send Agent to next node
             String Address = node.getNextNodeIP();
             // REST call to start failure on next node
@@ -53,7 +56,7 @@ public class FailureAgent implements Runnable, Serializable {
                 //terminate agent
 
                 System.out.println("Failure Agent: " + node.getIP() + " has completed ring and has terminated");
-                Agent.stop();
+                Behaviour.done();
             }
 
 
