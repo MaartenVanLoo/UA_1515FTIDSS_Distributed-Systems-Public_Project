@@ -7,7 +7,7 @@ import java.io.File;
 import jade.core.*;
 import jade.core.behaviours.*;
 
-public class SyncAgent {
+public class SyncAgent extends Agent {
     // go over every node and make a list of all files in localfolder
     public void getLocalFiles(Node node) {
         ArrayList<String> localFiles = new ArrayList<>();
@@ -41,8 +41,4 @@ public class SyncAgent {
             e.printStackTrace();
         }
     }
-
-
-public class SyncAgent extends Agent {
-
 }
