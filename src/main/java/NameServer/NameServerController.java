@@ -20,7 +20,6 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
-import com.jcraft.jsch.*;
 
 //TODO: clean API:
 // Proposal:
@@ -206,43 +205,6 @@ public class NameServerController {
         this.nameServer.getIpMapLock().writeLock().unlock();
     }
 
-    @ResponseStatus(HttpStatus.OK)
-    @PostMapping("/ns/nodes/{nodeIp}/start")
-    public void startNode(@PathVariable String nodeIp) {
-        System.out.println("Starting node at ip="+nodeIp);
-        String remoteShellScript = "/root/launch.sh";
-        Session jschSession = null;
-        try {
-            /*BufferedReader reader = new BufferedReader(new FileReader("allNodes.json"));
-            JSONParser parser = new JSONParser();
-            JSONObject jsonObject = (JSONObject) parser.parse(reader.lines().collect(Collectors.joining(System.lineSeparator())));
-            TreeMap<Integer,String> allNodes = new TreeMap<>();
-            for (Object obj : jsonObject.keySet()) {
-                long key = Long.parseLong((String) obj);
-                allNodes.put((int) key, (String) jsonObject.get(obj));
-            }
-            if (!allNodes.containsValue(nodeIp)) return;*/
-
-            JSch jsch = new JSch();
-            jsch.setKnownHosts("/root/.ssh/known_hosts");
-            jschSession = jsch.getSession("root", nodeIp, 22);
-            jschSession.setPassword("root");
-            jschSession.connect(10000);     // session timeout = 10.000 ms
-            ChannelExec channelExec = (ChannelExec) jschSession.openChannel("exec");
-            channelExec.setCommand("sh "+remoteShellScript);
-            channelExec.setErrStream(System.err);
-            InputStream in = channelExec.getInputStream();
-            channelExec.connect(5000);
-            channelExec.disconnect();
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
-        finally {
-            if (jschSession != null)
-                jschSession.disconnect();
-        }
-    }
 
     //</editor-fold>
 
