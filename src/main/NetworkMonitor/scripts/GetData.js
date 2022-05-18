@@ -171,6 +171,17 @@ async function shutdownNode(id){
     await sendShutdownNode(url);
 }
 
+async function startNode(ip) {
+
+    const SSH = require('simple-ssh');
+    var ssh = new SSH({
+        host:   ip,
+        user:   'root',
+        pass:   'root'
+    })
+    ssh.exec('sh /root/launch.sh', { out: function (stdout) { console.log(stdout); } }).start();
+}
+
 const getNodeData = async (ips) =>{
     if (nodeRequest > 2* ips.length){
         return null;
@@ -280,6 +291,11 @@ function checkSSHTunnel(){
         return false;
     }
 }
+
+/*
+Returns the ip of the SSH tunnel. If there is a mapping from with the localhost, it will return that ip, otherwise it will return
+the same ip as the parameter.
+ */
 function translateSSHTunnelIP(ip){
     if (checkSSHTunnel()){
         if (ip in sshTunnelMap){
