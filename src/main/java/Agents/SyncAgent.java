@@ -6,6 +6,7 @@ import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import Node.*;
 import java.io.File;
+import java.util.concurrent.Executors;
 
 import com.sun.net.httpserver.HttpServer;
 
@@ -63,6 +64,7 @@ public class SyncAgent extends Thread {
     public void run() {
         running = true;
         this.makeLocalList();
+        this.server.setExecutor(Executors.newCachedThreadPool());
         this.server.start();
         while (running){
             try {
