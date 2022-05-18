@@ -119,8 +119,7 @@ public class NodeAPI {
                     exchange.sendResponseHeaders(501, -1);
                 }
                 exchange.close();
-            };
-
+            });
         } catch (Exception e) {
             this.server = null;
             System.out.println("Error creating http server");
@@ -193,11 +192,18 @@ public class NodeAPI {
         for (File file : this.node.getFileManager().getReplicatedFiles()){
             replicated.add(file.getName());
         }
+
+        JSONArray allFiles = new JSONArray();
+        for (String file : this.node.getSyncAgent().getFileList()){
+            allFiles.add(file);
+        }
+
         response.put("node", node);
         response.put("next", next);
         response.put("prev", prev);
         response.put("local", local);
         response.put("replica", replicated);
+        response.put("allFiles", allFiles);
 
         return response.toJSONString();
     }

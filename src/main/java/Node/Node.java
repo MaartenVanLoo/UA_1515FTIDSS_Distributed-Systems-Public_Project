@@ -1,5 +1,6 @@
 package Node;
 
+import Agents.SyncAgent;
 import Utils.SynchronizedPrint;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
@@ -39,6 +40,7 @@ public class Node {
     private final NodeAPI nodeAPI;
     private final FileTransfer fileTransfer;
     private final FileManager fileManager;
+    private final SyncAgent syncAgent;
 
     private DatagramSocket listeningSocket;
 
@@ -64,6 +66,7 @@ public class Node {
         this.nodeAPI = new NodeAPI(this);
         this.fileTransfer = new FileTransfer(this);
         this.fileManager = new FileManager(this);
+        this.syncAgent = new SyncAgent(this);
     }
 
 
@@ -290,6 +293,10 @@ public class Node {
 
     public FileManager getFileManager() {
         return fileManager;
+    }
+
+    public SyncAgent getSyncAgent(){
+        return this.syncAgent;
     }
     /**
      * This algorithm is activated in every exception thrown during communication with other nodes.

@@ -18,9 +18,9 @@ import java.util.stream.Collectors;
 
 public class FileManager extends Thread {
     private Node node;
-    final String localFolder = "local";
-    final String replicaFolder = "replica";
-    final String logFolder = "log";
+    public final static String localFolder = "local";
+    public final static String replicaFolder = "replica";
+    public final static String logFolder = "log";
     private ArrayList<String> fileList = new ArrayList<>();
 
     WatchService watchService = FileSystems.getDefault().newWatchService();
@@ -248,7 +248,7 @@ public class FileManager extends Thread {
         WatchKey key;
         while ((key = watchService.take()) != null) {
 
-            //sleep(50);
+
             for (WatchEvent<?> event : key.pollEvents()) {
                 //sleep(50);
                 //fileEvents.add(event.kind().toString() + " " + event.context().toString());
@@ -286,6 +286,9 @@ public class FileManager extends Thread {
                         writer.close();
                         this.updateLogFile(file.getName(),replicateId,replicateIPAddr);
                         FileTransfer.sendFile(file.getName(),logFolder,logFolder, replicateIPAddr + ".log");
+
+                        //update sync agent:
+                        this.node.getSyncAgent().addLocalFile(file.getName());
                         //[fallthrough]
                     case "ENTRY_MODIFY":
                         try {
