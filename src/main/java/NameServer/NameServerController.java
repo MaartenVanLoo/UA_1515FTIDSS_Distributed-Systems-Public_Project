@@ -360,6 +360,36 @@ public class NameServerController {
                                     "\"nodeCount\":" + this.nameServerController.nameServer.getIpMapping().size() + "," +
                                     "\"node\":" + this.nameServerController.nameServer.nodeToJson(Id) + "}";
                             success = true;
+
+                            try {
+                                TreeMap<Integer, String> allNodes = new TreeMap<>();
+                                BufferedReader reader = new BufferedReader(new FileReader("allNodes.json"));//new file(filename)
+                                JSONObject allNodesJson = (JSONObject) parser.parse(reader.lines().collect(Collectors.joining(System.lineSeparator())));
+                                for (Object obj : allNodesJson.keySet()) {
+                                    long key = Long.parseLong((String) obj);
+                                    allNodes.put((int) key, (String) allNodesJson.get(obj));
+                                }
+
+                                for (int k: allNodes.keySet()){
+                                    if (!this.nameServerController.nameServer.getIpMapping().containsKey(k))
+                                        allNodes.put(k, this.nameServerController.nameServer.getIpMapping().get(k));
+                                    else
+                                        allNodes.replace(k, this.nameServerController.nameServer.getIpMapping().get(k));
+                                }
+
+                                for (int key : allNodes.keySet()) {
+                                    allNodesJson.clear();
+                                    allNodesJson.put(key, this.nameServerController.nameServer.getIpMapping().get(key));
+                                }
+                                PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter("allNodes.json")));
+                                jsonObject.writeJSONString(out);
+                                out.flush();
+                                out.close();
+                            }
+                            catch (Exception e) {
+                                e.printStackTrace();
+                            }
+
                             this.nameServerController.nameServer.getIpMapLock().readLock().unlock();
                         } else {
                             //adding unsuccessful

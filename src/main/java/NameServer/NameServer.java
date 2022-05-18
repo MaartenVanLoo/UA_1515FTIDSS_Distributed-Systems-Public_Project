@@ -131,12 +131,6 @@ public class NameServer {
         ipMapLock.writeLock().lock();
         if (ipMapping.containsKey(id)) { ipMapLock.writeLock().unlock(); return false; }
         ipMapping.put(id, ip);
-        try {
-            saveMapping("allNodes.json");
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
         ipMapLock.writeLock().unlock();
         return true;
     }
