@@ -40,6 +40,7 @@ public class SyncAgent extends Thread {
         try {
             this.server = HttpServer.create(new InetSocketAddress(HTTP_PORT), 0);
             this.server.createContext("/fileList", (exchange) -> {
+                exchange.getResponseHeaders().add("Content-Type", "application/json");
                 if (exchange.getRequestMethod().equals("GET")) {
                     //send file list in body
                     JSONObject json = new JSONObject();
@@ -49,11 +50,12 @@ public class SyncAgent extends Thread {
                     }
                     json.put("fileList", jsonArray);
                     String response = json.toJSONString();
+                    exchange.sendResponseHeaders(200, response.length());
                     OutputStream outputStream = exchange.getResponseBody();
                     outputStream.write(response.getBytes());
                     outputStream.flush();
                     outputStream.close();
-                    exchange.sendResponseHeaders(200, response.length());
+
                 }
                 else{
                     exchange.sendResponseHeaders(501, -1);
@@ -61,6 +63,7 @@ public class SyncAgent extends Thread {
                 exchange.close();
             });
         } catch (IOException e) {
+
             e.printStackTrace();
         }
 
@@ -80,7 +83,7 @@ public class SyncAgent extends Thread {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            if (! this.node.isSetUp()){
+            if (!this.node.isSetUp()){
                 continue;
             }
 
@@ -122,9 +125,10 @@ public class SyncAgent extends Thread {
     public void getNeighbourList(){
         JSONParser parser = new JSONParser();
         try {
-            JSONArray neighbourFiles = (JSONArray) parser.parse(Unirest.get("http://" + this.node.getNextNodeIP() + ":8082/fileList").asString().getBody());
-            for (Object file : neighbourFiles) {
-                if (!this.files.contains(file)) {
+            JSONObject neighbourFiles = (JSONObject) parser.parse(Unirest.get("http://" + this.node.getNextNodeIP() + ":8082/fileList").asString().getBody());
+            JSONArray fileList =  (JSONArray)neighbourFiles.get("fileList");
+            for (Object file : fileList) {
+                if (!this.files.contains((String)file)) {
                     this.files.add((String) file);
                 }
             }
