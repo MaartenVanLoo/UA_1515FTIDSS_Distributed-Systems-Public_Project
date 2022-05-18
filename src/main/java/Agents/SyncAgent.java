@@ -58,6 +58,8 @@ public class SyncAgent extends Thread {
                 }
                 else if (exchange.getRequestMethod().equals("DELETE")){
                     //delete file from files
+                    System.out.println("DELETE");
+                    System.out.println(exchange.getRequestURI());
                     String fileName = exchange.getRequestURI().getQuery().replace("/fileList","");
                     if (this.files.contains(fileName)){
                         this.files.remove(fileName);
