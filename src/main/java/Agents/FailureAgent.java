@@ -38,7 +38,7 @@ public class FailureAgent implements Runnable, Serializable {
      * Initialization of the agent
      */
     public void setup() {
-        FileManager fM;
+
         //get list of local files in the list from SyncAgent
         //if failing node is owner of the file replicate elsewhere
         ArrayList<String> arrayList = this.node.getSyncAgent().getFileList();
