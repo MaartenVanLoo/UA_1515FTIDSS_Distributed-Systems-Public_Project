@@ -1,6 +1,6 @@
 package Agents;
 
-import Node.Node;
+import Node.*;
 import Utils.Hashing;
 import kong.unirest.Unirest;
 import org.json.simple.JSONObject;
@@ -18,14 +18,10 @@ public class FailureAgent implements Runnable, Serializable {
 
     private  Node node;
     private long failedNodeId;
+    private FileManager fileManager;
 
 
     String starterNodeIP;
-
-    {
-        assert false;
-        starterNodeIP = this.node.getIP();
-    }
 
 
     public FailureAgent(Node node, long failedNodeId) {
@@ -45,7 +41,7 @@ public class FailureAgent implements Runnable, Serializable {
         for (String fileName : arrayList) {
             int fileHash = Hashing.hash(fileName);
             // ask the namingserver for the location of the file
-            int nodeIDofFile = Integer.parseInt(Unirest.get("/ns/files/" + fileName + "/id").asString().getBody()); //vieze ai zeg
+            int nodeIDofFile = Integer.parseInt(Unirest.get("/ns/files/" + fileName + "/id").asString().getBody());
             // if the the failing node is the owner or the failing node was the owner,...
             String allNodes = Unirest.get("/ns/nodes").asString().getBody();
             allNodes = allNodes.replace("{", "").replace("}","");
@@ -55,18 +51,23 @@ public class FailureAgent implements Runnable, Serializable {
                 String[] temp = e.trim().split("=>");
                 map.put(Long.parseLong(temp[0]),temp[1]);
             }
-            if (!map.containsKey(failedNodeId)) map.put(failedNodeId, "temp");
+            //if (!map.containsKey(failedNodeId)) map.put(failedNodeId, "temp");
             if (map.floorKey((long) fileHash) == failedNodeId) {
-                // failed node was owner
+
             }
-
-
-
             //get the Id before and after the failed node Id if node isnt lastKey
                 if (map.lastKey()==failedNodeId) {
-                    // check if the fileHash is bigger than the biggest NodeId but smaller than the failed node id
-                    if (fileHash > nodeIDofFile && fileHash < failedNodeId) {
+                    // check if the fimehash is smalller than the last key but bigger than the second to last key
+                    if (fileHash < map.lastKey() && fileHash > map.lowerKey((long) map.lastKey())) {
                         //file must be replicated
+                        String replicateIPAddr = Unirest.get("/ns/files/{filename}")
+                                .routeParam("filename", fileName).asString().getBody();
+                        long replicateId = Integer.parseInt(Unirest.get("/ns/files/{filename}/id").routeParam("filename", fileName).asString().getBody());
+                        FileTransfer.sendFile(fileName, "local", "replica", replicateIPAddr);//
+                        //update log file
+                        fileManager.updateLogFile(fileName, replicateId, replicateIPAddr);
+                        //send file to log
+                        FileTransfer.sendFile(fileName + ".log", "log", "log", replicateIPAddr);
                     }
 
                 }
