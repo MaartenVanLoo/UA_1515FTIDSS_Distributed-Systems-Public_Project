@@ -75,7 +75,6 @@ public class SyncAgent extends Thread {
                 exchange.close();
             });
         } catch (IOException e) {
-
             e.printStackTrace();
         }
 
@@ -98,9 +97,7 @@ public class SyncAgent extends Thread {
             if (!this.node.isSetUp()){
                 continue;
             }
-
             getNeighbourList();
-
         }
         this.server.stop(0);
     }
@@ -159,13 +156,5 @@ public class SyncAgent extends Thread {
             e.printStackTrace();
         }
     }
-
-
-
-
-
-
-
-
 
 }

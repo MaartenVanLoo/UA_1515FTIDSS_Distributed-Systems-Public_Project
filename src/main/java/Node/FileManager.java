@@ -268,24 +268,11 @@ public class FileManager extends Thread {
                 switch (event.kind().toString()) {
                     case "ENTRY_CREATE":
                         //Create log file
-                        JSONObject owner  = new JSONObject();
-                        owner.put("id", this.node.getId());
-                        owner.put("ip", this.node.getIP());
-                        JSONObject origin = new JSONObject();
-                        origin.put("id", this.node.getId());
-                        origin.put("ip", this.node.getIP());
-                        JSONArray downloads = new JSONArray();
-
-                        JSONObject logfile = new JSONObject();
-                        logfile.put("owner", owner);
-                        logfile.put("origin", origin);
-                        logfile.put("Downloads", downloads);
-
-                        FileWriter writer = new FileWriter(event.context().toString() + ".log");
-                        writer.write(logfile.toJSONString());
-                        writer.close();
+                        this.createLogFile(file.getName());
                         this.updateLogFile(file.getName(),replicateId,replicateIPAddr);
                         FileTransfer.sendFile(file.getName(),logFolder,logFolder, replicateIPAddr + ".log");
+
+                        //TODO: remove logfile after sending
 
                         //update sync agent:
                         this.node.getSyncAgent().addLocalFile(file.getName());
@@ -485,6 +472,27 @@ public class FileManager extends Thread {
         }
         return false;
     }
+
+    public void createLogFile(String filename) throws IOException {
+        //Create log file
+        JSONObject owner  = new JSONObject();
+        owner.put("id", this.node.getId());
+        owner.put("ip", this.node.getIP());
+        JSONObject origin = new JSONObject();
+        origin.put("id", this.node.getId());
+        origin.put("ip", this.node.getIP());
+        JSONArray downloads = new JSONArray();
+
+        JSONObject logfile = new JSONObject();
+        logfile.put("owner", owner);
+        logfile.put("origin", origin);
+        logfile.put("Downloads", downloads);
+
+        FileWriter writer = new FileWriter(filename + ".log");
+        writer.write(logfile.toJSONString());
+        writer.close();
+    }
+
 
     public static long getOrigin(String fileName){
         long origin = -1;

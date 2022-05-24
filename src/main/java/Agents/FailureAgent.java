@@ -2,18 +2,14 @@ package Agents;
 
 import Node.Node;
 import Utils.Hashing;
-import jdk.jshell.spi.ExecutionControl;
 import kong.unirest.Unirest;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Base64;
+import java.util.Objects;
 import java.util.TreeMap;
 
 import Node.FileManager;
-import org.springframework.http.converter.ObjectToStringHttpMessageConverter;
+import Node.FileTransfer;
 
 /**
  * Failiure agent will be setup by the nameserver and then send to every node in the network.
@@ -136,12 +132,7 @@ public class FailureAgent implements Runnable, Serializable {
             return;
         }
         try {
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            ObjectOutputStream oos = new ObjectOutputStream(baos);
-            oos.writeObject(this);
-            String agent = baos.toString();
-            oos.close();
-            Unirest.post("http://" + this.node.getNextNodeIP() + ":8081/agent").body(agent);
+            Unirest.post("http://" + this.node.getNextNodeIP() + ":8081/agent").body(this.serialize());
         }catch (Exception e){
             e.printStackTrace();
             System.out.println("Error in serilization, failed to forward failiure agent");
@@ -167,20 +158,39 @@ public class FailureAgent implements Runnable, Serializable {
     }
 
     private void recreateReplica(File localFile){
-        //TODO: create method
-        System.err.println("WARNING: recreate Replica not implemented yet");
+        try {
+            //find target node for file
+            String replicateIPAddr = Unirest.get("/ns/files/{filename}")
+                    .routeParam("filename", localFile.getName()).asString().getBody();
+            long replicateId = Integer.parseInt(Unirest.get("/ns/files/{filename}/id")
+                    .routeParam("filename", localFile.getName()).asString().getBody());
+            if (Objects.equals(replicateIPAddr, node.getIP())) {
+                replicateIPAddr = this.node.getPrevNodeIP();
+                replicateId = this.node.getPrevNodeId();
+            }
 
-        //create new logfile
+            //create new logfile
+            this.node.getFileManager().createLogFile(localFile.getName());
+            this.node.getFileManager().updateLogFile(localFile.getName(),replicateId,replicateIPAddr);
 
-        //send file
 
-        //send logfile
+            //send file and logfile
+            FileTransfer.sendFile(localFile.getName(),FileManager.localFolder,FileManager.replicaFolder,replicateIPAddr);
+            FileTransfer.sendFile(localFile.getName() + ".log",FileManager.logFolder,FileManager.logFolder, replicateIPAddr);
+
+            //remove log file from this node
+            File logFile = new File(FileManager.logFolder + "/" + localFile.getName() + ".log");
+            logFile.delete();
+        }catch (Exception e){
+            e.printStackTrace();
+            System.out.println("Failed to recreate replica");
+        }
     }
 
-    public static String serilize (FailureAgent failureAgent) throws IOException {
+    public String serialize() throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ObjectOutputStream oos = new ObjectOutputStream(baos);
-        oos.writeObject(failureAgent);
+        oos.writeObject(this);
         String agent = baos.toString();
         oos.close();
         return agent;
