@@ -6,17 +6,17 @@ import com.sun.net.httpserver.HttpServer;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
-import javax.swing.*;
 import java.io.*;
 import java.net.InetSocketAddress;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
 
 public class NodeAPI {
 
     private HttpServer server;
     private Node node;
     private static final int HTTP_PORT = 8081;
+
+    Thread failureAgentThread = null; //thread to hold the failure agent. This must be a field otherwise the thread is at risk of being cleaned up by the garbage collection
 
     public NodeAPI(Node node) {
         this.node = node;
@@ -158,13 +158,17 @@ public class NodeAPI {
     }
 
     private void runAgent(HttpExchange exchange) {
-        //TODO add agent;
         try {
             //read body with agent
-            ObjectInputStream ois = new ObjectInputStream(exchange.getRequestBody());
+            //ByteArrayInputStream bis = new ByteArrayInputStream(exchange.getRequestBody().readAllBytes());
+            ObjectInputStream ois = new ObjectInputStream(exchange.getRequestBody()); //TODO: check if this works, otherwise use "bis" as input and uncomment line above
             FailureAgent agent = (FailureAgent) ois.readObject();
-            Thread agentThread = new Thread(agent);
-            agentThread.start();
+            if (this.failureAgentThread != null){
+                this.failureAgentThread.join();
+            }
+            agent.setNode(this.node);
+            this.failureAgentThread = new Thread(agent);
+            this.failureAgentThread.start();
         } catch (Exception e) {
             e.printStackTrace();
         }

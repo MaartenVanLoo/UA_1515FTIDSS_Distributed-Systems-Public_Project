@@ -1,12 +1,16 @@
 package NameServer;
 
+import Agents.FailureAgent;
+import kong.unirest.Unirest;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+import org.junit.internal.runners.statements.Fail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -256,7 +260,29 @@ public class NameServer {
     }
     //</editor-fold>
 
+    //<editor-fold desc="failure agent">
+    public void launchFailureAgent(int failedNodeId){
+        this.ipMapLock.readLock().lock();
+        try {
+            FailureAgent agent = new FailureAgent(failedNodeId, this.getIpMapping());
+            int nextNode = this.getNextNode(failedNodeId);
+            String nextIp = this.ipMapping.get(nextNode);
+            agent.setFirstNode(nextNode);
 
+            int status =  Unirest.post("http://" + nextIp + ":8081/agent").body(FailureAgent.serilize(agent)).asString().getStatus();
+            if (status == 200){
+                System.out.println("Failure agent successfully launched");
+                System.out.println("Failure agent send to " + nextNode + "\t" + nextIp);
+            }else{
+                System.out.println("Failed to launch failure agent");
+            }
+        }catch(Exception e){
+            e.printStackTrace();
+            System.out.println("Failed to launch failure agent");
+        }
+        this.ipMapLock.readLock().unlock();
+    }
+    //</editor-fold>
 
     //<editor-fold desc="getters & setters">
     /**

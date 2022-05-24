@@ -1,5 +1,6 @@
 package NameServer;
 
+import Agents.FailureAgent;
 import Utils.Hashing;
 import kong.unirest.Unirest;
 import kong.unirest.UnirestException;
@@ -203,6 +204,8 @@ public class NameServerController {
         }
         catch (IOException ignored) {}
         this.nameServer.getIpMapLock().writeLock().unlock();
+
+        this.nameServer.launchFailureAgent(nodeId);
     }
 
 

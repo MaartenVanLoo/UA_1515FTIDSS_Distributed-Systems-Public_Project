@@ -485,6 +485,26 @@ public class FileManager extends Thread {
         }
         return false;
     }
+
+    public static long getOrigin(String fileName){
+        long origin = -1;
+        try {
+            File logFile = new File(logFolder + "/" + fileName + ".log");
+            String logFileContent = "";
+            BufferedReader reader = new BufferedReader(new FileReader(logFile));
+            //parse json file
+            JSONParser parser = new JSONParser();
+            JSONObject jsonObject = (JSONObject) parser.parse(reader.lines().collect(Collectors.joining(System.lineSeparator())));
+            reader.close();
+            //check if target is owner
+            JSONObject fileOrigin = (JSONObject) jsonObject.get("origin");
+            origin = (long)fileOrigin.get("id");
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }
+        return origin;
+    }
 }
 
 
