@@ -115,7 +115,12 @@ public class FileManager extends Thread {
         // new node with given ID is inserted in the network, check the hash of every replicated file.
         // If the hash > the nodeId => the file must be send to this new node and removed from this one.
 
-        // get the list of files in replicated folder
+        //Warning: when updating file location when a single node is in the network => prev ID is also yourself!
+        //no files should be updated!
+        if (this.node.getId() == this.node.getPrevNodeId() || this.node.getId() == this.node.getNextNodeId()){
+            return;
+        }
+
         try {
             File dir = new File(replicaFolder);
             File[] files = dir.listFiles();
