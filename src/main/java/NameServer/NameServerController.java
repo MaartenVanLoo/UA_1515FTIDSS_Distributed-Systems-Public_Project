@@ -323,6 +323,7 @@ public class NameServerController {
                                     "\"node\":" + this.nameServerController.nameServer.nodeToJson(Id) + "}";
                             success = true;
 
+                            /*
                             try {
                                 TreeMap<Integer, String> allNodes = new TreeMap<>();
                                 BufferedReader reader = new BufferedReader(new FileReader("allNodes.json"));//new file(filename)
@@ -352,6 +353,7 @@ public class NameServerController {
                             catch (Exception e) {
                                 e.printStackTrace();
                             }
+                            */
 
                             this.nameServerController.nameServer.getIpMapLock().readLock().unlock();
                         } else {
