@@ -71,10 +71,14 @@ public class Client {
                 "host4"
         };
         String[] filenames = new String[]{
+                "Caffeine.png",
+                "ItWorks.jpg",
+                "GodKnows.jpg",
+                "ProgramWithAnAttitude.jpg",
+                "CodingFun.jpg",
                 "magicCode.jpg",
-                "MagicCode.jpg",
-                "NoPlaceLik127.jpg",
-                "NoPlaceLik127.0.0.1.jpg",
+                "NoPlaceLike127.png",
+                "TrustMeIamAProgrammer.jpg"
         };
 
         String prefix = ".6dist";
@@ -82,7 +86,7 @@ public class Client {
             System.out.println(hostname + prefix + "\t" + Hashing.hash(hostname+prefix));
         }
         for (String filename : filenames) {
-            System.out.println(filename + "\t" + Hashing.hash(filename));
+            System.out.println(String.format("%30s\t%s",filename,Hashing.hash(filename)));
         }
         ;
        /*

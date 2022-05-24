@@ -36,7 +36,7 @@ public class FileManager extends Thread {
         this.start();
     }
 
-    public void startup() {
+    public synchronized void startup() {
         try {
             while (!this.node.isSetUp()) {
                 Thread.sleep(100); // wait for the node to be set up
@@ -111,43 +111,7 @@ public class FileManager extends Thread {
         }
     }
 
-    //TODO: remove?????????
-    public void updateFileCheck(String fileName) {
-        try {
-            File dir = new File(localFolder);
-            File[] files = dir.listFiles();
-            if (files == null || files.length == 0) {
-                System.out.println("No files in local folder");
-                return;
-            }
-            // Get the names of the files by using the .getName() method
-            // check if file is not in the list
-            for (File file : files) {
-                if (!fileList.contains(file.getName())) {
-                    int filehash = Hashing.hash(file.getName());
-                    fileList.add(file.getName());
-                    //send fileName to NameServer
-                    try {
-                        String replicateIPAddr = Unirest.get("/ns/files/{filename}")
-                                .routeParam("filename", file.getName()).asString().getBody();
-                        // if the IP addr the NS sent back is the same as the one of this node, get the prev node IP address
-                        // check example 3 doc3.pdf
-                        if (Objects.equals(replicateIPAddr, node.getIP())) {
-                            replicateIPAddr = this.node.getPrevNodeIP();
-                        }
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-
-                }
-            }
-        } catch (Exception e) {
-            System.err.println(e.getMessage());
-
-        }
-    }
-
-    public void updateFileLocations(long nodeId,String nodeIp){
+    public synchronized void updateFileLocations(long nodeId,String nodeIp){
         // new node with given ID is inserted in the network, check the hash of every replicated file.
         // If the hash > the nodeId => the file must be send to this new node and removed from this one.
 
@@ -162,8 +126,9 @@ public class FileManager extends Thread {
             // Get the names of the files by using the .getName() method
             for (File file : files) {
                 int fileHash = Hashing.hash(file.getName());
-                System.out.println("Filename: " + file.getName() + "\tHash: " + fileHash + "\tTransfer:" + (fileHash > nodeId));
-                if (fileHash > nodeId) {
+                System.out.println("Filename: " + file.getName() + "\tHash: " + fileHash + "\tTransfer:" + hasToSendFile(this.node.getId(), nodeId, fileHash));
+
+                if (hasToSendFile(this.node.getId(), nodeId, fileHash)) {
                     //send fileName to new node
                     try {
                         String replicateIPAddr = Unirest.get("/ns/files/{filename}").routeParam("filename", file.getName()).asString().getBody();
@@ -199,7 +164,27 @@ public class FileManager extends Thread {
             System.err.println(e.getMessage());
         }
     }
-
+    private boolean hasToSendFile(int own_id, long next_id, int fileHash){
+        if (next_id > own_id){
+            // this node should only have files between own_id and next_id
+            /* below = simplified statement according to intellij
+            if (fileHash > own_id && fileHash < next_id){
+                return false; //no resending
+            }
+            return true;
+             */
+            return fileHash <= own_id || fileHash >= next_id; //no resending
+        }else{
+            //warning! wrap around. All files between the next node and the current node should not be held by the current node
+            /*below = simplified statement according to intellij
+            if (fileHash > next_id && fileHash < own_id){
+                return true;
+            }
+            return false;
+             */
+            return fileHash > next_id && fileHash < own_id;
+        }
+    }
     /**
      * Sends a given file to a given IP address.
      *
@@ -312,7 +297,7 @@ public class FileManager extends Thread {
         }
     }
 
-    public void shutDown() {
+    public synchronized void shutDown() {
         String launchDirectory = System.getProperty("user.dir");
         System.out.println("Current directory: " + launchDirectory); //vieze ai zeg
         File dir = new File(launchDirectory + "/" + localFolder); //get the local folder

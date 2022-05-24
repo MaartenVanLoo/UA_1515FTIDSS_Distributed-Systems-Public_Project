@@ -18,6 +18,7 @@ public class N2NListener extends Thread {
     private PingNode pingNode;
     private final Node node;
     private volatile boolean running = false;
+    Thread fileUpdateThread = null;
 
 
     public N2NListener(Node node) {
@@ -186,6 +187,21 @@ public class N2NListener extends Thread {
         }
         //this.node.printStatus();
         //this.node.validateNode();
+
+        //check if files needs to be updated in a new thread
+        if (!(fileUpdateThread == null)){
+            try {
+                fileUpdateThread.join();
+            }
+            catch(Exception e){
+                e.printStackTrace();
+                System.out.println("no files updated");
+                return;
+            }
+        }
+
+        fileUpdateThread = new Thread(createRunnableUpdateFiles(this.node,neighbourId));
+        fileUpdateThread.start();
     }
     private void shutdownHandler(DatagramPacket receivedPacket,JSONObject jsonObject){
         if (this.node.getNextNodeId() == this.node .getId() && this.node.getPrevNodeId() == this.node.getId()){
@@ -349,4 +365,13 @@ public class N2NListener extends Thread {
     }
 
 
+    private Runnable createRunnableUpdateFiles(Node node, int new_id){
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                node.getFileManager().updateFileLocations(new_id,"");
+            }
+        };
+        return runnable;
+    }
 }
