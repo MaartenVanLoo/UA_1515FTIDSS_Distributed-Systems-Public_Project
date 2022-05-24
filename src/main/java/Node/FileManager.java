@@ -275,7 +275,7 @@ public class FileManager extends Thread {
                         writer.write(logfile.toJSONString());
                         writer.close();
                         this.updateLogFile(file.getName(),replicateId,replicateIPAddr);
-                        FileTransfer.sendFile(file.getName(),logFolder,logFolder, replicateIPAddr + ".log");
+                        FileTransfer.sendFile(file.getName() + ".log", logFolder,logFolder, replicateIPAddr);
                         //[fallthrough]
                     case "ENTRY_MODIFY":
                         try {
