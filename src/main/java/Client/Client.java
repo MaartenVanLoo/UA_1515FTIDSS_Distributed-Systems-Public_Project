@@ -10,6 +10,7 @@ import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.HashMap;
 
 public class Client {
     private Socket nodeTCPSocket;
@@ -84,26 +85,16 @@ public class Client {
         for (String filename : filenames) {
             System.out.println(filename + "\t" + Hashing.hash(filename));
         }
-        ;
-       /*
-        String test = "Node0";
-        for (byte theByte : test.getBytes(StandardCharsets.UTF_8))
-        {
-            System.out.print(Integer.toHexString(theByte));
-            System.out.print(" ");
-        }
-        System.out.println();
 
-        InetAddress.getAllByName("localhost");
-        for (InetAddress address : InetAddress.getAllByName("localhost")) {
-            System.out.println(address.getHostAddress());
+        //test somethings with maps
+        HashMap<String, Boolean> fileLocks = new HashMap<>();
+        fileLocks.put("file1",true);
+        fileLocks.put("file2",false);
+        if (fileLocks.get("file1")) System.out.println("file1 locked");
+        if (fileLocks.get("file2")) System.out.println("file2 locked");
+        if (fileLocks.containsKey("file3")){
+            if (fileLocks.get("file3")) System.out.println("file3 locked");
         }
-        System.out.println("Broadcast addresses: ");
-        ArrayList<InetAddress> arrayList =  IPUtils.getIpv4BroadcastAdresses();
-        for (InetAddress address : arrayList) {
-            System.out.println(address.getHostAddress());
-        }*/
-    
     }
 
 }

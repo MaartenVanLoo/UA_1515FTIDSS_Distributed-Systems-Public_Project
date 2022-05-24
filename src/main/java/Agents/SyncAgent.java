@@ -2,12 +2,15 @@ package Agents;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.Serializable;
-import java.net.InetSocketAddress;
+import java.net.*;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import Node.*;
 import java.io.File;
+import java.util.HashMap;
 import java.util.concurrent.Executors;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import com.sun.net.httpserver.HttpServer;
 
@@ -23,9 +26,20 @@ public class SyncAgent extends Thread {
     private String nextNodeIP;
     private long nextNodeId;
     private ArrayList<String> files;
+    private volatile HashMap<String, Boolean> fileLocks;
+    private volatile HashMap<String, String> lockOwner;
+    private ReadWriteLock fileMapLock = new ReentrantReadWriteLock();
 
     private HttpServer server;
-    private static final int HTTP_PORT = 8082;
+    private static final int syncAgentPort = 8082;
+
+    private MulticastSocket multicastSocket;
+    private static final String multicastIP ="224.0.0.100"; //https://en.wikipedia.org/wiki/Multicast_address
+    private InetAddress group;
+    private MulticastListener multicastListener;
+
+
+
 
     private volatile boolean running = false;
 
@@ -38,7 +52,7 @@ public class SyncAgent extends Thread {
 
         //setup websocket
         try {
-            this.server = HttpServer.create(new InetSocketAddress(HTTP_PORT), 0);
+            this.server = HttpServer.create(new InetSocketAddress(syncAgentPort), 0); //TCP
             this.server.createContext("/fileList", (exchange) -> {
                 exchange.getResponseHeaders().add("Content-Type", "application/json");
                 if (exchange.getRequestMethod().equals("GET")) {
@@ -74,10 +88,20 @@ public class SyncAgent extends Thread {
                 }
                 exchange.close();
             });
+            this.server.setExecutor(Executors.newCachedThreadPool());
         } catch (IOException e) {
             e.printStackTrace();
         }
 
+        //setup multicastSocket
+        try {
+            this.group = InetAddress.getByName(multicastIP);
+            this.multicastSocket = new MulticastSocket(syncAgentPort); //UDP
+            this.multicastSocket.joinGroup(this.group);
+            multicastListener = new MulticastListener();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         //start thread
         this.start();
     }
@@ -86,8 +110,9 @@ public class SyncAgent extends Thread {
     public void run() {
         running = true;
         this.makeLocalList();
-        this.server.setExecutor(Executors.newCachedThreadPool());
-        this.server.start();
+        if (this.server != null) this.server.start();
+        if (this.multicastListener != null) this.multicastListener.start();
+
         while (running){
             try {
                 Thread.sleep(1000);
@@ -100,6 +125,7 @@ public class SyncAgent extends Thread {
             getNeighbourList();
         }
         this.server.stop(0);
+        this.multicastListener.interrupt();
     }
 
     public void makeLocalList(){//make a list out of local files.
@@ -154,6 +180,106 @@ public class SyncAgent extends Thread {
             }
         }catch(Exception e){
             e.printStackTrace();
+        }
+    }
+
+
+    public synchronized boolean lockFile(String fileName){
+        fileMapLock.readLock().lock();
+        if (this.multicastSocket == null) return false;
+        if (this.fileLocks.containsKey(fileName)) {
+            if (this.fileLocks.get(fileName)) return false;
+        }
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("fileName",fileName);
+        jsonObject.put("name",this.node.getName());
+        jsonObject.put("action","lock");
+
+        String message = jsonObject.toJSONString();
+        DatagramPacket packet = new DatagramPacket(message.getBytes(StandardCharsets.UTF_8),message.length(), this.group,SyncAgent.syncAgentPort);
+        try {
+            this.multicastSocket.send(packet);
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+        fileMapLock.readLock().unlock();
+        return true;
+    }
+
+    public synchronized boolean unlockFile(String fileName){
+        fileMapLock.readLock().lock();
+        if (this.multicastSocket == null) return false;
+        if (!this.fileLocks.containsKey(fileName)) return true; //after this line we know the key fileName exists, no nullptr exceptions with get
+        if (!this.fileLocks.get(fileName)) return true; //don't unlock a file that isn't locked
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("fileName",fileName);
+        jsonObject.put("name",this.node.getName());
+        jsonObject.put("action","unlock");
+
+        String message = jsonObject.toJSONString();
+        DatagramPacket packet = new DatagramPacket(message.getBytes(StandardCharsets.UTF_8),message.length(), this.group,SyncAgent.syncAgentPort);
+        try {
+            this.multicastSocket.send(packet);
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+        fileMapLock.readLock().unlock();
+        return true;
+    }
+
+    private class MulticastListener extends Thread{
+        private byte[] buf = new byte[256];
+
+        public MulticastListener() {}
+
+        @Override
+        public void run() {
+            try {
+                SyncAgent.this.multicastSocket.setSoTimeout(1000);
+            } catch (SocketException e) {
+                e.printStackTrace();
+                System.out.println("Failed to set timeout in syncagent");
+                return;
+            }
+            while (SyncAgent.this.running){
+                try{
+                    DatagramPacket packet = new DatagramPacket(buf,buf.length);
+                    SyncAgent.this.multicastSocket.receive(packet);
+                    String received  = new String(packet.getData(),0,packet.getLength());
+
+                    //parse recieved data (should be JSON format)
+                    JSONParser parser = new JSONParser();
+                    JSONObject data = (JSONObject) parser.parse(received);
+
+                    String fileName = (String)data.get("fileName");
+                    String nodeName = (String)data.get("name");
+                    String action = (String)data.get("action");
+
+                    //do specified action
+                    SyncAgent.this.fileMapLock.writeLock().lock();
+                    if (action.equals("lock")){
+                        fileLocks.put(fileName,true);
+                        lockOwner.put(fileName,nodeName);
+                    }else if(action.equals("unlock")){
+                        fileLocks.put(fileName,false);
+                        lockOwner.put(fileName,"");
+                        fileLocks.remove(fileName);
+                        lockOwner.remove(fileName);
+                    }else{
+                        System.out.println("Sync agent received bad lock request");
+                    }
+                    SyncAgent.this.fileMapLock.writeLock().unlock();
+                }
+                catch(java.net.SocketTimeoutException ignore){}
+                catch(Exception e){
+                    e.printStackTrace();
+                }
+            }
+            try {
+                SyncAgent.this.multicastSocket.leaveGroup(SyncAgent.this.group);
+            }catch (Exception e){
+                e.printStackTrace();
+            }
         }
     }
 
