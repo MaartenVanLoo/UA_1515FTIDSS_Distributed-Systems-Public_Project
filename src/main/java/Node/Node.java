@@ -400,8 +400,8 @@ public class Node {
 
         System.out.println("Network interfaces:");
         System.out.println(NetworkInterface.getNetworkInterfaces());
-        for (int i = 0; i < 10 ; i++) {
-            launchNode(name,30000 + 2 * (long) ((Math.random() - 0.5) * 15000)); // sleep for 30±15 seconds
+        for (int i = 0; i < 0 ; i++) { // set i < 0 to just launch the node, set i < x when you want to restart the node x times
+            //launchNode(name,30000 + 2 * (long) ((Math.random() - 0.5) * 15000)); // sleep for 30±15 seconds
             System.gc();
             Thread.sleep((long) (Math.random() * 10000)); // sleep for a value between 0-10 seconds
         }
