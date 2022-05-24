@@ -343,7 +343,7 @@ public class FileManager extends Thread {
         //System.out.println("Directory: " + dir.getCanonicalPath());
         files = dir.listFiles();
         if (files == null || files.length == 0) {
-            System.out.println("No files in local folder");
+            System.out.println("No files in replica folder");
             return;
         }
         for (File file : files) {
@@ -371,12 +371,16 @@ public class FileManager extends Thread {
 
             //send file to replica
             FileTransfer.sendFile(file.getName(), replicaFolder, replicaFolder, replicateIPAddr);
+            //delete file
+            file.delete();
             //update log file
             updateLogFile(file.getName(),replicateId, replicateIPAddr);
             //send log file
             FileTransfer.sendFile(file.getName() + ".log", logFolder,logFolder, replicateIPAddr);
+            //delet logfile
+            File logFile = new File(logFolder + "/" + file.getName() + ".log");
+            logFile.delete();
         }
-
     }
 
     /**
