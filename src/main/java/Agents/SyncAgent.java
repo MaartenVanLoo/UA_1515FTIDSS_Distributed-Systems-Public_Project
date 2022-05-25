@@ -318,7 +318,7 @@ public class SyncAgent extends Thread {
                 catch(Exception e){
                     e.printStackTrace();
                 }
-                SyncAgent.this.fileMapLock.writeLock().unlock();
+
             }
             try {
                 SyncAgent.this.multicastSocket.leaveGroup(SyncAgent.this.group);
