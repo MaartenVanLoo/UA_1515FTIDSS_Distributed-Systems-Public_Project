@@ -49,9 +49,15 @@ public class startup {
         } catch (Exception e) {
             System.err.println(e);
         }
+        this.server.start();
     }
 
     public static void main(String[] args) {
         new startup();
+        try{
+            Thread.sleep(Long.MAX_VALUE);
+        }catch(InterruptedException ignored){
+
+        }
     }
 }

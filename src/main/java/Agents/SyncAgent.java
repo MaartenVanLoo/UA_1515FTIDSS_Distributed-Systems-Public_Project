@@ -83,13 +83,13 @@ public class SyncAgent extends Thread {
                     System.out.println("DELETE");
                     System.out.println(exchange.getRequestURI());
                     String fileName = exchange.getRequestURI().toString().replace("/fileList/","");
+                    exchange.sendResponseHeaders(200, -1);
                     if (this.files.contains(fileName)){
                         this.files.remove(fileName);
                         System.out.println("Notify neighbours of deletion of file " + fileName);
                         Unirest.delete("http://" + this.node.getNextNodeIP() + ":8082/fileList/" + fileName).asString();
                         System.out.println("notified");
                     }
-                    exchange.sendResponseHeaders(200, -1);
                 }
                 else{
                     exchange.sendResponseHeaders(501, -1);
