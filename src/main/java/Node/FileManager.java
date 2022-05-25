@@ -114,9 +114,11 @@ public class FileManager extends Thread {
         //Warning: when updating file location when a single node is in the network => prev ID is also yourself!
         //no files should be updated!
         if (this.node.getId() == this.node.getPrevNodeId() || this.node.getId() == this.node.getNextNodeId()){
+            System.out.println("Only one node in the network, no files should be updated!");
             return;
         }
         if (this.node.getPrevNodeId() == this.node.getNextNodeId()){
+            System.out.println("Only 2 nodes in the network!");
             //2 nodes in the network => send all replicas
             for (File file : this.getReplicatedFiles()){
                 FileTransfer.sendFile(file.getName(), replicaFolder, replicaFolder, nextNodeIp);
