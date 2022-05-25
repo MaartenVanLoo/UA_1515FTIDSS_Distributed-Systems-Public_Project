@@ -121,7 +121,38 @@ public class FileManager extends Thread {
         }
     }
 
+    public synchronized  void update(){
+        File[] replicatedFiles = this.getReplicatedFiles();
+        for (File file : replicatedFiles){
+            try {
+                String fileName = file.getName();
+                String replicateIPAddr = Unirest.get("/ns/files/{filename}").routeParam("filename", file.getName()).asString().getBody();
+                long replicateId = Integer.parseInt(Unirest.get("/ns/files/{filename}/id").routeParam("filename", file.getName()).asString().getBody());
+                if (targetIsOrigin(fileName, replicateIPAddr)){
+                    replicateId = getPrevNode(replicateId);
+                    replicateIPAddr = getNodeIp(replicateId);
+                }
+                if (replicateId != this.node.getId()){
+                    //update log file
+                    this.updateLogFile(fileName, replicateId, replicateIPAddr);
+                    //send log file
+                    FileTransfer.sendFile(fileName + ".log", logFolder, logFolder, replicateIPAddr);
+                    //send file
+                    FileTransfer.sendFile(fileName, replicaFolder, replicaFolder, replicateIPAddr);
+                    //delete log file
+                    File f = new File(logFolder + "/" + fileName + ".log");
+                    f.delete();
+                    //delete file
+                    file.delete();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
     public synchronized void updateFileLocationsNewNextNode(long nextNodeId, String nextNodeIp){
+        this.update();
+        return;/*
         // new node with given ID is inserted in the network, check the hash of every replicated file.
         // If the hash > the nextNodeId => the file must be send to this new node and removed from this one.
 
@@ -210,6 +241,7 @@ public class FileManager extends Thread {
         } catch (Exception e) {
             System.err.println(e.getMessage());
         }
+        */
     }
     private boolean hasToSendFile(int own_id, long next_id, int fileHash){
         if (next_id > own_id){
@@ -234,6 +266,8 @@ public class FileManager extends Thread {
     }
 
     public synchronized void updateFileLocationOtherNewNode(long newNodeId){
+        update();
+        /*
         int nodeCount = getNodeCount();
         if (nodeCount == 1){
             System.out.println("Only one node in the network, no files should be updated!");
@@ -277,6 +311,8 @@ public class FileManager extends Thread {
                 logFile.delete();
             }
         }
+
+        */
     }
 
     private boolean IsBetween(long first, long second, long value){
@@ -296,6 +332,31 @@ public class FileManager extends Thread {
             return -1;
         }
 
+    }
+    private int getPrevNode(long nodeId){
+        try {
+            //Request nodeId configuration from nameserver
+            String response = Unirest.get("/ns/nodes/{nodeId}").routeParam("nodeId", String.valueOf(nodeId)).asString().getBody();
+            JSONParser parser = new JSONParser();
+            JSONObject json = (JSONObject) parser.parse(response);
+            JSONObject prevNode = (JSONObject) json.get("prev");
+            return (int)((long) prevNode.get("id"));
+        }
+        catch (Exception e){
+            return -1;
+        }
+    }
+    private String getNodeIp(long nodeId){
+        try{
+            String response = Unirest.get("/ns/nodes/{nodeId}").routeParam("nodeId", String.valueOf(nodeId)).asString().getBody();
+            JSONParser parser = new JSONParser();
+            JSONObject json = (JSONObject) parser.parse(response);
+            JSONObject prevNode = (JSONObject) json.get("node");
+            return (String) prevNode.get("ip");
+        }
+        catch (Exception e){
+            return "";
+        }
     }
 
     /**
