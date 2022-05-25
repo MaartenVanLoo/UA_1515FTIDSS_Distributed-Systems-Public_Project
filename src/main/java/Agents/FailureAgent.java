@@ -138,7 +138,12 @@ public class FailureAgent implements Runnable, Serializable {
         try {
             String nextIP = this.node.getNextNodeIP();
             this.node = null; //Note: this is needed because a "node" object is not serializable
-            Unirest.post("http://" + nextIP + ":8081/agent").body(this.serialize());
+            int status = Unirest.post("http://" + nextIP + ":8081/agent").body(this.serialize()).asString().getStatus();
+            if (status == 200){
+                System.out.println("Successfully sent agent to next node.");
+            } else {
+                System.out.println("Failed to send agent to next node.");
+            }
         }catch (Exception e){
             e.printStackTrace();
             System.out.println("Error in serilization, failed to forward failiure agent");
