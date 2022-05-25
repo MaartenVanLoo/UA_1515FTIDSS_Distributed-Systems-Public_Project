@@ -134,15 +134,15 @@ public class SyncAgent extends Thread {
         if (this.multicastListener != null) this.multicastListener.start();
 
         while (running){
+            getNeighbourList();
             try {
-                Thread.sleep(1000);
+                Thread.sleep(5000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
             if (!this.node.isSetUp()){
                 continue;
             }
-            getNeighbourList();
         }
         this.server.stop(0);
         this.multicastListener.interrupt();
@@ -298,11 +298,13 @@ public class SyncAgent extends Thread {
                     if (action.equals("lock")){
                         fileLocks.put(fileName,true);
                         lockOwner.put(fileName,nodeName);
+                        System.out.println("Locked file " + fileName + " by " + nodeName);
                     }else if(action.equals("unlock")){
                         fileLocks.put(fileName,false);
                         lockOwner.put(fileName,"");
                         fileLocks.remove(fileName);
                         lockOwner.remove(fileName);
+                        System.out.println("Unlocked file " + fileName);
                     }else{
                         System.out.println("Sync agent received bad lock request");
                     }
