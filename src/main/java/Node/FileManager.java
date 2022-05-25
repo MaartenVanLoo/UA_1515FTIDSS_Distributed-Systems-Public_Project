@@ -151,18 +151,28 @@ public class FileManager extends Thread {
                     //send fileName to new node
                     try {
                         String replicateIPAddr = Unirest.get("/ns/files/{filename}").routeParam("filename", file.getName()).asString().getBody();
-                        /*if (Objects.equals(replicateIPAddr, node.getIP())) { //TODO: this isn't true right?
-                            //don't send it, file is correctly placed
-                            continue;
-                        }*/
+                        long replicateID = -1;
+                        //assert
+                        System.out.println("Replicate IP: " + replicateIPAddr + "\tNextNodeIP: " + nextNodeIp);
 
-                        // check if the target of the file is the origin of the file
-                        if (this.targetIsOrigin(file.getName(), replicateIPAddr))  {
-                            //do nothing, if the new node is the origin, this node is the previous node, the file is correctly placed
+                        if (Objects.equals(replicateIPAddr, node.getIP())) {
+                            //don't send it, file is correctly placed
                             continue;
                         }
 
-                        long replicateID = Long.parseLong(Unirest.get("/ns/files/{fileName}/id").routeParam("fileName", file.getName()).asString().getBody());
+                        // check if the target of the file is the origin of the file
+                        if (this.targetIsOrigin(file.getName(), replicateIPAddr)) {
+                            if (!IsBetween(this.node.getId(),this.node.getNextNodeId() , nextNodeId)) {
+                                //do nothing
+                                continue;
+                            }
+                            //new node = in between this node and next node => new node should become the owner of the file
+                            replicateID = nextNodeId;
+                            replicateIPAddr = nextNodeIp;
+                        }else{
+                            replicateID = Long.parseLong(Unirest.get("/ns/files/{fileName}/id").routeParam("fileName", file.getName()).asString().getBody());
+                        }
+
 
 
                         FileTransfer.sendFile(file.getName(), replicaFolder, replicaFolder, replicateIPAddr);
