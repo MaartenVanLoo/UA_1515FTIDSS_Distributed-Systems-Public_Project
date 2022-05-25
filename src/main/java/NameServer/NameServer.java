@@ -267,6 +267,7 @@ public class NameServer {
             String nextIp = this.ipMapping.get(nextNode);
             agent.setFirstNode(nextNode);
 
+            System.out.println(agent.serialize());
             int status =  Unirest.post("http://" + nextIp + ":8081/agent").body(agent.serialize()).asString().getStatus();
             if (status == 200){
                 System.out.println("Failure agent successfully launched");
