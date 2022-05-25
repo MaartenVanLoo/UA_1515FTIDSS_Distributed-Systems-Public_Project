@@ -117,7 +117,7 @@ public class FileManager extends Thread {
         if (this.node.getId() == this.node.getPrevNodeId() || this.node.getId() == this.node.getNextNodeId()){
             return;
         }
-        Set<String> localFiles = Set.of();
+        HashSet<String> localFiles = new HashSet<>();
         for (File f : this.getLocalFiles()){
            localFiles.add(f.getName());
         }
