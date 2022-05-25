@@ -163,8 +163,8 @@ public class NodeAPI {
     private void runAgent(HttpExchange exchange) {
         try {
             //read body with agent
-            //ByteArrayInputStream bis = new ByteArrayInputStream(exchange.getRequestBody().readAllBytes());
-            ObjectInputStream ois = new ObjectInputStream(exchange.getRequestBody()); //TODO: check if this works, otherwise use "bis" as input and uncomment line above
+            ByteArrayInputStream bis = new ByteArrayInputStream(exchange.getRequestBody().readAllBytes());
+            ObjectInputStream ois = new ObjectInputStream(bis); //TODO: check if this works, otherwise use "bis" as input and uncomment line above
             FailureAgent agent = (FailureAgent) ois.readObject();
             if (this.failureAgentThread != null){
                 this.failureAgentThread.join();
