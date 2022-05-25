@@ -35,6 +35,7 @@ public class FileManager extends Thread {
 
     public synchronized void startup() {
         try {
+            int nodeCount = getNodeCount();
             while (!this.node.isSetUp()) {
                 Thread.sleep(100); // wait for the node to be set up
             }
@@ -78,6 +79,13 @@ public class FileManager extends Thread {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+                if (nodeCount == 1){
+                    //just copy from local to replica folders
+                    File localFile=new File(launchDirectory + "/" + localFolder + "/" + file.getName());
+                    File replicaFile = new File(launchDirectory + "/" + replicaFolder + "/" + file.getName());
+                    Files.copy(localFile.toPath(), replicaFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                    continue;
+                }
                 //send fileName to NameServer
                 try {
                     String replicateIPAddr = Unirest.get("/ns/files/{filename}")
@@ -98,6 +106,9 @@ public class FileManager extends Thread {
                     this.updateLogFile(file.getName(), replicateId, replicateIPAddr);
                     //send file to log
                     FileTransfer.sendFile(file.getName() + ".log", logFolder, logFolder, replicateIPAddr);
+                    //delete log file
+                    File f = new File(logFolder + "/" + file.getName() + ".log");
+                    f.delete();
 
                 } catch (Exception e) {
                     System.out.println("Error: " + e.getMessage());
