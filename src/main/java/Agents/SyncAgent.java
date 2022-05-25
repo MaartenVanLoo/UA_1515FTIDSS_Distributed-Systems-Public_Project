@@ -106,6 +106,14 @@ public class SyncAgent extends Thread {
         this.start();
     }
 
+    public HashMap<String, Boolean> getFileLocks() {
+        return fileLocks;
+    }
+
+    public HashMap<String, String> getLockOwner() {
+        return lockOwner;
+    }
+
     @Override
     public void run() {
         running = true;

@@ -384,6 +384,11 @@ public class Node {
             //node.validateNode();
         };
         executorService.scheduleAtFixedRate(validator, 1, 5, TimeUnit.SECONDS);
+
+        Thread.sleep(5000); //wait 5 seconds
+        //try to lock a file
+        File[] localfiles = node.getFileManager().getLocalFiles();
+        node.getSyncAgent().lockFile(localfiles[0].getName());
         Thread.sleep(1000000);
 
         Thread.sleep(35000 + 2 * (long) ((Math.random() - 0.5) * 30000)); // sleep for 60±30 seconds

@@ -8,6 +8,9 @@ import org.json.simple.JSONObject;
 
 import java.io.*;
 import java.net.InetSocketAddress;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Executors;
 
 public class NodeAPI {
@@ -202,13 +205,24 @@ public class NodeAPI {
         for (String file: this.node.getSyncAgent().getFileList()){
             allFiles.add(file);
         }
+
+        JSONArray locks = new JSONArray();
+        HashMap<String,Boolean> filelocks =  this.node.getSyncAgent().getFileLocks();
+        HashMap<String,String> lockOwners = this.node.getSyncAgent().getLockOwner();
+        for (String filename: this.node.getSyncAgent().getFileLocks().keySet()){
+            JSONObject tmp = new JSONObject();
+            tmp.put("filename", filelocks.get(filename));
+            tmp.put("locked", filelocks.get(filename));
+            tmp.put("owner", lockOwners.get(filename));
+            locks.add(tmp);
+        }
         response.put("node", node);
         response.put("next", next);
         response.put("prev", prev);
         response.put("local", local);
         response.put("replica", replicated);
         response.put("allFiles", allFiles);
-
+        response.put("locks", locks);
         return response.toJSONString();
     }
     private String readContent(HttpExchange exchange) {
