@@ -98,9 +98,9 @@ public class Client {
 
         //test failure agent
         FailureAgent failureAgent = new FailureAgent(100,new TreeMap<>());
-        String agent = failureAgent.serialize();
+        byte[] agent = failureAgent.serialize();
         System.out.println(agent);
-        for (byte b : agent.getBytes()) {
+        for (byte b : agent) {
             System.out.print(b + " ");
         }
 

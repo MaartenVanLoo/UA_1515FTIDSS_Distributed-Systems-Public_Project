@@ -191,7 +191,7 @@ public class FailureAgent implements Runnable, Serializable {
         }
     }
 
-    public String serialize() throws IOException {
+    public byte[] serialize() throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ObjectOutputStream oos = new ObjectOutputStream(baos);
         oos.writeObject(this);
@@ -199,13 +199,14 @@ public class FailureAgent implements Runnable, Serializable {
             System.out.print(b + " ");
         }
         System.out.println();
-        String agent = Base64.getEncoder().encodeToString(baos.toByteArray());
+        //String agent = Base64.getEncoder().encodeToString(baos.toByteArray());
+        byte[] agent = baos.toByteArray();
         oos.close();
         return agent;
     }
-    public static FailureAgent deserialize(String agent) throws IOException, ClassNotFoundException {
-        byte[] data = Base64.getDecoder().decode(agent);
-        ByteArrayInputStream bais = new ByteArrayInputStream(data);
+    public static FailureAgent deserialize(byte[] agent) throws IOException, ClassNotFoundException {
+        //byte[] data = Base64.getDecoder().decode(agent);
+        ByteArrayInputStream bais = new ByteArrayInputStream(agent);
         ObjectInputStream ois = new ObjectInputStream(bais);
         FailureAgent fa = (FailureAgent) ois.readObject();
         ois.close();

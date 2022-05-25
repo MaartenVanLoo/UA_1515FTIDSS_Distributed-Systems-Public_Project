@@ -163,7 +163,7 @@ public class NodeAPI {
     private void runAgent(HttpExchange exchange) {
         try {
             //read body with agent
-            FailureAgent agent = FailureAgent.deserialize(exchange.getRequestBody().toString());
+            FailureAgent agent = FailureAgent.deserialize(exchange.getRequestBody().readAllBytes());
             if (this.failureAgentThread != null){
                 this.failureAgentThread.join();
             }
