@@ -88,10 +88,11 @@ public class SyncAgent extends Thread {
                             if (this.files.contains(fileName)) {
                                 this.files.remove(fileName);
                                 System.out.println("Notify neighbours of deletion of file " + fileName);
+                                System.out.println("Notifing :" + this.node.getNextNodeIP());
                                 Unirest.delete("http://" + this.node.getNextNodeIP() + ":8082/fileList/" + fileName).asString();
                                 System.out.println("notified");
                             }
-                        }catch (Exception ignored){}
+                        }catch (Exception ignored){} //TODO: why do we get the "failed to respond to request" error?
                         return;
                     }catch(Exception e){
                         exchange.sendResponseHeaders(404,-1);
@@ -189,6 +190,7 @@ public class SyncAgent extends Thread {
         }
         this.files.remove(filename);
         System.out.println("Notify neighbours file deleted");
+        System.out.println("Notifing :" + this.node.getNextNodeIP());
         Unirest.delete("http://" + this.node.getNextNodeIP() + ":8082/fileList/" + filename).asString().getStatus();
         System.out.println("Notification done");
     }
