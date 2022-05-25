@@ -209,11 +209,10 @@ public class NodeAPI {
         }
 
         JSONArray logFiles = new JSONArray();
-        for (String file: this.node.getSyncAgent().getFileList()){
-            File f = new File(FileManager.logFolder + "/" + file + ".log");
-            if (f.exists()){
-                logFiles.add(file);
-            }
+        File dir = new File(FileManager.logFolder);
+        File[] files = dir.listFiles();
+        for (File file: files){
+            logFiles.add(file.getName());
         }
         JSONArray locks = new JSONArray();
         HashMap<String,Boolean> filelocks =  this.node.getSyncAgent().getFileLocks();
