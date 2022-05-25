@@ -143,7 +143,7 @@ public class FileManager extends Thread {
                         }*/
 
                         // check if the target of the file is the origin of the file
-                        if (this.targetIsOrigin(file.getName(), replicateIPAddr)) {
+                        if (this.targetIsOrigin(file.getName(), replicateIPAddr) && !localFiles.contains(file.getName())) {
                             //do nothing, if the new node is the origin, this node is the previous node, the file is correctly placed
                             continue;
                         }
