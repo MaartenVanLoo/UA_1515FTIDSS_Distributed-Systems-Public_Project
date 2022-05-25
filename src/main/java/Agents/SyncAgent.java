@@ -49,6 +49,8 @@ public class SyncAgent extends Thread {
         this.nextNodeIP = node.getNextNodeIP();
         this.nextNodeId = node.getNextNodeId();
         this.files = new ArrayList<>();
+        this.fileLocks = new HashMap<>();
+        this.lockOwner = new HashMap<>();
 
         //setup websocket
         try {
