@@ -14,7 +14,6 @@ function screenRefresh(force){
     if (!newDataAvailable && !force){ return; } //prevent unnecessary refreshes
     updateCards();
     newDataAvailable = false;
-
 }
 
 function updateCards(){

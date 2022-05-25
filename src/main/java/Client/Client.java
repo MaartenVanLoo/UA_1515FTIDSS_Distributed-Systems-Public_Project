@@ -88,6 +88,7 @@ public class Client {
         for (String filename : filenames) {
             System.out.println(String.format("%30s\t%s",filename,Hashing.hash(filename)));
         }
+        Hashing.hash("CodingFun.jpg");
         ;
        /*
         String test = "Node0";
