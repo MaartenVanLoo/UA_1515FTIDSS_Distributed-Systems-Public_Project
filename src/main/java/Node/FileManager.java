@@ -113,6 +113,9 @@ public class FileManager extends Thread {
 
         //Warning: when updating file location when a single node is in the network => prev ID is also yourself!
         //no files should be updated!
+        System.out.println("Prev id" + this.node.getPrevNodeId());
+        System.out.println("Next id" + this.node.getNextNodeId());
+        System.out.println("new node id" + nextNodeId);
         if ((this.node.getId() == this.node.getPrevNodeId() || this.node.getId() == this.node.getNextNodeId()) && this.node.getId() == nextNodeId){
             System.out.println("Only one node in the network, no files should be updated!");
             return;
