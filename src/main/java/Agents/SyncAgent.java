@@ -60,11 +60,21 @@ public class SyncAgent extends Thread {
                 if (exchange.getRequestMethod().equals("GET")) {
                     //send file list in body
                     JSONObject json = new JSONObject();
-                    JSONArray jsonArray = new JSONArray();
+                    JSONArray fileList = new JSONArray();
                     for (String file: this.files){
-                        jsonArray.add(file);
+                        fileList.add(file);
                     }
-                    json.put("fileList", jsonArray);
+                    JSONArray lockList = new JSONArray();
+                    for (String file: this.fileLocks.keySet()){
+                        JSONObject lock = new JSONObject();
+                        lock.put("file", file);
+                        lock.put("lock", this.fileLocks.get(file));
+                        lock.put("owner", this.lockOwner.get(file));
+                        lockList.add(lock);
+                    }
+
+                    json.put("fileList", fileList);
+                    json.put("lockList", lockList);
                     String response = json.toJSONString();
                     exchange.sendResponseHeaders(200, response.length());
                     OutputStream outputStream = exchange.getResponseBody();
@@ -183,10 +193,28 @@ public class SyncAgent extends Thread {
         try {
             JSONObject neighbourFiles = (JSONObject) parser.parse(Unirest.get("http://" + this.node.getNextNodeIP() + ":8082/fileList").asString().getBody());
             JSONArray fileList =  (JSONArray)neighbourFiles.get("fileList");
+            JSONArray lockList =  (JSONArray)neighbourFiles.get("lockList");
+
+            //sync files
             for (Object file : fileList) {
                 if (!this.files.contains((String)file)) {
                     this.files.add((String) file);
                 }
+            }
+            //sync locks
+            for (Object lock : lockList) {
+                JSONObject lockObj = (JSONObject) lock;
+                String filename = (String) lockObj.get("filename");
+                String owner = (String) lockObj.get("owner");
+                Boolean isLocked = (Boolean) lockObj.get("isLocked");
+                this.fileMapLock.writeLock().lock();
+                if (!this.fileLocks.containsKey(filename)) {
+                    this.fileLocks.put(filename, isLocked);
+                }
+                if (!this.lockOwner.containsKey(filename)) {
+                    this.lockOwner.put(filename, owner);
+                }
+                this.fileMapLock.writeLock().unlock();
             }
         }catch(Exception e){
             e.printStackTrace();
