@@ -53,7 +53,7 @@ public class startup {
     }
 
     public static void main(String[] args) {
-        new startup();
+        startup s = new startup();
         try{
             Thread.sleep(Long.MAX_VALUE);
         }catch(InterruptedException ignored){
