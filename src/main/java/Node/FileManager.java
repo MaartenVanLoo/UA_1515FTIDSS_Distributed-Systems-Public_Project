@@ -51,6 +51,7 @@ public class FileManager extends Thread {
             for (File file : files) { // for each file in the directory
                 System.out.println("File: " + file.getName()); // print the file name
             }
+            System.out.println("NodeCount: " + nodeCount); // print the node count
             // Get the names of the files by using the .getName() method
             for (File file : files) {
                 //System.out.println(file.getName());
