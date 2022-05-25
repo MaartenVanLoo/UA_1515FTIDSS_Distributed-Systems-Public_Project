@@ -380,10 +380,11 @@ public class NameServerController {
                 if (success) {
                     //notify the previous node that a new node has been created
                     this.nameServerController.nameServer.getIpMapLock().readLock().lock();
+                    String ip = this.nameServerController.nameServer.getIpMapping().get(Id);
                     String previousIp = this.nameServerController.nameServer.getPrevNodeIP(Id);
                     JSONObject json = new JSONObject();
                     json.put("id", Id);
-                    json.put("ip", previousIp);
+                    json.put("ip", ip);
                     System.out.println(previousIp+":8081/files");
                     try {
                         System.out.println("Status:"
