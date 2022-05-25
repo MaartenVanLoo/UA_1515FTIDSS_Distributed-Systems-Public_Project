@@ -208,6 +208,13 @@ public class NodeAPI {
             allFiles.add(file);
         }
 
+        JSONArray logFiles = new JSONArray();
+        for (String file: this.node.getSyncAgent().getFileList()){
+            File f = new File(FileManager.logFolder + "/" + file + ".log");
+            if (f.exists()){
+                logFiles.add(file);
+            }
+        }
         JSONArray locks = new JSONArray();
         HashMap<String,Boolean> filelocks =  this.node.getSyncAgent().getFileLocks();
         HashMap<String,String> lockOwners = this.node.getSyncAgent().getLockOwner();
@@ -225,6 +232,7 @@ public class NodeAPI {
         response.put("replica", replicated);
         response.put("allFiles", allFiles);
         response.put("locks", locks);
+        response.put("logFiles", logFiles);
         return response.toJSONString();
     }
     private String readContent(HttpExchange exchange) {
