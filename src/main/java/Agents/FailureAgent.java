@@ -96,7 +96,7 @@ public class FailureAgent implements Runnable, Serializable {
             }
         }catch (Exception e){
             e.printStackTrace();
-            System.out.println("Error in serilization, failed to forward failiure agent");
+            System.out.println("Error in serilization, failed to forward failure agent");
         }
     }
 

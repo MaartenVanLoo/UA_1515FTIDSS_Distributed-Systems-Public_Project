@@ -195,7 +195,6 @@ public class FileManager extends Thread {
         catch (Exception e){
             return -1;
         }
-
     }
     private int getPrevNode(long nodeId){
         try {
@@ -485,7 +484,7 @@ public class FileManager extends Thread {
     public static long getOrigin(String fileName){
         long origin = -1;
         try {
-            File logFile = new File(logFolder + "/" + fileName + ".log");
+            File logFile = new File("./"+logFolder + "/" + fileName + ".log");
             String logFileContent = "";
             BufferedReader reader = new BufferedReader(new FileReader(logFile));
             //parse json file
