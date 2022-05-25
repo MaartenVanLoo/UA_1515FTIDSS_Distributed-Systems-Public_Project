@@ -162,10 +162,6 @@ public class FileManager extends Thread {
 
                         // check if the target of the file is the origin of the file
                         if (this.targetIsOrigin(file.getName(), replicateIPAddr)) {
-                            if (!IsBetween(this.node.getId(),this.node.getNextNodeId() , nextNodeId)) {
-                                //do nothing
-                                continue;
-                            }
                             //new node = in between this node and next node => new node should become the owner of the file
                             replicateID = nextNodeId;
                             replicateIPAddr = nextNodeIp;
