@@ -68,12 +68,14 @@ public class FailureAgent implements Runnable, Serializable {
             if (origin == -1){
                 //failed to find origin in logfile => remove file
                 System.out.println("Failed to find origin in logfile, removing replica");
+                this.node.getSyncAgent().deleteLocalFile(file.getName());
                 file.delete();
                 continue;
             }
             if (origin == failedNodeId){
                 System.out.println("Removing file from failed node " + file.getName());
                 File logFile = new File(FileManager.logFolder + "/" + file.getName() + ".log");
+                this.node.getSyncAgent().deleteLocalFile(file.getName());
                 file.delete();
                 logFile.delete();
             }
