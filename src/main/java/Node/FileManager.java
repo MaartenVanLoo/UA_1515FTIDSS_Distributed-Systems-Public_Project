@@ -9,11 +9,8 @@ import org.json.simple.parser.JSONParser;
 
 import java.io.*;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Objects;
+import java.util.*;
 import java.nio.file.*;
-import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 public class FileManager extends Thread {
@@ -120,7 +117,10 @@ public class FileManager extends Thread {
         if (this.node.getId() == this.node.getPrevNodeId() || this.node.getId() == this.node.getNextNodeId()){
             return;
         }
-
+        Set<String> localFiles = Set.of();
+        for (File f : this.getLocalFiles()){
+           localFiles.add(f.getName());
+        }
         try {
             File dir = new File(replicaFolder);
             File[] files = dir.listFiles();
@@ -133,7 +133,7 @@ public class FileManager extends Thread {
                 int fileHash = Hashing.hash(file.getName());
                 System.out.println("Filename: " + file.getName() + "\tHash: " + fileHash + "\tTransfer:" + hasToSendFile(this.node.getId(), nodeId, fileHash));
 
-                if (hasToSendFile(this.node.getId(), nodeId, fileHash)) {
+                if (hasToSendFile(this.node.getId(), nodeId, fileHash) || localFiles.contains(file.getName())) {
                     //send fileName to new node
                     try {
                         String replicateIPAddr = Unirest.get("/ns/files/{filename}").routeParam("filename", file.getName()).asString().getBody();
