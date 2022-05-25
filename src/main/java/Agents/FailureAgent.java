@@ -160,7 +160,7 @@ public class FailureAgent implements Runnable, Serializable {
         if (this.node == null){
             return null;
         }
-        return this.node.getFileManager().getLocalFiles();
+        return this.node.getFileManager().getReplicatedFiles();
     }
     private TreeMap<Integer,String> getDummyMap(){
         TreeMap<Integer,String> map = new TreeMap<>(this.allNodes);
