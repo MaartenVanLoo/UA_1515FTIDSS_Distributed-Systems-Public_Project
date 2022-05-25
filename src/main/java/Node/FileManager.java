@@ -2,6 +2,7 @@ package Node;
 
 import Utils.Hashing;
 import kong.unirest.Unirest;
+import kong.unirest.UnirestException;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -116,11 +117,15 @@ public class FileManager extends Thread {
         System.out.println("Prev id" + this.node.getPrevNodeId());
         System.out.println("Next id" + this.node.getNextNodeId());
         System.out.println("new node id" + nextNodeId);
-        if ((this.node.getId() == this.node.getPrevNodeId() || this.node.getId() == this.node.getNextNodeId()) && this.node.getId() == nextNodeId){
+        int nodeCount = getNodeCount();
+        System.out.println("Node count" + nodeCount);
+        if (nodeCount == 1){
+        //if ((this.node.getId() == this.node.getPrevNodeId() || this.node.getId() == this.node.getNextNodeId()) && this.node.getId() == nextNodeId){
             System.out.println("Only one node in the network, no files should be updated!");
             return;
         }
-        if (this.node.getPrevNodeId() == this.node.getNextNodeId()){
+        if (nodeCount == 2){
+        //if (this.node.getPrevNodeId() == this.node.getNextNodeId()){
             System.out.println("Only 2 nodes in the network!");
             //2 nodes in the network => send all replicas
             for (File file : this.getReplicatedFiles()){
@@ -218,9 +223,11 @@ public class FileManager extends Thread {
 
     public synchronized void updateFileLocationOtherNewNode(long newNodeId){
         if (this.node.getId() == this.node.getPrevNodeId() || this.node.getId() == this.node.getNextNodeId()){
+            System.out.println("Only one node in the network, no files should be updated!");
             return;
         }
         if (this.node.getPrevNodeId() == this.node.getNextNodeId()){
+            System.out.println("Two nodes in the network, no files should be updated");
             return;
         }
         //1 and 2 nodes in the network will always trigger "updateFileLocationNewNextNode"
@@ -258,13 +265,25 @@ public class FileManager extends Thread {
             }
         }
     }
-    public boolean IsBetween(long first, long second, long value){
+
+    private boolean IsBetween(long first, long second, long value){
         if (first < second){
             return value >= first && value <= second;
         }
         return value >= second && value <= first;
     }
+    private int getNodeCount(){
+        try {
+            String nameserver = Unirest.get("/ns").asString().getBody();
+            JSONParser parser = new JSONParser();
+            JSONObject json = (JSONObject) parser.parse(nameserver);
+            return (int)((long) json.get("Nodes"));
+        }
+        catch (Exception e){
+            return -1;
+        }
 
+    }
 
     /**
      * Sends a given file to a given IP address.
