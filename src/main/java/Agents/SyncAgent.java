@@ -37,8 +37,6 @@ public class SyncAgent extends Thread {
     private MulticastListener multicastListener;
 
 
-
-
     private volatile boolean running = false;
 
     public SyncAgent(Node node) {
@@ -86,12 +84,14 @@ public class SyncAgent extends Thread {
                         String fileName = exchange.getRequestURI().toString().replace("/fileList/", "");
                         exchange.sendResponseHeaders(200, -1);
                         exchange.close();
-                        if (this.files.contains(fileName)) {
-                            this.files.remove(fileName);
-                            System.out.println("Notify neighbours of deletion of file " + fileName);
-                            Unirest.delete("http://" + this.node.getNextNodeIP() + ":8082/fileList/" + fileName).asString();
-                            System.out.println("notified");
-                        }
+                        try {
+                            if (this.files.contains(fileName)) {
+                                this.files.remove(fileName);
+                                System.out.println("Notify neighbours of deletion of file " + fileName);
+                                Unirest.delete("http://" + this.node.getNextNodeIP() + ":8082/fileList/" + fileName).asString();
+                                System.out.println("notified");
+                            }
+                        }catch (Exception ignored){}
                         return;
                     }catch(Exception e){
                         exchange.sendResponseHeaders(404,-1);
@@ -189,7 +189,7 @@ public class SyncAgent extends Thread {
         }
         this.files.remove(filename);
         System.out.println("Notify neighbours file deleted");
-        Unirest.delete("http://" + this.node.getNextNodeIP() + ":8082/fileList/" + filename).asString();
+        Unirest.delete("http://" + this.node.getNextNodeIP() + ":8082/fileList/" + filename).asString().getStatus();
         System.out.println("Notification done");
     }
 
