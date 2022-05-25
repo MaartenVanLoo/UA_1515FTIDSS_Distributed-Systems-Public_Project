@@ -134,15 +134,15 @@ public class SyncAgent extends Thread {
         if (this.multicastListener != null) this.multicastListener.start();
 
         while (running){
-            getNeighbourList();
+            if (this.node.isSetUp()){
+                getNeighbourList();
+            }
             try {
-                Thread.sleep(5000);
+                Thread.sleep(this.node.isSetUp()?5000:100);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            if (!this.node.isSetUp()){
-                continue;
-            }
+
         }
         this.server.stop(0);
         this.multicastListener.interrupt();
