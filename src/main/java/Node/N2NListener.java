@@ -369,7 +369,8 @@ public class N2NListener extends Thread {
         Runnable runnable = new Runnable() {
             @Override
             public void run() {
-                node.getFileManager().updateFileLocations(new_id,"");
+                //note: other case in which the next node is updated is handled by the nameserver notifying the previous node
+                node.getFileManager().updateFileLocationOtherNewNode(new_id);
             }
         };
         return runnable;

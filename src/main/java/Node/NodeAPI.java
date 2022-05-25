@@ -5,14 +5,12 @@ import com.sun.net.httpserver.HttpServer;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
-import javax.swing.*;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
 
 public class NodeAPI {
 
@@ -134,7 +132,7 @@ public class NodeAPI {
             JSONObject jsonObject = (JSONObject) this.node.getParser().parse(requestBody.toString());
             long newNodeId = (long) jsonObject.get("id");
             String newNodeIp = (String) jsonObject.get("ip");
-            this.node.getFileManager().updateFileLocations(newNodeId, newNodeIp);
+            this.node.getFileManager().updateFileLocationsNewNextNode(newNodeId, newNodeIp);
             System.out.println("Update replicated file locations complete");
         }catch(Exception e) {
             e.printStackTrace();
