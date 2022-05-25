@@ -218,9 +218,7 @@ public class SyncAgent extends Thread {
                     this.fileMapLock.writeLock().unlock();
                 }catch (Exception ignore) {}
             }
-        }catch(Exception e){
-            e.printStackTrace();
-        }
+        }catch(Exception ignore){}
     }
 
 
