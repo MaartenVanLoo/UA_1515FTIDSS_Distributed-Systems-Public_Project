@@ -474,7 +474,7 @@ public class FileManager extends Thread {
         logfile.put("origin", origin);
         logfile.put("Downloads", downloads);
 
-        FileWriter writer = new FileWriter(filename + ".log");
+        FileWriter writer = new FileWriter(filename);
         writer.write(logfile.toJSONString());
         writer.close();
     }
