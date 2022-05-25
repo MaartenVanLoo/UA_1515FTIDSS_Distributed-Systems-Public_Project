@@ -211,7 +211,7 @@ public class NodeAPI {
         HashMap<String,String> lockOwners = this.node.getSyncAgent().getLockOwner();
         for (String filename: this.node.getSyncAgent().getFileLocks().keySet()){
             JSONObject tmp = new JSONObject();
-            tmp.put("filename", filelocks.get(filename));
+            tmp.put("filename", filename);
             tmp.put("locked", filelocks.get(filename));
             tmp.put("owner", lockOwners.get(filename));
             locks.add(tmp);
