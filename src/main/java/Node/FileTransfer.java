@@ -26,7 +26,10 @@ public class FileTransfer extends Thread {
             in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
             File file = new File(sourceFilePath);
-            //System.out.println("File exists:" + file.exists());
+            System.out.println("File exists:" + file.exists());
+            if (!file.exists()) {
+                System.out.println(file.getName() + " does not exist");
+            }
             long fileSize = file.length();
             BufferedInputStream bufferedInputStream = new BufferedInputStream(new FileInputStream(file));
 
