@@ -293,6 +293,10 @@ public class SyncAgent extends Thread {
                     String nodeName = (String)data.get("name");
                     String action = (String)data.get("action");
 
+                    if (fileName == null) {
+                        System.out.println("Received packet with no fileName");
+                        continue;
+                    }
                     //do specified action
                     SyncAgent.this.fileMapLock.writeLock().lock();
                     if (action.equals("lock")){
