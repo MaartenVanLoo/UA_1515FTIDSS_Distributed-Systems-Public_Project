@@ -35,10 +35,10 @@ public class FileManager extends Thread {
 
     public synchronized void startup() {
         try {
-            int nodeCount = getNodeCount();
             while (!this.node.isSetUp()) {
                 Thread.sleep(100); // wait for the node to be set up
             }
+            int nodeCount = getNodeCount();
             String launchDirectory = System.getProperty("user.dir"); // get the current directory
             System.out.println("Current directory: " + launchDirectory); // print the current directory
             File dir = new File(launchDirectory + "/" + localFolder); // get the  new directory(/local)
