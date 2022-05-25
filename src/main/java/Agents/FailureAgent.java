@@ -25,13 +25,6 @@ public class FailureAgent implements Runnable, Serializable {
     private int firstNode = 0; //node who recieves the agent the first time, agent should never pass by the same node twice
     private  TreeMap<Integer, String> allNodes = null;
 
-    String starterNodeIP;
-    /*{
-        assert false;
-        starterNodeIP = this.node.getIP();
-    }*/
-
-
     public FailureAgent( long failedNodeId, TreeMap<Integer,String> allNodes) {
         this.failedNodeId = (int)failedNodeId;
         this.allNodes = new TreeMap<Integer,String>(allNodes); //deepcopy!
@@ -41,49 +34,6 @@ public class FailureAgent implements Runnable, Serializable {
     }
     public void setFirstNode(int node){
         this.firstNode = node;
-    }
-
-
-    /**
-     * Initialization of the agent
-     */
-    public void setup() {
-        /*FileManager fM;
-        //get list of local files in the list from SyncAgent
-        //if failing node is owner of the file replicate elsewhere
-        ArrayList<String> arrayList = this.node.getSyncAgent().getFileList();
-        for (String fileName : arrayList) {
-            int fileHash = Hashing.hash(fileName);
-            // ask the namingserver for the location of the file
-            int nodeIDofFile = Integer.parseInt(Unirest.get("/ns/files/" + fileName + "/id").asString().getBody()); //vieze ai zeg
-            // if the the failing node is the owner or the failing node was the owner,...
-            String allNodes = Unirest.get("/ns/nodes").asString().getBody();
-            allNodes = allNodes.replace("{", "").replace("}","");
-            String[] allNodesList = allNodes.split("\n");
-            TreeMap<Long, String> map = new TreeMap<>();
-            for (String e: allNodesList){
-                String[] temp = e.trim().split("=>");
-                map.put(Long.parseLong(temp[0]),temp[1]);
-            }
-            if (!map.containsKey(failedNodeId)) map.put(failedNodeId, "temp");
-            if (map.floorKey((long) fileHash) == failedNodeId) {
-                // failed node was owner
-            }
-
-
-
-            //get the Id before and after the failed node Id if node isnt lastKey
-                if (map.lastKey()==failedNodeId) {
-                    // check if the fileHash is bigger than the biggest NodeId but smaller than the failed node id
-                    if (fileHash > nodeIDofFile && fileHash < failedNodeId) {
-                        //file must be replicated
-                    }
-
-                }
-
-
-
-        }*/
     }
 
     @Override
@@ -202,17 +152,11 @@ public class FailureAgent implements Runnable, Serializable {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ObjectOutputStream oos = new ObjectOutputStream(baos);
         oos.writeObject(this);
-        for (byte b : baos.toByteArray()) {
-            System.out.print(b + " ");
-        }
-        System.out.println();
-        //String agent = Base64.getEncoder().encodeToString(baos.toByteArray());
         byte[] agent = baos.toByteArray();
         oos.close();
         return agent;
     }
     public static FailureAgent deserialize(byte[] agent) throws IOException, ClassNotFoundException {
-        //byte[] data = Base64.getDecoder().decode(agent);
         ByteArrayInputStream bais = new ByteArrayInputStream(agent);
         ObjectInputStream ois = new ObjectInputStream(bais);
         FailureAgent fa = (FailureAgent) ois.readObject();

@@ -23,8 +23,6 @@ import org.json.simple.parser.JSONParser;
 public class SyncAgent extends Thread {
 
     private Node node;
-    private String nextNodeIP;
-    private long nextNodeId;
     private ArrayList<String> files;
     private volatile HashMap<String, Boolean> fileLocks;
     private volatile HashMap<String, String> lockOwner;
@@ -46,8 +44,6 @@ public class SyncAgent extends Thread {
     public SyncAgent(Node node) {
         this.setDaemon(true);
         this.node = node;
-        this.nextNodeIP = node.getNextNodeIP();
-        this.nextNodeId = node.getNextNodeId();
         this.files = new ArrayList<>();
         this.fileLocks = new HashMap<>();
         this.lockOwner = new HashMap<>();
