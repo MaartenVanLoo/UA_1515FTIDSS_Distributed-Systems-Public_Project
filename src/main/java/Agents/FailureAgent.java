@@ -136,6 +136,7 @@ public class FailureAgent implements Runnable, Serializable {
             return;
         }
         try {
+            this.node = null; //Note: this is needed because a "node" object is not serializable
             Unirest.post("http://" + this.node.getNextNodeIP() + ":8081/agent").body(this.serialize());
         }catch (Exception e){
             e.printStackTrace();
