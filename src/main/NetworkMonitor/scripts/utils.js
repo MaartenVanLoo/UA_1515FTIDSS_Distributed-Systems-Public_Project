@@ -67,3 +67,7 @@ function bytesToShort(bytes){
     hash &=0x7FFF;
     return hash;
 }
+
+function computeHash(filename){
+    return bytesToShort(toBytes(MD5(filename)));
+}

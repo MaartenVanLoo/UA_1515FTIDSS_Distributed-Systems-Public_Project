@@ -41,18 +41,23 @@ function updateFileTable(){
         }
     }
 
+    //compute hashes
+    for (const file in fileList){
+        fileList[file].hash = computeHash(file);
+    }
+
     //clear table
     table.innerHTML = "";
 
     //print date in table
     Object.keys(fileList).forEach((key) => {
-        console.log(key);
-        console.log(bytesToShort(toBytes(MD5(key))));
+        let hash = document.createElement("td");
         let row = document.createElement("tr");
         let name = document.createElement("td");
         let local = document.createElement("td");
         let replica = document.createElement("td");
         let status = document.createElement("td");
+        hash.innerHTML = String(fileList[key].hash).padStart(5);
         name.innerHTML = key;
         local.innerHTML = fileList[key].local === undefined? "":fileList[key].local;
         replica.innerHTML = fileList[key].replica === undefined? "":fileList[key].replica;
@@ -64,6 +69,7 @@ function updateFileTable(){
         replica.style.textAlign = "center";
         status.style.textAlign = "center";
 
+        row.appendChild(hash);
         row.appendChild(name);
         row.appendChild(local);
         row.appendChild(replica);
@@ -128,3 +134,4 @@ function sortTable(n) {
         }
     }
 }
+
