@@ -86,6 +86,8 @@ public class Client {
             System.out.println(String.format("%30s\t%s",filename,Hashing.hash(filename)));
         }
         Hashing.hash("CodingFun.jpg");
+
+        System.out.println("file content:");
         File dir = new File("./local");
         for (File file : dir.listFiles()) {
             System.out.println(String.format("%30s\t%s",file.getName(),Hashing.hash(file.getName())));

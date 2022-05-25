@@ -144,8 +144,7 @@ public class FileManager extends Thread {
         }
         //3 or more nodes
         try {
-            File dir = new File("./" + replicaFolder);
-            File[] files = dir.listFiles();
+            File[] files = this.getReplicatedFiles();
             if (files == null || files.length == 0) {
                 System.out.println("No files in replica folder");
                 return;
@@ -222,11 +221,12 @@ public class FileManager extends Thread {
     }
 
     public synchronized void updateFileLocationOtherNewNode(long newNodeId){
-        if (this.node.getId() == this.node.getPrevNodeId() || this.node.getId() == this.node.getNextNodeId()){
+        int nodeCount = getNodeCount();
+        if (nodeCount == 1){
             System.out.println("Only one node in the network, no files should be updated!");
             return;
         }
-        if (this.node.getPrevNodeId() == this.node.getNextNodeId()){
+        if (nodeCount == 2){
             System.out.println("Two nodes in the network, no files should be updated");
             return;
         }
