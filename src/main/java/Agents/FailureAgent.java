@@ -5,6 +5,8 @@ import Utils.Hashing;
 import kong.unirest.Unirest;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.Objects;
 import java.util.TreeMap;
 
@@ -193,8 +195,20 @@ public class FailureAgent implements Runnable, Serializable {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ObjectOutputStream oos = new ObjectOutputStream(baos);
         oos.writeObject(this);
-        String agent = baos.toString();
+        for (byte b : baos.toByteArray()) {
+            System.out.print(b + " ");
+        }
+        System.out.println();
+        String agent = Base64.getEncoder().encodeToString(baos.toByteArray());
         oos.close();
         return agent;
+    }
+    public static FailureAgent deserialize(String agent) throws IOException, ClassNotFoundException {
+        byte[] data = Base64.getDecoder().decode(agent);
+        ByteArrayInputStream bais = new ByteArrayInputStream(data);
+        ObjectInputStream ois = new ObjectInputStream(bais);
+        FailureAgent fa = (FailureAgent) ois.readObject();
+        ois.close();
+        return fa;
     }
 }

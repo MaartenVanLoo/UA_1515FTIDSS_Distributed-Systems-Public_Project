@@ -1,16 +1,15 @@
 package Client;
+import Agents.FailureAgent;
 import Utils.Hashing;
 import Utils.IPUtils;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.TreeMap;
 
 public class Client {
     private Socket nodeTCPSocket;
@@ -44,7 +43,7 @@ public class Client {
         System.out.printf("Response: %s\n", response);
         stopTCPConnection();
     }
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, ClassNotFoundException {
         //TCP
         Client client = new Client();
         //client.sendTCPMessage();
@@ -95,6 +94,17 @@ public class Client {
         if (fileLocks.containsKey("file3")){
             if (fileLocks.get("file3")) System.out.println("file3 locked");
         }
+
+
+        //test failure agent
+        FailureAgent failureAgent = new FailureAgent(100,new TreeMap<>());
+        String agent = failureAgent.serialize();
+        System.out.println(agent);
+        for (byte b : agent.getBytes()) {
+            System.out.print(b + " ");
+        }
+
+        FailureAgent failureAgent2 = (FailureAgent.deserialize(agent));
     }
 
 }
