@@ -205,9 +205,9 @@ public class SyncAgent extends Thread {
             for (Object lock : lockList) {
                 try {
                     JSONObject lockObj = (JSONObject) lock;
-                    String filename = (String) lockObj.get("filename"); if (filename == null) continue;
+                    String filename = (String) lockObj.get("file"); if (filename == null) continue;
                     String owner = (String) lockObj.get("owner");
-                    Boolean isLocked = (Boolean) lockObj.get("isLocked");
+                    Boolean isLocked = (Boolean) lockObj.get("lock");
                     this.fileMapLock.writeLock().lock();
                     if (!this.fileLocks.containsKey(filename)) {
                         this.fileLocks.put(filename, isLocked);
@@ -215,10 +215,8 @@ public class SyncAgent extends Thread {
                     if (!this.lockOwner.containsKey(filename)) {
                         this.lockOwner.put(filename, owner);
                     }
-                }catch (Exception ignore) {}
-                finally {
                     this.fileMapLock.writeLock().unlock();
-                }
+                }catch (Exception ignore) {}
             }
         }catch(Exception e){
             e.printStackTrace();
