@@ -118,16 +118,14 @@ public class FileManager extends Thread {
         }
         if (this.node.getPrevNodeId() == this.node.getNextNodeId()){
             //2 nodes in the network => send all replicas
-            String replicateIPAddr = this.node.getPrevNodeIP();
-            long replicateID = this.node.getPrevNodeId();
             for (File file : this.getReplicatedFiles()){
-                FileTransfer.sendFile(file.getName(), replicaFolder, replicaFolder, replicateIPAddr);
+                FileTransfer.sendFile(file.getName(), replicaFolder, replicaFolder, nextNodeIp);
                 file.delete();
                 //update log file
-                updateLogFile(file.getName(),replicateID, replicateIPAddr);
+                updateLogFile(file.getName(),nextNodeId, nextNodeIp);
                 System.out.println("LogFile updated" );
                 //send log file
-                FileTransfer.sendFile(file.getName() + ".log", logFolder,logFolder, replicateIPAddr);
+                FileTransfer.sendFile(file.getName() + ".log", logFolder,logFolder, nextNodeIp);
                 //delete log file
                 File logFile = new File(logFolder + "/" + file.getName() + ".log");
                 logFile.delete();
