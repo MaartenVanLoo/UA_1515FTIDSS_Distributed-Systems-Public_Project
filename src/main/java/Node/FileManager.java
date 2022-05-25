@@ -137,17 +137,20 @@ public class FileManager extends Thread {
                     //send fileName to new node
                     try {
                         String replicateIPAddr = Unirest.get("/ns/files/{filename}").routeParam("filename", file.getName()).asString().getBody();
-                        if (Objects.equals(replicateIPAddr, node.getIP())) {
+                        /*if (Objects.equals(replicateIPAddr, node.getIP())) { //TODO: this isn't true right?
                             //don't send it, file is correctly placed
                             continue;
-                        }
-                        int replicateID = Integer.parseInt(Unirest.get("/ns/files/{fileName}/id").routeParam("fileName", file.getName()).asString().getBody());
+                        }*/
 
                         // check if the target of the file is the origin of the file
                         if (this.targetIsOrigin(file.getName(), replicateIPAddr)) {
                             //do nothing, if the new node is the origin, this node is the previous node, the file is correctly placed
                             continue;
                         }
+
+                        int replicateID = Integer.parseInt(Unirest.get("/ns/files/{fileName}/id").routeParam("fileName", file.getName()).asString().getBody());
+
+
 
                         FileTransfer.sendFile(file.getName(), replicaFolder, replicaFolder, replicateIPAddr);
                         file.delete();
