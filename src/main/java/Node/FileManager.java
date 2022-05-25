@@ -81,6 +81,7 @@ public class FileManager extends Thread {
                 }
                 if (nodeCount == 1){
                     //just copy from local to replica folders
+                    System.out.println("Copying "+ file.getName() +" to replica folder");
                     File localFile=new File(launchDirectory + "/" + localFolder + "/" + file.getName());
                     File replicaFile = new File(launchDirectory + "/" + replicaFolder + "/" + file.getName());
                     Files.copy(localFile.toPath(), replicaFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
