@@ -1,4 +1,4 @@
-/* package Agents;
+package Agents;
 
 import Node.Node;
 import Utils.Hashing;
@@ -220,4 +220,3 @@ public class FailureAgent implements Runnable, Serializable {
         return fa;
     }
 }
-*/

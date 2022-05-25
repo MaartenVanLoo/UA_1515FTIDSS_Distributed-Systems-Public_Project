@@ -1,4 +1,4 @@
-/*package Agents;
+package Agents;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -327,6 +327,4 @@ public class SyncAgent extends Thread {
             }
         }
     }
-
 }
-*/
