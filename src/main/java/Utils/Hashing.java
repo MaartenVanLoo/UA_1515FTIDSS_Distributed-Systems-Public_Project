@@ -38,11 +38,13 @@ public class Hashing {
         return hash;
     }
     private static short bytesToShort(byte[] bytes) {
-        short hash = 0;
+        byte byte0 = 0;
+        byte byte1 = 0;
         for (int i = 0; i < bytes.length/2; i++) {
-            hash ^= bytes[2*i+0] << 0;
-            hash ^= bytes[2*i+1] << 8;
+            byte0 ^= bytes[2*i+0];
+            byte1 ^= bytes[2*i+1];
         }
+        short hash = (short)((byte0 & 0xFF) | (byte1 & 0xFF) << 8);
         return hash;
     }
 }

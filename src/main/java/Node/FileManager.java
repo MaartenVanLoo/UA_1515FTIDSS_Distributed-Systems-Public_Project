@@ -2,18 +2,15 @@ package Node;
 
 import Utils.Hashing;
 import kong.unirest.Unirest;
-import org.apache.tomcat.util.http.fileupload.FileUtils;
+import kong.unirest.UnirestException;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
 import java.io.*;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Objects;
+import java.util.*;
 import java.nio.file.*;
-import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 public class FileManager extends Thread {
@@ -36,11 +33,12 @@ public class FileManager extends Thread {
         this.start();
     }
 
-    public void startup() {
+    public synchronized void startup() {
         try {
             while (!this.node.isSetUp()) {
                 Thread.sleep(100); // wait for the node to be set up
             }
+            int nodeCount = getNodeCount();
             String launchDirectory = System.getProperty("user.dir"); // get the current directory
             System.out.println("Current directory: " + launchDirectory); // print the current directory
             File dir = new File(launchDirectory + "/" + localFolder); // get the  new directory(/local)
@@ -53,6 +51,7 @@ public class FileManager extends Thread {
             for (File file : files) { // for each file in the directory
                 System.out.println("File: " + file.getName()); // print the file name
             }
+            System.out.println("NodeCount: " + nodeCount); // print the node count
             // Get the names of the files by using the .getName() method
             for (File file : files) {
                 //System.out.println(file.getName());
@@ -81,6 +80,14 @@ public class FileManager extends Thread {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+                if (nodeCount == 1){
+                    //just copy from local to replica folders
+                    System.out.println("Copying "+ file.getName() +" to replica folder");
+                    File localFile=new File(launchDirectory + "/" + localFolder + "/" + file.getName());
+                    File replicaFile = new File(launchDirectory + "/" + replicaFolder + "/" + file.getName());
+                    Files.copy(localFile.toPath(), replicaFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                    continue;
+                }
                 //send fileName to NameServer
                 try {
                     String replicateIPAddr = Unirest.get("/ns/files/{filename}")
@@ -101,6 +108,9 @@ public class FileManager extends Thread {
                     this.updateLogFile(file.getName(), replicateId, replicateIPAddr);
                     //send file to log
                     FileTransfer.sendFile(file.getName() + ".log", logFolder, logFolder, replicateIPAddr);
+                    //delete log file
+                    File f = new File(logFolder + "/" + file.getName() + ".log");
+                    f.delete();
 
                 } catch (Exception e) {
                     System.out.println("Error: " + e.getMessage());
@@ -111,50 +121,74 @@ public class FileManager extends Thread {
         }
     }
 
-    //TODO: remove?????????
-    public void updateFileCheck(String fileName) {
-        try {
-            File dir = new File(localFolder);
-            File[] files = dir.listFiles();
-            if (files == null || files.length == 0) {
-                System.out.println("No files in local folder");
-                return;
-            }
-            // Get the names of the files by using the .getName() method
-            // check if file is not in the list
-            for (File file : files) {
-                if (!fileList.contains(file.getName())) {
-                    int filehash = Hashing.hash(file.getName());
-                    fileList.add(file.getName());
-                    //send fileName to NameServer
-                    try {
-                        String replicateIPAddr = Unirest.get("/ns/files/{filename}")
-                                .routeParam("filename", file.getName()).asString().getBody();
-                        // if the IP addr the NS sent back is the same as the one of this node, get the prev node IP address
-                        // check example 3 doc3.pdf
-                        if (Objects.equals(replicateIPAddr, node.getIP())) {
-                            replicateIPAddr = this.node.getPrevNodeIP();
-                        }
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-
+    public synchronized  void update(){
+        File[] replicatedFiles = this.getReplicatedFiles();
+        for (File file : replicatedFiles){
+            try {
+                String fileName = file.getName();
+                String replicateIPAddr = Unirest.get("/ns/files/{filename}").routeParam("filename", file.getName()).asString().getBody();
+                long replicateId = Integer.parseInt(Unirest.get("/ns/files/{filename}/id").routeParam("filename", file.getName()).asString().getBody());
+                if (targetIsOrigin(fileName, replicateIPAddr)){
+                    replicateId = getPrevNode(replicateId);
+                    replicateIPAddr = getNodeIp(replicateId);
                 }
+                if (replicateId != this.node.getId()){
+                    //update log file
+                    this.updateLogFile(fileName, replicateId, replicateIPAddr);
+                    //send log file
+                    FileTransfer.sendFile(fileName + ".log", logFolder, logFolder, replicateIPAddr);
+                    //send file
+                    FileTransfer.sendFile(fileName, replicaFolder, replicaFolder, replicateIPAddr);
+                    //delete log file
+                    File f = new File(logFolder + "/" + fileName + ".log");
+                    f.delete();
+                    //delete file
+                    file.delete();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-        } catch (Exception e) {
-            System.err.println(e.getMessage());
-
         }
     }
-
-    public void updateFileLocations(long nodeId,String nodeIp){
+    public synchronized void updateFileLocationsNewNextNode(long nextNodeId, String nextNodeIp){
+        this.update();
+        return;/*
         // new node with given ID is inserted in the network, check the hash of every replicated file.
-        // If the hash > the nodeId => the file must be send to this new node and removed from this one.
+        // If the hash > the nextNodeId => the file must be send to this new node and removed from this one.
 
-        // get the list of files in replicated folder
+        //Warning: when updating file location when a single node is in the network => prev ID is also yourself!
+        //no files should be updated!
+        System.out.println("Prev id" + this.node.getPrevNodeId());
+        System.out.println("Next id" + this.node.getNextNodeId());
+        System.out.println("new node id" + nextNodeId);
+        int nodeCount = getNodeCount();
+        System.out.println("Node count" + nodeCount);
+        if (nodeCount == 1){
+        //if ((this.node.getId() == this.node.getPrevNodeId() || this.node.getId() == this.node.getNextNodeId()) && this.node.getId() == nextNodeId){
+            System.out.println("Only one node in the network, no files should be updated!");
+            return;
+        }
+        if (nodeCount == 2){
+        //if (this.node.getPrevNodeId() == this.node.getNextNodeId()){
+            System.out.println("Only 2 nodes in the network!");
+            //2 nodes in the network => send all replicas
+            for (File file : this.getReplicatedFiles()){
+                FileTransfer.sendFile(file.getName(), replicaFolder, replicaFolder, nextNodeIp);
+                file.delete();
+                //update log file
+                updateLogFile(file.getName(),nextNodeId, nextNodeIp);
+                System.out.println("LogFile updated" );
+                //send log file
+                FileTransfer.sendFile(file.getName() + ".log", logFolder,logFolder, nextNodeIp);
+                //delete log file
+                File logFile = new File(logFolder + "/" + file.getName() + ".log");
+                logFile.delete();
+            }
+            return;
+        }
+        //3 or more nodes
         try {
-            File dir = new File(replicaFolder);
-            File[] files = dir.listFiles();
+            File[] files = this.getReplicatedFiles();
             if (files == null || files.length == 0) {
                 System.out.println("No files in replica folder");
                 return;
@@ -162,22 +196,31 @@ public class FileManager extends Thread {
             // Get the names of the files by using the .getName() method
             for (File file : files) {
                 int fileHash = Hashing.hash(file.getName());
-                System.out.println("Filename: " + file.getName() + "\tHash: " + fileHash + "\tTransfer:" + (fileHash > nodeId));
-                if (fileHash > nodeId) {
+                System.out.println("Filename: " + file.getName() + "\tHash: " + fileHash + "\tTransfer:" + hasToSendFile(this.node.getId(), nextNodeId, fileHash));
+
+                if (hasToSendFile(this.node.getId(), nextNodeId, fileHash)) {
                     //send fileName to new node
                     try {
                         String replicateIPAddr = Unirest.get("/ns/files/{filename}").routeParam("filename", file.getName()).asString().getBody();
+                        long replicateID = -1;
+                        //assert
+                        System.out.println("Replicate IP: " + replicateIPAddr + "\tNextNodeIP: " + nextNodeIp);
+
                         if (Objects.equals(replicateIPAddr, node.getIP())) {
                             //don't send it, file is correctly placed
                             continue;
                         }
-                        int replicateID = Integer.parseInt(Unirest.get("/ns/files/{fileName}/id").routeParam("fileName", file.getName()).asString().getBody());
 
                         // check if the target of the file is the origin of the file
                         if (this.targetIsOrigin(file.getName(), replicateIPAddr)) {
-                            //do nothing, if the new node is the origin, this node is the previous node, the file is correctly placed
-                            continue;
+                            //new node = in between this node and next node => new node should become the owner of the file
+                            replicateID = nextNodeId;
+                            replicateIPAddr = nextNodeIp;
+                        }else{
+                            replicateID = Long.parseLong(Unirest.get("/ns/files/{fileName}/id").routeParam("fileName", file.getName()).asString().getBody());
                         }
+
+
 
                         FileTransfer.sendFile(file.getName(), replicaFolder, replicaFolder, replicateIPAddr);
                         file.delete();
@@ -197,6 +240,122 @@ public class FileManager extends Thread {
             }
         } catch (Exception e) {
             System.err.println(e.getMessage());
+        }
+        */
+    }
+    private boolean hasToSendFile(int own_id, long next_id, int fileHash){
+        if (next_id > own_id){
+            // this node should only have files between own_id and next_id
+            /* below = simplified statement according to intellij
+            if (fileHash > own_id && fileHash < next_id){
+                return false; //no resending
+            }
+            return true;
+             */
+            return fileHash <= own_id || fileHash >= next_id; //no resending
+        }else{
+            //warning! wrap around. All files between the next node and the current node should not be held by the current node
+            /*below = simplified statement according to intellij
+            if (fileHash > next_id && fileHash < own_id){
+                return true;
+            }
+            return false;
+             */
+            return fileHash > next_id && fileHash < own_id;
+        }
+    }
+
+    public synchronized void updateFileLocationOtherNewNode(long newNodeId){
+        update();
+        /*
+        int nodeCount = getNodeCount();
+        if (nodeCount == 1){
+            System.out.println("Only one node in the network, no files should be updated!");
+            return;
+        }
+        if (nodeCount == 2){
+            System.out.println("Two nodes in the network, no files should be updated");
+            return;
+        }
+        //1 and 2 nodes in the network will always trigger "updateFileLocationNewNextNode"
+        //check if other node is NOT between current ID and next ID
+        if (!IsBetween(this.node.getId(), this.node.getNextNodeId(), newNodeId)){
+            //This could potentially trigger the edgecase where the new node should take the ownership of the
+            // replicated file stored in the previous node of the original node.
+            for (File file: this.getReplicatedFiles()){
+                int hash = Hashing.hash(file.getName());
+                if (IsBetween(this.node.getId(), this.node.getNextNodeId(), hash)){
+                    //this file should be stored in this node, don't take action
+                    continue;
+                }
+                //It shouldn't be possible to own a file with a hash larger than the next node id unless the next node
+                // is the origin and owner of the file (edge case)
+                // We need to check if this file should be send to the new node
+                String replicateIPAddr = Unirest.get("/ns/files/{filename}").routeParam("filename", file.getName()).asString().getBody();
+                if (this.targetIsOrigin(file.getName(),replicateIPAddr)){
+                    //Don't send file, target is still the origin
+                    continue;
+                }
+                long replicateID = Long.parseLong(Unirest.get("/ns/files/{fileName}/id").routeParam("fileName", file.getName()).asString().getBody());
+
+                //if all checks are passed this means we have to send the file to the new node
+                FileTransfer.sendFile(file.getName(), replicaFolder, replicaFolder, replicateIPAddr);
+                file.delete();
+                //update log file
+                updateLogFile(file.getName(),replicateID, replicateIPAddr);
+                System.out.println("LogFile updated" );
+                //send log file
+                FileTransfer.sendFile(file.getName() + ".log", logFolder,logFolder, replicateIPAddr);
+                //delete log file
+                File logFile = new File(logFolder + "/" + file.getName() + ".log");
+                logFile.delete();
+            }
+        }
+
+        */
+    }
+
+    private boolean IsBetween(long first, long second, long value){
+        if (first < second){
+            return value >= first && value <= second;
+        }
+        return value >= second && value <= first;
+    }
+    private int getNodeCount(){
+        try {
+            String nameserver = Unirest.get("/ns").asString().getBody();
+            JSONParser parser = new JSONParser();
+            JSONObject json = (JSONObject) parser.parse(nameserver);
+            return (int)((long) json.get("Nodes"));
+        }
+        catch (Exception e){
+            return -1;
+        }
+
+    }
+    private int getPrevNode(long nodeId){
+        try {
+            //Request nodeId configuration from nameserver
+            String response = Unirest.get("/ns/nodes/{nodeId}").routeParam("nodeId", String.valueOf(nodeId)).asString().getBody();
+            JSONParser parser = new JSONParser();
+            JSONObject json = (JSONObject) parser.parse(response);
+            JSONObject prevNode = (JSONObject) json.get("prev");
+            return (int)((long) prevNode.get("id"));
+        }
+        catch (Exception e){
+            return -1;
+        }
+    }
+    private String getNodeIp(long nodeId){
+        try{
+            String response = Unirest.get("/ns/nodes/{nodeId}").routeParam("nodeId", String.valueOf(nodeId)).asString().getBody();
+            JSONParser parser = new JSONParser();
+            JSONObject json = (JSONObject) parser.parse(response);
+            JSONObject prevNode = (JSONObject) json.get("node");
+            return (String) prevNode.get("ip");
+        }
+        catch (Exception e){
+            return "";
         }
     }
 
@@ -248,7 +407,7 @@ public class FileManager extends Thread {
         WatchKey key;
         while ((key = watchService.take()) != null) {
 
-
+            //sleep(50);
             for (WatchEvent<?> event : key.pollEvents()) {
                 //sleep(50);
                 //fileEvents.add(event.kind().toString() + " " + event.context().toString());
@@ -270,10 +429,7 @@ public class FileManager extends Thread {
                         //Create log file
                         this.createLogFile(file.getName());
                         this.updateLogFile(file.getName(),replicateId,replicateIPAddr);
-                        FileTransfer.sendFile(file.getName(),logFolder,logFolder, replicateIPAddr + ".log");
-
-                        //TODO: remove logfile after sending
-
+                        FileTransfer.sendFile(file.getName() + ".log", logFolder,logFolder, replicateIPAddr);
                         //update sync agent:
                         this.node.getSyncAgent().addLocalFile(file.getName());
                         //[fallthrough]
@@ -303,7 +459,7 @@ public class FileManager extends Thread {
         }
     }
 
-    public void shutDown() {
+    public synchronized void shutDown() {
         String launchDirectory = System.getProperty("user.dir");
         System.out.println("Current directory: " + launchDirectory); //vieze ai zeg
         File dir = new File(launchDirectory + "/" + localFolder); //get the local folder
@@ -344,7 +500,7 @@ public class FileManager extends Thread {
         //System.out.println("Directory: " + dir.getCanonicalPath());
         files = dir.listFiles();
         if (files == null || files.length == 0) {
-            System.out.println("No files in local folder");
+            System.out.println("No files in replica folder");
             return;
         }
         for (File file : files) {
@@ -372,12 +528,16 @@ public class FileManager extends Thread {
 
             //send file to replica
             FileTransfer.sendFile(file.getName(), replicaFolder, replicaFolder, replicateIPAddr);
+            //delete file
+            file.delete();
             //update log file
             updateLogFile(file.getName(),replicateId, replicateIPAddr);
             //send log file
             FileTransfer.sendFile(file.getName() + ".log", logFolder,logFolder, replicateIPAddr);
+            //delet logfile
+            File logFile = new File(logFolder + "/" + file.getName() + ".log");
+            logFile.delete();
         }
-
     }
 
     /**

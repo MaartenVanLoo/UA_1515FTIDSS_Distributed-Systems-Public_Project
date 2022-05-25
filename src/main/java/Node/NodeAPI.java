@@ -7,6 +7,10 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.Map;
@@ -139,7 +143,7 @@ public class NodeAPI {
             JSONObject jsonObject = (JSONObject) this.node.getParser().parse(requestBody.toString());
             long newNodeId = (long) jsonObject.get("id");
             String newNodeIp = (String) jsonObject.get("ip");
-            this.node.getFileManager().updateFileLocations(newNodeId, newNodeIp);
+            this.node.getFileManager().updateFileLocationsNewNextNode(newNodeId, newNodeIp);
             System.out.println("Update replicated file locations complete");
         }catch(Exception e) {
             e.printStackTrace();

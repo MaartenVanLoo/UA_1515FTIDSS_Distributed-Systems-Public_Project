@@ -362,7 +362,7 @@ public class Node {
      * @throws IOException
      * @throws InterruptedException
      */
-    public static void launchNode(String name) throws IOException, InterruptedException{
+    public static void launchNode(String name, long liveTime) throws IOException, InterruptedException{
         Node node = new Node(name);
         try {
             node.discoverNameServer();
@@ -385,15 +385,19 @@ public class Node {
         };
         executorService.scheduleAtFixedRate(validator, 1, 5, TimeUnit.SECONDS);
 
+
         Thread.sleep(5000); //wait 5 seconds
         //try to lock a file
         File[] localfiles = node.getFileManager().getLocalFiles();
         node.getSyncAgent().lockFile(localfiles[0].getName());
-        Thread.sleep(1000000);
 
-        Thread.sleep(35000 + 2 * (long) ((Math.random() - 0.5) * 30000)); // sleep for 60±30 seconds
+        Thread.sleep(liveTime);
+
         executorService.shutdownNow();
         node.shutdown();
+    }
+    public static void launchNode(String name) throws IOException, InterruptedException {
+        launchNode(name,60000 + 2 * (long) ((Math.random() - 0.5) * 30000)); // sleep for 60±30 seconds
     }
 
     public static void main(String[] args) throws IOException, InterruptedException {
@@ -408,11 +412,12 @@ public class Node {
 
         System.out.println("Network interfaces:");
         System.out.println(NetworkInterface.getNetworkInterfaces());
-        while (true) {
-            launchNode(name);
+        for (int i = 0; i < 0 ; i++) { // set i < 0 to just launch the node, set i < x when you want to restart the node x times
+            //launchNode(name,30000 + 2 * (long) ((Math.random() - 0.5) * 15000)); // sleep for 30±15 seconds
             System.gc();
             Thread.sleep((long) (Math.random() * 10000)); // sleep for a value between 0-10 seconds
         }
+        launchNode(name, Long.MAX_VALUE);
     }
 
 }

@@ -401,6 +401,13 @@ input[type="text"]{
 /*
 utilities
  */
+.text-size-18{
+    font-size:18px;
+}
+.text-size-22{
+    font-size:22px;
+}
+
 .row {
     display: -ms-flexbox;
     display: flex;

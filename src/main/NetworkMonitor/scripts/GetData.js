@@ -172,11 +172,13 @@ async function shutdownNode(id){
 }
 
 async function startNode(id) {
-    if (nodeData[id].node.ip == undefined) return;
+    //if (nodeData[id].node.ip == undefined) return;
     let url = "http://"+ipNS+":8081/ns/nodes/"+id+"/start";
     try{
         const response = await fetch(url, {
-            method: 'GET'
+            method: 'POST',
+            body: JSON.stringify({method:'start'}),
+            mode: 'no-cors'
         })
         return await response.json(); // parses JSON response into native JavaScript object
     }
