@@ -27,7 +27,7 @@ public class startup {
                     // one argument to bash, so we do not need to quote it to make it one thing.
                     // Also, exec may object if it does not have an executable file as the first thing,
                     // so having bash here makes it happy provided bash is installed and in path.
-                    String[] commands = {"bash", "-c", "./launch.sh"};
+                    String[] commands = {"bash", "-c", "../launch.sh"};
                     try {
                         p = r.exec(commands);
                         exchange.sendResponseHeaders(200, 0);
