@@ -79,16 +79,21 @@ public class SyncAgent extends Thread {
                     outputStream.close();
                 }
                 else if (exchange.getRequestMethod().equals("DELETE")){
-                    //delete file from files
-                    System.out.println("DELETE");
-                    System.out.println(exchange.getRequestURI());
-                    String fileName = exchange.getRequestURI().toString().replace("/fileList/","");
-                    exchange.sendResponseHeaders(200, -1);
-                    if (this.files.contains(fileName)){
-                        this.files.remove(fileName);
-                        System.out.println("Notify neighbours of deletion of file " + fileName);
-                        Unirest.delete("http://" + this.node.getNextNodeIP() + ":8082/fileList/" + fileName).asString();
-                        System.out.println("notified");
+                    try {
+                        //delete file from files
+                        System.out.println("DELETE");
+                        System.out.println(exchange.getRequestURI());
+                        String fileName = exchange.getRequestURI().toString().replace("/fileList/", "");
+                        exchange.sendResponseHeaders(200, -1);
+                        if (this.files.contains(fileName)) {
+                            this.files.remove(fileName);
+                            System.out.println("Notify neighbours of deletion of file " + fileName);
+                            Unirest.delete("http://" + this.node.getNextNodeIP() + ":8082/fileList/" + fileName).asString();
+                            System.out.println("notified");
+                        }
+                    }catch(Exception e){
+                        exchange.sendResponseHeaders(404,-1);
+                        e.printStackTrace();
                     }
                 }
                 else{
