@@ -144,7 +144,7 @@ public class FileManager extends Thread {
         }
         //3 or more nodes
         try {
-            File dir = new File(replicaFolder);
+            File dir = new File("./" + replicaFolder);
             File[] files = dir.listFiles();
             if (files == null || files.length == 0) {
                 System.out.println("No files in replica folder");

@@ -2,10 +2,7 @@ package Client;
 import Utils.Hashing;
 import Utils.IPUtils;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -89,6 +86,14 @@ public class Client {
             System.out.println(String.format("%30s\t%s",filename,Hashing.hash(filename)));
         }
         Hashing.hash("CodingFun.jpg");
+        File dir = new File("./local");
+        for (File file : dir.listFiles()) {
+            System.out.println(String.format("%30s\t%s",file.getName(),Hashing.hash(file.getName())));
+        }
+        File dir2 = new File("./replica");
+        for (File file : dir2.listFiles()) {
+            System.out.println(String.format("%30s\t%s",file.getName(),Hashing.hash(file.getName())));
+        }
         ;
        /*
         String test = "Node0";
