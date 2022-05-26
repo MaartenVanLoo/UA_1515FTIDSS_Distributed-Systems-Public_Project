@@ -49,6 +49,7 @@ public class SyncAgent extends Thread {
         //setup websocket
         try {
             this.server = HttpServer.create(new InetSocketAddress(syncAgentPort), 0); //TCP
+            this.server.setExecutor(Executors.newCachedThreadPool());
             this.server.createContext("/fileList", (exchange) -> {
                 exchange.getResponseHeaders().add("Content-Type", "application/json");
                 if (exchange.getRequestMethod().equals("GET")) {
