@@ -83,6 +83,11 @@ public class SyncAgent extends Thread {
                         System.out.println("DELETE");
                         System.out.println(exchange.getRequestURI());
                         String fileName = exchange.getRequestURI().toString().replace("/fileList/", "");
+
+                        //need to consume all the data from the input stram befoe closing it (see  https://docs.oracle.com/javase/8/docs/jre/api/net/httpserver/spec/com/sun/net/httpserver/HttpExchange.html);
+                        exchange.getRequestBody().readAllBytes();
+                        exchange.getRequestBody().close();
+
                         exchange.sendResponseHeaders(200, -1);
                         exchange.close();
                         try {
@@ -192,7 +197,8 @@ public class SyncAgent extends Thread {
         this.files.remove(filename);
         System.out.println("Notify neighbours file deleted");
         System.out.println("Notifing :" + this.node.getNextNodeIP());
-        Unirest.delete("http://" + this.node.getNextNodeIP() + ":8082/fileList/" + filename).asString().getStatus();
+        int status = Unirest.delete("http://" + this.node.getNextNodeIP() + ":8082/fileList/" + filename).asString().getStatus();
+        System.out.println("Delete status: " + status);
         System.out.println("Notification done");
     }
 
