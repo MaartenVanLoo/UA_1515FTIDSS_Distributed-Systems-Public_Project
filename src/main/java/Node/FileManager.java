@@ -405,7 +405,7 @@ public class FileManager extends Thread {
                 StandardWatchEventKinds.ENTRY_MODIFY);
 
         WatchKey key;
-        while ((key = watchService.take()) != null) {
+        while ((key = watchService.take()) != null && ! this.isInterrupted()) {
 
             //sleep(50);
             for (WatchEvent<?> event : key.pollEvents()) {

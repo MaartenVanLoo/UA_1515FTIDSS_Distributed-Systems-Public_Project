@@ -220,9 +220,9 @@ public class FileTransfer extends Thread {
         this.start(); //start the thread;
     }
 
-    public void startListener(int port) throws IOException {
+    private void startListener(int port) throws IOException {
         serverSocket = new ServerSocket(port);
-        while (true) {
+        while (!this.isInterrupted()) {
             try {
                 new NodeHandler(serverSocket.accept(),this.node).start();
             } catch (IOException exception) {
