@@ -143,7 +143,7 @@ public class NodeAPI {
             JSONObject jsonObject = (JSONObject) this.node.getParser().parse(requestBody.toString());
             long newNodeId = (long) jsonObject.get("id");
             String newNodeIp = (String) jsonObject.get("ip");
-            this.node.getFileManager().updateFileLocationsNewNextNode(newNodeId, newNodeIp);
+            this.node.getFileManager().update();
             System.out.println("Update replicated file locations complete");
         }catch(Exception e) {
             e.printStackTrace();
