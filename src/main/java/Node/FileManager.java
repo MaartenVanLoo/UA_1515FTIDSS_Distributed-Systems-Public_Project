@@ -440,7 +440,7 @@ public class FileManager extends Thread {
                         logfile.put("origin", origin);
                         logfile.put("Downloads", downloads);
 
-                        FileWriter writer = new FileWriter(event.context().toString() + ".log");
+                        FileWriter writer = new FileWriter(logFolder + '/' + file.getName() + ".log");
                         writer.write(logfile.toJSONString());
                         writer.close();
                         this.updateLogFile(file.getName(),replicateId,replicateIPAddr);
@@ -448,7 +448,7 @@ public class FileManager extends Thread {
                         //[fallthrough]
                     case "ENTRY_MODIFY":
                         try {
-                            System.out.println("Replicating " + file.getName() + " to " + replicateIPAddr); //vieze ai zeg
+                            System.out.println("Replicating " + file.getName() + " to " + replicateIPAddr); 
                             //send file to replica
                             FileTransfer.sendFile(file.getName(), localFolder, replicaFolder, replicateIPAddr);
                             System.out.println("Modification handled");
@@ -473,23 +473,23 @@ public class FileManager extends Thread {
 
     public synchronized void shutDown() {
         String launchDirectory = System.getProperty("user.dir");
-        System.out.println("Current directory: " + launchDirectory); //vieze ai zeg
+        System.out.println("Current directory: " + launchDirectory); 
         File dir = new File(launchDirectory + "/" + localFolder); //get the local folder
-        //System.out.println("Directory: " + dir.getCanonicalPath()); //vieze ai zeg
+        //System.out.println("Directory: " + dir.getCanonicalPath()); 
         File[] files = dir.listFiles(); //get all files in the directory
         if (files == null || files.length == 0) {
-            System.out.println("No files in local folder"); //vieze ai zeg
+            System.out.println("No files in local folder"); 
             return;
         }
         for (File file : files) {
-            System.out.println("File: " + file.getName()); //vieze ai zeg
+            System.out.println("File: " + file.getName()); 
         }
         // Remove replications of local files
         for (File file : files) {
             //send fileName to NameServer
             try {
-                String deleteIPAddr = Unirest.get("/ns/files/{filename}") //vieze ai zeg
-                        .routeParam("filename", file.getName()).asString().getBody(); //vieze ai zeg
+                String deleteIPAddr = Unirest.get("/ns/files/{filename}") 
+                        .routeParam("filename", file.getName()).asString().getBody(); 
                 // if the IP addr the NS sent back is the same as the one of this node, get the prev node IP address
                 // check example 3 doc3.pdf
                 if (Objects.equals(deleteIPAddr, node.getIP())) {
