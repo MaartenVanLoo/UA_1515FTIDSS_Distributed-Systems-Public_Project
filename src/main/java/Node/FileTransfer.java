@@ -216,6 +216,7 @@ public class FileTransfer extends Thread {
     }
     public FileTransfer(Node node) {
         this.node = node;
+        this.setDaemon(true);
         this.start(); //start the thread;
     }
 
