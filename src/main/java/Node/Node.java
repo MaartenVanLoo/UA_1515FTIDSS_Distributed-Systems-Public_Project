@@ -405,7 +405,8 @@ public class Node {
             System.gc();
             Thread.sleep((long) (Math.random() * 10000)); // sleep for a value between 0-10 seconds
         }
-        launchNode(name, Long.MAX_VALUE);
+        launchNode(name, 120000); // sleep for 120 seconds
+        //launchNode(name, Long.MAX_VALUE);
     }
 
 }
