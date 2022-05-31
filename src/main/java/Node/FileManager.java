@@ -1,5 +1,6 @@
 package Node;
 
+import NameServer.NameServerStatusCodes;
 import Utils.Hashing;
 import kong.unirest.Unirest;
 import kong.unirest.UnirestException;
@@ -70,7 +71,7 @@ public class FileManager extends Thread {
                 JSONArray downloads = new JSONArray();
                 logfile.put("owner", owner);
                 logfile.put("origin", source);
-                logfile.put("Downloads", downloads);
+                logfile.put("downloads", downloads);
                 //put the JSONObject in the file
                 try (PrintWriter out = new PrintWriter(new FileWriter(logFile, false))){
                     out.write(logfile.toString());
@@ -389,6 +390,11 @@ public class FileManager extends Thread {
             owner.put("id", newOwner);
             owner.put("ip", newIP);
             jsonObject.put("owner", owner);
+            //update downloads
+            JSONArray downloads = (JSONArray) jsonObject.get("downloads");
+            downloads.add(newOwner);
+            jsonObject.put("downloads", downloads);
+
             //write log file
             FileWriter writer = new FileWriter(logFile);
             writer.write(jsonObject.toJSONString());
@@ -434,7 +440,7 @@ public class FileManager extends Thread {
         JSONObject logfile = new JSONObject();
         logfile.put("owner", owner);
         logfile.put("origin", origin);
-        logfile.put("Downloads", downloads);
+        logfile.put("downloads", downloads);
 
         FileWriter writer = new FileWriter(filename);
         writer.write(logfile.toJSONString());
