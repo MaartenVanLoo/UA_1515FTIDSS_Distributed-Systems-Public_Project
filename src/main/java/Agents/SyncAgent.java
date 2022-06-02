@@ -22,23 +22,43 @@ import org.json.simple.parser.JSONParser;
 
 public class SyncAgent extends Thread {
 
+    /** The node that this agent is associated with. */
     private Node node;
+    /** ArrayList of all files in the system. */
     private ArrayList<String> files;
+    /** HashMap of all files in the system and whether or not they're locked. **/
     private volatile HashMap<String, Boolean> fileLocks;
+    /** HashMap of all files in the system and the owner of the lock. **/
     private volatile HashMap<String, String> lockOwner;
+    /** ReadWriteLock for editing the HashMap "fileLocks". **/
     private ReadWriteLock fileMapLock = new ReentrantReadWriteLock();
 
+    /** The HttpServer to retrieve the file list from. **/
     private HttpServer server;
+    /** The port on which the HttpServer is running and the MulticastListener is listening on. **/
     private static final int syncAgentPort = 8082;
 
+    /** The socket on which the MultiCastListener is listening. **/
     private MulticastSocket multicastSocket;
+    /** The IP address of the multicast group. **/
     private static final String multicastIP ="224.0.0.100"; //https://en.wikipedia.org/wiki/Multicast_address
+    /** The Multicast group the MulticastListener is listening on. **/
     private InetAddress group;
+    /** The multicast listener. **/
     private MulticastListener multicastListener;
 
-
+    /** Boolean to indicate whether or not the SyncAgent is running. Set to "true" in the "run()" method. **/
     private volatile boolean running = false;
 
+    /**
+     * Constructor for the SyncAgent.
+     * After setting its node variable to the node its running on, the SyncAgent will start its HttpServer. On receiving
+     * a "GET" request at "[nodeIP]:8082/fileList", the SyncAgent will respond with a JSONArray of all files in the system.
+     * On receiving a "DELETE" request at "[nodeIP]:8082/fileList/[filename]", the SyncAgent will remove the file from the
+     * system.
+     * After the Http server is setup, the SyncAgent will also setup its MulticastListener.
+     * @param node The node that this agent is associated with.
+     */
     public SyncAgent(Node node) {
         this.setDaemon(true);
         this.node = node;
@@ -130,14 +150,27 @@ public class SyncAgent extends Thread {
         this.start();
     }
 
+    /**
+     * Get the HashMap of files with their lock status.
+     * @return HashMap of files with their lock status.
+     */
     public HashMap<String, Boolean> getFileLocks() {
         return fileLocks;
     }
 
+    /**
+     * Get the HashMap of files with the node that locked it.
+     * @return HashMap of files with the node that locked it.
+     */
     public HashMap<String, String> getLockOwner() {
         return lockOwner;
     }
 
+    /**
+     * Regularly updates its own file list with the one from its next node.
+     * Starts the thread that listens for incoming multicast messages as well as the HttpServer. After these two threads
+     * are running, the SyncAgent starts regularly updating its own file list with the one from its next node.
+     */
     @Override
     public void run() {
         running = true;
@@ -160,6 +193,9 @@ public class SyncAgent extends Thread {
         this.multicastListener.interrupt();
     }
 
+    /**
+     * Makes a list of files that the current node has.
+     */
     public void makeLocalList(){//make a list out of local files.
         try {
             File dir = new File(FileManager.localFolder);
@@ -176,11 +212,19 @@ public class SyncAgent extends Thread {
         }
     }
 
+    /**
+     * Returns the list of files in the system according to the this node.
+     * @return the list of files.
+     */
     public ArrayList<String> getFileList(){
         return this.files;
     }
 
-    public void addLocalFile(String filename){//update the local list when a new local file get's added.
+    /**
+     * Updates the local list when a new local file gets added.
+     * @param filename the name of the file that was added.
+     */
+    public void addLocalFile(String filename){
         if(!this.files.contains(filename)){
             this.files.add(filename);
         }
@@ -189,6 +233,11 @@ public class SyncAgent extends Thread {
         }
     }
 
+    /**
+     * When a file has been deleted, it will be removed from the map of all files in the system, and the next node will
+     * be notified.
+     * @param filename the name of the file that was deleted.
+     */
     public void deleteLocalFile(String filename){
         if (!this.files.contains(filename)){
             System.out.println("File not found!!");//enkel debug..
@@ -202,6 +251,10 @@ public class SyncAgent extends Thread {
         System.out.println("Notification done");
     }
 
+    /**
+     * Retrieves the list of files from the next node and updates its own list of files. The list of locks for each file
+     * will also be updated.
+     */
     public void getNeighbourList(){
         JSONParser parser = new JSONParser();
         try {
@@ -235,7 +288,12 @@ public class SyncAgent extends Thread {
         }catch(Exception ignore){}
     }
 
-
+    /**
+     * Sets the lock for a file.
+     * Makes a JSON object with the file name and the lock status. Then it will send a UDP message to the multicast group.
+     * @param fileName the name of the file that is being locked.
+     * @return true if the lock was successful, false otherwise.
+     */
     public synchronized boolean lockFile(String fileName){
         fileMapLock.readLock().lock();
         if (this.multicastSocket == null) return false;
@@ -258,6 +316,12 @@ public class SyncAgent extends Thread {
         return true;
     }
 
+    /**
+     * Unlocks a file.
+     * Makes a JSON object with the file name and the lock status. Then it will send a UDP message to the multicast group.
+     * @param fileName The file to unlock.
+     * @return True if the file was unlocked, false otherwise.
+     */
     public synchronized boolean unlockFile(String fileName){
         fileMapLock.readLock().lock();
         if (this.multicastSocket == null) return false;
@@ -279,11 +343,24 @@ public class SyncAgent extends Thread {
         return true;
     }
 
+    /**
+     * Class that handles the UDP messages about locking and unlocking files.
+     */
     private class MulticastListener extends Thread{
+
+        /** Buffer for the UDP message. **/
         private byte[] buf = new byte[256];
 
+        /**
+         * Constructor for the MulticastListener class.
+         */
         public MulticastListener() {}
 
+        /**
+         * Runs the MulticastListener thread.
+         * First, it will create a new DatagramSocket. Then it will listen for UDP messages. If a message is received, it will
+         * parse the message and update the fileLocks map accordingly.
+         */
         @Override
         public void run() {
             try {
