@@ -318,8 +318,8 @@ public class SyncAgent extends Thread {
                         lockOwner.put(fileName,nodeName);
                         System.out.println("Locked file " + fileName + " by " + nodeName);
                     }else if(action.equals("unlock")){
-                        fileLocks.put(fileName,false);
-                        lockOwner.put(fileName,"");
+                        fileLocks.put(fileName,false);  // make sure the entry exists!
+                        lockOwner.put(fileName,"");     // make sure the entry exists!
                         fileLocks.remove(fileName);
                         lockOwner.remove(fileName);
                         System.out.println("Unlocked file " + fileName);
