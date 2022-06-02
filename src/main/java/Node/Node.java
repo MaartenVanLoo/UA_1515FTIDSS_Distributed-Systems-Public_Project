@@ -388,9 +388,12 @@ public class Node {
 
         Thread.sleep(5000); //wait 5 seconds
         //try to lock a file
-        File[] localfiles = node.getFileManager().getLocalFiles();
-        node.getSyncAgent().lockFile(localfiles[0].getName());
-
+        try {
+            File[] localfiles = node.getFileManager().getLocalFiles();
+            node.getSyncAgent().lockFile(localfiles[0].getName());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         Thread.sleep(liveTime);
 
         executorService.shutdownNow();

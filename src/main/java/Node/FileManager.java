@@ -1,5 +1,6 @@
 package Node;
 
+import NameServer.NameServerStatusCodes;
 import Utils.Hashing;
 import kong.unirest.Unirest;
 import kong.unirest.UnirestException;
@@ -18,7 +19,6 @@ public class FileManager extends Thread {
     public final static String localFolder = "local";
     public final static String replicaFolder = "replica";
     public final static String logFolder = "log";
-    private ArrayList<String> fileList = new ArrayList<>();
 
     WatchService watchService = FileSystems.getDefault().newWatchService();
     Path path = Paths.get("./local");
@@ -54,9 +54,7 @@ public class FileManager extends Thread {
             System.out.println("NodeCount: " + nodeCount); // print the node count
             // Get the names of the files by using the .getName() method
             for (File file : files) {
-                //System.out.println(file.getName());
-                //int filehash = Hashing.hash(file.getName()); //  nameserver doet dit
-                fileList.add(file.getName());
+                //create logfile
                 File logFile = new File(launchDirectory + "/"+ logFolder + "/" + file.getName() + ".log");
                 if (!logFile.exists()) {
                     logFile.createNewFile();
@@ -73,19 +71,21 @@ public class FileManager extends Thread {
                 JSONArray downloads = new JSONArray();
                 logfile.put("owner", owner);
                 logfile.put("origin", source);
-                logfile.put("Downloads", downloads);
+                logfile.put("downloads", downloads);
                 //put the JSONObject in the file
                 try (PrintWriter out = new PrintWriter(new FileWriter(logFile, false))){
                     out.write(logfile.toString());
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+
                 if (nodeCount == 1){
                     //just copy from local to replica folders
                     System.out.println("Copying "+ file.getName() +" to replica folder");
                     File localFile=new File(launchDirectory + "/" + localFolder + "/" + file.getName());
                     File replicaFile = new File(launchDirectory + "/" + replicaFolder + "/" + file.getName());
                     Files.copy(localFile.toPath(), replicaFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                    this.updateLogFile(file.getName(),this.node.getId(),this.node.getIP());
                     continue;
                 }
 
@@ -150,41 +150,7 @@ public class FileManager extends Thread {
             }
         }
     }
-    public synchronized void updateFileLocationsNewNextNode(long nextNodeId, String nextNodeIp){
-        this.update();
-    }
-    private boolean hasToSendFile(int own_id, long next_id, int fileHash){
-        if (next_id > own_id){
-            // this node should only have files between own_id and next_id
-            /* below = simplified statement according to intellij
-            if (fileHash > own_id && fileHash < next_id){
-                return false; //no resending
-            }
-            return true;
-             */
-            return fileHash <= own_id || fileHash >= next_id; //no resending
-        }else{
-            //warning! wrap around. All files between the next node and the current node should not be held by the current node
-            /*below = simplified statement according to intellij
-            if (fileHash > next_id && fileHash < own_id){
-                return true;
-            }
-            return false;
-             */
-            return fileHash > next_id && fileHash < own_id;
-        }
-    }
 
-    public synchronized void updateFileLocationOtherNewNode(long newNodeId){
-        this.update();
-    }
-
-    private boolean IsBetween(long first, long second, long value){
-        if (first < second){
-            return value >= first && value <= second;
-        }
-        return value >= second && value <= first;
-    }
     private int getNodeCount(){
         try {
             String nameserver = Unirest.get("/ns").asString().getBody();
@@ -232,7 +198,7 @@ public class FileManager extends Thread {
                 StandardWatchEventKinds.ENTRY_MODIFY);
 
         WatchKey key;
-        while ((key = watchService.take()) != null) {
+        while ((key = watchService.take()) != null && !this.isInterrupted()) {
 
             //sleep(50);
             for (WatchEvent<?> event : key.pollEvents()) {
@@ -254,7 +220,7 @@ public class FileManager extends Thread {
                 switch (event.kind().toString()) {
                     case "ENTRY_CREATE":
                         //Create log file
-                        this.createLogFile(file.getName());
+                        this.createLogFile(FileManager.logFolder + "/"+ file.getName() + ".log");
                         this.updateLogFile(file.getName(),replicateId,replicateIPAddr);
                         FileTransfer.sendFile(file.getName() + ".log", logFolder,logFolder, replicateIPAddr);
                         //update sync agent:
@@ -262,7 +228,7 @@ public class FileManager extends Thread {
                         //[fallthrough]
                     case "ENTRY_MODIFY":
                         try {
-                            System.out.println("Replicating " + file.getName() + " to " + replicateIPAddr); //vieze ai zeg
+                            System.out.println("Replicating " + file.getName() + " to " + replicateIPAddr);
                             //send file to replica
                             FileTransfer.sendFile(file.getName(), localFolder, replicaFolder, replicateIPAddr);
                             System.out.println("Modification handled");
@@ -288,37 +254,36 @@ public class FileManager extends Thread {
 
     public synchronized void shutDown() {
         String launchDirectory = System.getProperty("user.dir");
-        System.out.println("Current directory: " + launchDirectory); //vieze ai zeg
+        System.out.println("Current directory: " + launchDirectory);
         File dir = new File(launchDirectory + "/" + localFolder); //get the local folder
         //System.out.println("Directory: " + dir.getCanonicalPath()); //vieze ai zeg
         File[] files = dir.listFiles(); //get all files in the directory
         if (files == null || files.length == 0) {
-            System.out.println("No files in local folder"); //vieze ai zeg
-            return;
+            System.out.println("No files in local folder");
         }
-        for (File file : files) {
-            System.out.println("File: " + file.getName()); //vieze ai zeg
-        }
-        // Remove replications of local files
-        for (File file : files) {
-            //send fileName to NameServer
-            try {
-                String deleteIPAddr = Unirest.get("/ns/files/{filename}") //vieze ai zeg
-                        .routeParam("filename", file.getName()).asString().getBody(); //vieze ai zeg
-                // if the IP addr the NS sent back is the same as the one of this node, get the prev node IP address
-                // check example 3 doc3.pdf
-                if (Objects.equals(deleteIPAddr, node.getIP())) {
-                    deleteIPAddr = this.node.getPrevNodeIP();
+        else {
+            // Remove replications of local files
+            for (File file : files) {
+                //send fileName to NameServer
+                try {
+                    String deleteIPAddr = Unirest.get("/ns/files/{filename}")
+                            .routeParam("filename", file.getName()).asString().getBody();
+                    // if the IP addr the NS sent back is the same as the one of this node, get the prev node IP address
+                    // check example 3 doc3.pdf
+                    if (Objects.equals(deleteIPAddr, node.getIP())) {
+                        deleteIPAddr = this.node.getPrevNodeIP();
+                    }
+
+                    System.out.println("Deleting " + file.getName() + " to " + deleteIPAddr);
+                    //delete file to replica
+                    FileTransfer.deleteFile(file.getName(), replicaFolder, deleteIPAddr);
+                    //delete log file
+                    FileTransfer.deleteFile(file.getName() + ".log", logFolder, deleteIPAddr);
+
+                    this.node.getSyncAgent().deleteLocalFile(file.getName());
+                } catch (Exception e) {
+                    System.out.println("Error: " + e.getMessage());
                 }
-
-                System.out.println("Deleting " + file.getName() + " to " + deleteIPAddr);
-                //delete file to replica
-                FileTransfer.deleteFile(file.getName(), replicaFolder, deleteIPAddr);
-                //delete log file
-                FileTransfer.deleteFile(file.getName() + ".log", logFolder, deleteIPAddr);
-
-            } catch (Exception e) {
-                System.out.println("Error: " + e.getMessage());
             }
         }
 
@@ -331,7 +296,6 @@ public class FileManager extends Thread {
             return;
         }
         for (File file : files) {
-            //send fileName to NameServer
             String replicateIPAddr = this.node.getPrevNodeIP();
             long replicateId = this.node.getPrevNodeId();
 
@@ -361,7 +325,7 @@ public class FileManager extends Thread {
             updateLogFile(file.getName(),replicateId, replicateIPAddr);
             //send log file
             FileTransfer.sendFile(file.getName() + ".log", logFolder,logFolder, replicateIPAddr);
-            //delet logfile
+            //delete logfile
             File logFile = new File(logFolder + "/" + file.getName() + ".log");
             logFile.delete();
         }
@@ -402,13 +366,23 @@ public class FileManager extends Thread {
     }
 
     public File[] getLocalFiles() {
-        File local = new File("./local");
-        return local.listFiles();
+        try {
+            File local = new File("./local");
+            return local.listFiles();
+        }
+        catch (Exception e){
+            return new File[]{};
+        }
     }
 
     public File[] getReplicatedFiles() {
-        File local = new File("./replica");
-        return local.listFiles();
+        try {
+            File local = new File("./replica");
+            return local.listFiles();
+        }
+        catch (Exception e){
+            return new File[]{};
+        }
     }
 
     public void updateLogFile(String fileName, long newOwner, String newIP) {
@@ -427,6 +401,11 @@ public class FileManager extends Thread {
             owner.put("id", newOwner);
             owner.put("ip", newIP);
             jsonObject.put("owner", owner);
+            //update downloads
+            JSONArray downloads = (JSONArray) jsonObject.get("downloads");
+            downloads.add(newOwner);
+            jsonObject.put("downloads", downloads);
+
             //write log file
             FileWriter writer = new FileWriter(logFile);
             writer.write(jsonObject.toJSONString());
@@ -472,7 +451,7 @@ public class FileManager extends Thread {
         JSONObject logfile = new JSONObject();
         logfile.put("owner", owner);
         logfile.put("origin", origin);
-        logfile.put("Downloads", downloads);
+        logfile.put("downloads", downloads);
 
         FileWriter writer = new FileWriter(filename);
         writer.write(logfile.toJSONString());

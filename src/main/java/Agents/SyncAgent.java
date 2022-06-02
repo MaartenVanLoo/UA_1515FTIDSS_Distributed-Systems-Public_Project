@@ -84,12 +84,12 @@ public class SyncAgent extends Thread {
                         System.out.println(exchange.getRequestURI());
                         String fileName = exchange.getRequestURI().toString().replace("/fileList/", "");
 
-                        //need to consume all the data from the input stram befoe closing it (see  https://docs.oracle.com/javase/8/docs/jre/api/net/httpserver/spec/com/sun/net/httpserver/HttpExchange.html);
+                        //need to consume all the data from the input stream before closing it (see  https://docs.oracle.com/javase/8/docs/jre/api/net/httpserver/spec/com/sun/net/httpserver/HttpExchange.html);
                         exchange.getRequestBody().readAllBytes();
                         exchange.getRequestBody().close();
 
                         exchange.sendResponseHeaders(200, -1);
-                        exchange.close();
+                        exchange.close(); //close before opening connection to next node, otherwise all connections will be waiting till the last one closes!
                         try {
                             if (this.files.contains(fileName)) {
                                 this.files.remove(fileName);
@@ -318,8 +318,8 @@ public class SyncAgent extends Thread {
                         lockOwner.put(fileName,nodeName);
                         System.out.println("Locked file " + fileName + " by " + nodeName);
                     }else if(action.equals("unlock")){
-                        fileLocks.put(fileName,false);
-                        lockOwner.put(fileName,"");
+                        fileLocks.put(fileName,false);  // make sure the entry exists!
+                        lockOwner.put(fileName,"");     // make sure the entry exists!
                         fileLocks.remove(fileName);
                         lockOwner.remove(fileName);
                         System.out.println("Unlocked file " + fileName);

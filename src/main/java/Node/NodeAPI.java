@@ -143,7 +143,7 @@ public class NodeAPI {
             JSONObject jsonObject = (JSONObject) this.node.getParser().parse(requestBody.toString());
             long newNodeId = (long) jsonObject.get("id");
             String newNodeIp = (String) jsonObject.get("ip");
-            this.node.getFileManager().updateFileLocationsNewNextNode(newNodeId, newNodeIp);
+            this.node.getFileManager().update();
             System.out.println("Update replicated file locations complete");
         }catch(Exception e) {
             e.printStackTrace();
@@ -209,9 +209,14 @@ public class NodeAPI {
         }
 
         JSONArray logFiles = new JSONArray();
-        File dir = new File(FileManager.logFolder);
-        File[] files = dir.listFiles();
-        for (File file: files){
+        File[] logs;
+        try {
+            File dir = new File(FileManager.logFolder);
+            logs = dir.listFiles();
+        }catch (Exception e) {
+            logs = new File[]{};
+        }
+        for (File file: logs){
             logFiles.add(file.getName());
         }
         JSONArray locks = new JSONArray();

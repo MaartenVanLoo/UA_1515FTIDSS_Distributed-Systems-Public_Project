@@ -59,7 +59,6 @@ import java.util.stream.Collectors;
 public class NameServerController {
     Logger logger = LoggerFactory.getLogger(NameServerController.class);
 
-
     static final int DATAGRAM_PORT = 8001;
     private NameServer nameServer;
     private JSONParser jsonParser = new JSONParser();
@@ -360,7 +359,7 @@ public class NameServerController {
                     System.out.println(previousIp+":8081/files");
                     try {
                         System.out.println("Status:"
-                                + Unirest.post("http://" + previousIp + ":8081/files").body(json.toJSONString()).asString().getStatus()
+                                + Unirest.post("http://" + previousIp + ":8081/files").body(json.toJSONString()).connectTimeout(5000).asString().getStatus()
                         );
                         this.nameServerController.nameServer.getIpMapLock().readLock().unlock();
                     }catch (UnirestException e) {
