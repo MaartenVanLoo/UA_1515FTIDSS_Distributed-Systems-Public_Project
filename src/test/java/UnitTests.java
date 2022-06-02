@@ -12,7 +12,7 @@ import java.util.TreeMap;
 
 
 public class UnitTests {
-/*
+
     protected static NameServerController ns;
 
     @BeforeAll
@@ -30,8 +30,6 @@ public class UnitTests {
         System.out.println("teardown");
         ns.getNameServer().getIpMapping().clear();
     }
-
-
 
     @Test
     public void testHash() throws IOException {
@@ -115,28 +113,16 @@ public class UnitTests {
         ns.getNameServer().deleteNode(5);
 
     }
-    @Test
-    public void askTwoPCs() throws Exception{
-
-    }
-    */
-/*
-    @Test
-    public void eventWatch() throws IOException, InterruptedException {
-        FileManager fm = new FileManager(new Node("def"));
-        fm.checkDirectory();
-    }
 
     @Test
     public void status() throws IOException {
         Node n = new Node("def");
         n.printStatus();
     }
-*/
-    /*
+
+
     @Test
     public void getAllNodes() {
-        NameServerController ns = new NameServerController();
         ns.getNameServer().addNode(1000, "192.168.2.1");
         ns.getNameServer().addNode(2000, "192.168.2.2");
         ns.getNameServer().addNode(3000, "192.168.2.3");
@@ -144,5 +130,5 @@ public class UnitTests {
         ns.getNameServer().addNode(5000, "192.168.2.5");
         System.out.println(ns.getAllNodes());
     }
-    */
+
 }

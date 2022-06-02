@@ -12,39 +12,19 @@ public class Hashing {
             messageDigest.update(string.getBytes());
         } catch (NoSuchAlgorithmException e){return -1;}
         byte[] digest = messageDigest.digest();
-        //String stringHash = new String(digest);
-        //SynchronizedPrint.printHex(digest);
-        //System.out.println();
         //shrink the byte array to an int using xor
         short hash = bytesToShort(digest);
         hash &= 0x7FFF; //remove sign bit
         return hash;
-        /*
-        //System.out.println(javax.xml.bind.DatatypeConverter.printHexBinary(stringHash.getBytes()));
-        long max = 2147483647;
-        long min = -2147483648;
-        return (int)(((long)stringHash.hashCode()+max)*(32768.0/(max+Math.abs(min))));
-        */
     }
 
-    private static int bytesToInt(byte[] bytes) {
-        int hash = 0;
-        for (int i = 0; i < bytes.length/4; i++) {
-            hash ^= bytes[4*i+0] << 0;
-            hash ^= bytes[4*i+1] << 8;
-            hash ^= bytes[4*i+2] << 16;
-            hash ^= bytes[4*i+3] << 24;
-        }
-        return hash;
-    }
     private static short bytesToShort(byte[] bytes) {
         byte byte0 = 0;
         byte byte1 = 0;
         for (int i = 0; i < bytes.length/2; i++) {
-            byte0 ^= bytes[2*i+0];
-            byte1 ^= bytes[2*i+1];
+            byte0 ^= bytes[2 * i];
+            byte1 ^= bytes[2 * i + 1];
         }
-        short hash = (short)((byte0 & 0xFF) | (byte1 & 0xFF) << 8);
-        return hash;
+        return (short)((byte0 & 0xFF) | (byte1 & 0xFF) << 8);
     }
 }

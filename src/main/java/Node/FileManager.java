@@ -85,6 +85,7 @@ public class FileManager extends Thread {
                     File localFile=new File(launchDirectory + "/" + localFolder + "/" + file.getName());
                     File replicaFile = new File(launchDirectory + "/" + replicaFolder + "/" + file.getName());
                     Files.copy(localFile.toPath(), replicaFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                    this.updateLogFile(file.getName(),this.node.getId(),this.node.getIP());
                     continue;
                 }
 
