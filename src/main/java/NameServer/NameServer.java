@@ -133,6 +133,7 @@ public class NameServer {
         ipMapLock.writeLock().lock();
         if (ipMapping.containsKey(id)) { ipMapLock.writeLock().unlock(); return false; }
         ipMapping.put(id, ip);
+        saveMapping();
         ipMapLock.writeLock().unlock();
         return true;
     }
@@ -148,6 +149,7 @@ public class NameServer {
         ipMapLock.writeLock().lock();
         if (!ipMapping.containsKey(id)) { ipMapLock.writeLock().unlock(); return false;}
         ipMapping.put(id, ip);
+        saveMapping();
         ipMapLock.writeLock().unlock();
         return true;
     }
@@ -161,6 +163,7 @@ public class NameServer {
         ipMapLock.writeLock().lock();
         if (!ipMapping.containsKey(id)) { ipMapLock.writeLock().unlock(); return false;}
         ipMapping.remove(id);
+        saveMapping();
         ipMapLock.writeLock().unlock();
         return true;
     }

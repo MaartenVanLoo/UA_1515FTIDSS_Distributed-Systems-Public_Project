@@ -12,7 +12,7 @@ import java.util.TreeMap;
 
 
 public class UnitTests {
-
+/*
     protected static NameServerController ns;
 
     @BeforeAll
@@ -130,5 +130,5 @@ public class UnitTests {
         ns.getNameServer().addNode(5000, "192.168.2.5");
         System.out.println(ns.getAllNodes());
     }
-
+*/
 }

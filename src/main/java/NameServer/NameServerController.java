@@ -59,7 +59,6 @@ import java.util.stream.Collectors;
 public class NameServerController {
     Logger logger = LoggerFactory.getLogger(NameServerController.class);
 
-
     static final int DATAGRAM_PORT = 8001;
     private NameServer nameServer;
     private JSONParser jsonParser = new JSONParser();
