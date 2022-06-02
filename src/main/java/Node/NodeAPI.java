@@ -209,9 +209,14 @@ public class NodeAPI {
         }
 
         JSONArray logFiles = new JSONArray();
-        File dir = new File(FileManager.logFolder);
-        File[] files = dir.listFiles();
-        for (File file: files){
+        File[] logs;
+        try {
+            File dir = new File(FileManager.logFolder);
+            logs = dir.listFiles();
+        }catch (Exception e) {
+            logs = new File[]{};
+        }
+        for (File file: logs){
             logFiles.add(file.getName());
         }
         JSONArray locks = new JSONArray();

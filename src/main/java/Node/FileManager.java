@@ -366,13 +366,23 @@ public class FileManager extends Thread {
     }
 
     public File[] getLocalFiles() {
-        File local = new File("./local");
-        return local.listFiles();
+        try {
+            File local = new File("./local");
+            return local.listFiles();
+        }
+        catch (Exception e){
+            return new File[]{};
+        }
     }
 
     public File[] getReplicatedFiles() {
-        File local = new File("./replica");
-        return local.listFiles();
+        try {
+            File local = new File("./replica");
+            return local.listFiles();
+        }
+        catch (Exception e){
+            return new File[]{};
+        }
     }
 
     public void updateLogFile(String fileName, long newOwner, String newIP) {
