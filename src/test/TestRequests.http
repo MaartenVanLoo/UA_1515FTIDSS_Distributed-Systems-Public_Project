@@ -202,6 +202,9 @@ GET http://localhost:8081/ns/nodes/{{nodeID4}}
     });
 %}
 
+
 ###
-DELETE http://localhost:8081/ns/nodes/1
+POST http://localhost:8083/file/exchange/test5
+Content-Type: charset=UTF-8
+somedata
 

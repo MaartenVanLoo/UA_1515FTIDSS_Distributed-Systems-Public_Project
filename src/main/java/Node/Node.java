@@ -1,5 +1,6 @@
 package Node;
 
+import Agents.SyncAgent;
 import Utils.SynchronizedPrint;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
@@ -8,7 +9,8 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-import java.io.IOException;
+import java.io.*;
+
 import java.net.*;
 import java.nio.file.AccessDeniedException;
 import java.util.Objects;
@@ -18,6 +20,7 @@ import static java.lang.System.exit;
 
 public class Node {
     //<editor-fold desc="global variables">
+    private static final int SENDING_PORT = 8000;
     private static final int LISTENING_PORT = 8001;
 
     private String ip;          // ip address of the node
@@ -31,15 +34,21 @@ public class Node {
     private long nextNodeId;    // id of the next node in the network
     private String nextNodeIP;  // ip addr of the next node in the network
 
+
     private final JSONParser parser = new JSONParser();
     private final N2NListener n2NListener;
     private final NodeAPI nodeAPI;
+    private final FileTransfer fileTransfer;
+    private final FileManager fileManager;
+    private final SyncAgent syncAgent;
+
     private DatagramSocket listeningSocket;
+
 
     private boolean setUpComplete = false;
     //</editor-fold>
 
-    public Node(String name) {
+    public Node(String name) throws IOException {
         // turn logger off so it doesn't clutter the console
         Logger root = (Logger) org.slf4j.LoggerFactory.getLogger("org.apache.http");
         root.setLevel(Level.OFF);
@@ -54,31 +63,34 @@ public class Node {
         }
 
         this.n2NListener = new N2NListener(this);
-        this.n2NListener.start();
         this.nodeAPI = new NodeAPI(this);
-        this.nodeAPI.start();
+        this.fileTransfer = new FileTransfer(this);
+        this.fileManager = new FileManager(this);
+        this.syncAgent = new SyncAgent(this);
     }
-    
+
+
+
     // Send broadcasts until the NS answers
     public void discoverNameServer() throws IOException {
         InetAddress broadcastIp = InetAddress.getByName("255.255.255.255");
         String message = "{\"type\":\"Discovery\",\"name\":\"" + name + "\"}";
         boolean received = false;
-        boolean resend = false;
+        boolean resend = true;
 
 
-        DatagramSocket socket = new DatagramSocket(8000);
+        DatagramSocket socket = new DatagramSocket(SENDING_PORT);
         socket.setSoTimeout(1000);
         DatagramPacket discoveryPacket = new DatagramPacket(message.getBytes(), message.length(),
-                broadcastIp, 8001);
+                broadcastIp, LISTENING_PORT);
 
         while (!received) {
+            //Refresh buffer
+            byte[] response = new byte[256];
+            DatagramPacket responsePacket = new DatagramPacket(response, response.length);
             // Discovery request command
             if (resend) socket.send(discoveryPacket);
             System.out.println("Discovery package sent!" + discoveryPacket.getAddress() + ":" + discoveryPacket.getPort());
-            // reset response buffer every time!
-            byte[] response = new byte[256];
-            DatagramPacket responsePacket = new DatagramPacket(response, response.length);
 
             // Discovery response command
             try {
@@ -147,7 +159,7 @@ public class Node {
     }
 
     // exit the network
-    public void shutdown(){
+    public void shutdown(boolean remoteShutdown){
         try {
             System.out.println("Shutting down...");
             this.setUpComplete = false;
@@ -165,7 +177,7 @@ public class Node {
                            "\"nextNodeIP\":\""+this.getNextNodeIP() +"\"}";
 
             DatagramPacket prevNodePacket = new DatagramPacket(updatePrev.getBytes(), updatePrev.length(),
-                    InetAddress.getByName(prevNodeIP), 8001);
+                    InetAddress.getByName(prevNodeIP), LISTENING_PORT);
 
             DatagramSocket socket = new DatagramSocket();
             socket.send(prevNodePacket);
@@ -175,16 +187,23 @@ public class Node {
                           "\"prevNodeId\":"+this.getPrevNodeId() + "," +
                           "\"prevNodeIP\":\""+this.getPrevNodeIP() +"\"}";
             DatagramPacket nextNodePacket = new DatagramPacket(updateNext.getBytes(), updateNext.length(),
-                    InetAddress.getByName(nextNodeIP), 8001);
+                    InetAddress.getByName(nextNodeIP), LISTENING_PORT);
             //send this.nextNodeID to prevNodeID
             socket.send(nextNodePacket);
         } catch (Exception e) {
             e.printStackTrace();
         }
+        this.fileManager.shutDown();
         this.listeningSocket.close(); //close the listening socket, this will cause the N2N to exit
-        this.nodeAPI.stop();
+        if (!remoteShutdown) { //remote shutdown = shutdown initiated by REST, do not stop the api!
+            this.nodeAPI.stop();
+        }
         System.out.println("Shutdown complete");
     }
+    public void shutdown(){
+        this.shutdown(false);
+    }
+
 
     // print the variables of the node to the console
     public void printStatus(){
@@ -199,6 +218,16 @@ public class Node {
             System.out.println("Node next id:\t" + this.nextNodeId);
             System.out.println("Node next ip:\t" + this.nextNodeIP);
             System.out.println("Node nodeCount:\t" + this.nodeCount);
+            System.out.print("Local files: ");
+            File local = new File("./local");
+            File[] localFiles = local.listFiles();
+            for (File file: localFiles) System.out.print(file.getName() + "\t");
+            System.out.println("");
+            System.out.print("Replicated files: ");
+            File replica = new File("./replica");
+            File[] replicaFiles = replica.listFiles();
+            for (File file: replicaFiles) System.out.print(file.getName() + "\t");
+            System.out.println("");
         }
     }
 
@@ -262,6 +291,13 @@ public class Node {
         return name;
     }
 
+    public FileManager getFileManager() {
+        return fileManager;
+    }
+
+    public SyncAgent getSyncAgent(){
+        return this.syncAgent;
+    }
     /**
      * This algorithm is activated in every exception thrown during communication with other nodes.
      * This allows distributed detection of node failure.
@@ -313,8 +349,20 @@ public class Node {
         return this.parser;
     }
 
+    public void startupFilesCheck(){
 
-    public static void launchNode(String name) throws IOException, InterruptedException{
+    }
+
+
+    /**
+     * After the name of the node has been set and the network interfaces are printed to the console, this method is called.
+     * In this method, a node object is created and the discovery is started. After the nameserver has been discovered, the status
+     * of the node is printed and refreshed every 5 seconds. The parameters of the node are also validated by the nameserver every 5 seconds.
+     * @param name
+     * @throws IOException
+     * @throws InterruptedException
+     */
+    public static void launchNode(String name, long liveTime) throws IOException, InterruptedException{
         Node node = new Node(name);
         try {
             node.discoverNameServer();
@@ -331,15 +379,28 @@ public class Node {
 
         ScheduledExecutorService executorService = Executors.newScheduledThreadPool(2);
         Runnable validator = () -> {
-            SynchronizedPrint.clearConsole();
-            node.printStatus();
-            node.validateNode();
+            //SynchronizedPrint.clearConsole();
+            //node.printStatus();
+            //node.validateNode();
         };
         executorService.scheduleAtFixedRate(validator, 1, 5, TimeUnit.SECONDS);
 
-        Thread.sleep(6000000 + 2 * (long) ((Math.random() - 0.5) * 30000)); // sleep for 60±30 seconds
+
+        Thread.sleep(5000); //wait 5 seconds
+        //try to lock a file
+        try {
+            File[] localfiles = node.getFileManager().getLocalFiles();
+            node.getSyncAgent().lockFile(localfiles[0].getName());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        Thread.sleep(liveTime);
+
         executorService.shutdownNow();
         node.shutdown();
+    }
+    public static void launchNode(String name) throws IOException, InterruptedException {
+        launchNode(name,60000 + 2 * (long) ((Math.random() - 0.5) * 30000)); // sleep for 60±30 seconds
     }
 
     public static void main(String[] args) throws IOException, InterruptedException {
@@ -354,10 +415,12 @@ public class Node {
 
         System.out.println("Network interfaces:");
         System.out.println(NetworkInterface.getNetworkInterfaces());
-        while (true) {
-            launchNode(name);
+        for (int i = 0; i < 0 ; i++) { // set i < 0 to just launch the node, set i < x when you want to restart the node x times
+            //launchNode(name,30000 + 2 * (long) ((Math.random() - 0.5) * 15000)); // sleep for 30±15 seconds
             System.gc();
             Thread.sleep((long) (Math.random() * 10000)); // sleep for a value between 0-10 seconds
         }
+        launchNode(name, Long.MAX_VALUE);
     }
+
 }

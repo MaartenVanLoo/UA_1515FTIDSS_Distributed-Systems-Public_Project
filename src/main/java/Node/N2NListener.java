@@ -18,14 +18,17 @@ import java.nio.charset.StandardCharsets;
 public class N2NListener extends Thread {
     private PingNode pingNode;
     private final Node node;
-    private boolean running = false;
+    private volatile boolean running = false;
+    Thread fileUpdateThread = null;
 
 
     public N2NListener(Node node) {
         this.setDaemon(true); //make sure the thread dies when the main thread dies
         this.node = node;
+        this.start();
         this.pingNode = new PingNode(node);
         pingNode.start();
+
     }
 
     @Override
@@ -45,7 +48,7 @@ public class N2NListener extends Thread {
                 if (!this.node.isSetUp()) continue; //Do not answer packets till the node is set up
 
                 String data = new String(receivedPacket.getData()).trim();
-                System.out.println("Received: " + data);
+                //System.out.println("Received: " + data);
                 String sourceIp = receivedPacket.getAddress().getHostAddress();
 
                 //what type is the received packet?
@@ -113,9 +116,9 @@ public class N2NListener extends Thread {
         //discovery message
         String name = (String) jsonObject.get("name");
         if (name.equals(this.node.getName())) return; //no answer!
-        System.out.println("Name: " + name);
+        //System.out.println("Name: " + name);
         int neighbourId = Hashing.hash(name);
-        System.out.println("NeighbourId: " + neighbourId);
+        //System.out.println("NeighbourId: " + neighbourId);
 
         // if the old prevId and NextId are equal to the currentId, then the new node is the second node in the
         // network, and the prevId and nextId should be updated to the new node's Id
@@ -175,11 +178,26 @@ public class N2NListener extends Thread {
             //new node is to the left
             updatePrevNode(neighbourId, receivedPacket);
         } else {
-            System.out.println("Received discovery message from " + receivedPacket.getAddress().getHostAddress() + " but it is not a neighbour");
+            //System.out.println("Received discovery message from " + receivedPacket.getAddress().getHostAddress() + " but it is not a neighbour");
             //no answer!, never send an empty response!
         }
-        this.node.printStatus();
-        this.node.validateNode();
+        //this.node.printStatus();
+        //this.node.validateNode();
+
+        //check if files needs to be updated in a new thread
+        if (!(fileUpdateThread == null)){
+            try {
+                fileUpdateThread.join();
+            }
+            catch(Exception e){
+                e.printStackTrace();
+                System.out.println("no files updated");
+                return;
+            }
+        }
+
+        fileUpdateThread = new Thread(createRunnableUpdateFiles(this.node,neighbourId));
+        fileUpdateThread.start();
     }
     private void shutdownHandler(DatagramPacket receivedPacket,JSONObject jsonObject){
         if (this.node.getNextNodeId() == this.node .getId() && this.node.getPrevNodeId() == this.node.getId()){
@@ -347,4 +365,15 @@ public class N2NListener extends Thread {
     }
 
 
+    private Runnable createRunnableUpdateFiles(Node node, int new_id){
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                //note: other case in which the next node is updated is handled by the nameserver notifying the previous node
+                System.out.println("update fileLocationOtherNewNode " + new_id);
+                node.getFileManager().update();
+            }
+        };
+        return runnable;
+    }
 }

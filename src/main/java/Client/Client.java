@@ -1,45 +1,125 @@
 package Client;
+import Agents.FailureAgent;
 import Utils.Hashing;
 import Utils.IPUtils;
 
+import java.io.*;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.TreeMap;
 
 public class Client {
-    public static void main(String[] args) throws UnknownHostException, SocketException {
-        System.out.println("Client Started");
-        System.out.println("Node0\t" + Hashing.hash("Node0"));
-        System.out.println("Node1\t" + Hashing.hash("Node1"));
-        System.out.println("Node2\t" + Hashing.hash("Node2"));
-        System.out.println("Node3\t" + Hashing.hash("Node3"));
-        System.out.println("Node4\t" + Hashing.hash("Node4"));
-        System.out.println("Node5\t" + Hashing.hash("Node5"));
-        System.out.println("Node6\t" + Hashing.hash("Node6"));
-        System.out.println("Node7\t" + Hashing.hash("Node7"));
-        System.out.println("Node8\t" + Hashing.hash("Node8"));
-        System.out.println("Node9\t" + Hashing.hash("Node9"));
-        System.out.println("Node10\t" + Hashing.hash("Node10"));
+    private Socket nodeTCPSocket;
+    private PrintWriter out;
+    private BufferedReader in;
 
-        String test = "Node0";
-        for (byte theByte : test.getBytes(StandardCharsets.UTF_8))
-        {
-            System.out.print(Integer.toHexString(theByte));
-            System.out.print(" ");
-        }
-        System.out.println();
-
-        InetAddress.getAllByName("localhost");
-        for (InetAddress address : InetAddress.getAllByName("localhost")) {
-            System.out.println(address.getHostAddress());
-        }
-        System.out.println("Broadcast addresses: ");
-        ArrayList<InetAddress> arrayList =  IPUtils.getIpv4BroadcastAdresses();
-        for (InetAddress address : arrayList) {
-            System.out.println(address.getHostAddress());
-        }
+    //TCP connection
+    public void startTCPConnection(String ip, int port) throws IOException {
+        nodeTCPSocket = new Socket(ip, port);
+        out = new PrintWriter(nodeTCPSocket.getOutputStream(), true);
+        in = new BufferedReader(new InputStreamReader(nodeTCPSocket.getInputStream()));
     }
 
+    public String sendMessage(String message) throws IOException {
+        out.println(message);
+        return in.readLine(); //Return response;
+    }
+
+    public void stopTCPConnection() throws IOException {
+        in.close();
+        out.close();
+        nodeTCPSocket.close();
+    }
+
+    //TCP debug method
+    public void sendTCPMessage() throws IOException {
+        startTCPConnection("192.168.48.4", 8001); //misschien 8001?node3
+        String message = "Hello from Client to NODE3";
+        System.out.printf("Sending message: %s\n", message);
+        String response = sendMessage(message);
+        System.out.printf("Response: %s\n", response);
+        stopTCPConnection();
+    }
+    public static void main(String[] args) throws IOException, ClassNotFoundException {
+        //TCP
+        Client client = new Client();
+        //client.sendTCPMessage();
+        //initilize arraylist with possible hostnames
+        String[] hostnames = new String[]{
+                "Node0",
+                "Node1",
+                "Node2",
+                "Node3",
+                "Node4",
+                "Host0",
+                "Host1",
+                "Host2",
+                "Host3",
+                "Host4",
+                "node0",
+                "node1",
+                "node2",
+                "node3",
+                "node4",
+                "host0",
+                "host1",
+                "host2",
+                "host3",
+                "host4"
+        };
+        String[] filenames = new String[]{
+                "Caffeine.png",
+                "ItWorks.jpg",
+                "GodKnows.jpg",
+                "ProgramWithAnAttitude.jpg",
+                "CodingFun.jpg",
+                "magicCode.jpg",
+                "NoPlaceLike127.png",
+                "TrustMeIamAProgrammer.jpg"
+        };
+
+        String prefix = ".6dist";
+        for (String hostname : hostnames) {
+            System.out.println(hostname + prefix + "\t" + Hashing.hash(hostname+prefix));
+        }
+        for (String filename : filenames) {
+            System.out.println(String.format("%30s\t%s",filename,Hashing.hash(filename)));
+        }
+        Hashing.hash("CodingFun.jpg");
+
+        System.out.println("file content:");
+        File dir = new File("./local");
+        for (File file : dir.listFiles()) {
+            System.out.println(String.format("%30s\t%s",file.getName(),Hashing.hash(file.getName())));
+        }
+        File dir2 = new File("./replica");
+        for (File file : dir2.listFiles()) {
+            System.out.println(String.format("%30s\t%s",file.getName(),Hashing.hash(file.getName())));
+        }
+
+        //test somethings with maps
+        HashMap<String, Boolean> fileLocks = new HashMap<>();
+        fileLocks.put("file1",true);
+        fileLocks.put("file2",false);
+        if (fileLocks.get("file1")) System.out.println("file1 locked");
+        if (fileLocks.get("file2")) System.out.println("file2 locked");
+        if (fileLocks.containsKey("file3")){
+            if (fileLocks.get("file3")) System.out.println("file3 locked");
+        }
+
+
+        //test failure agent
+        FailureAgent failureAgent = new FailureAgent(100,new TreeMap<>());
+        byte[] agent = failureAgent.serialize();
+        System.out.println(agent);
+        for (byte b : agent) {
+            System.out.print(b + " ");
+        }
+
+        FailureAgent failureAgent2 = (FailureAgent.deserialize(agent));
+    }
 
 }

@@ -1,5 +1,7 @@
 package NameServer;
 
+import Agents.FailureAgent;
+import kong.unirest.Unirest;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -132,10 +134,11 @@ public class NameServer {
      * @param ip ip address of the node.
      * @return True when the node was registered, false when the node was already registered
      */
-    public boolean addNode(int id, String ip){
+    public boolean addNode(int id, String ip) {
         ipMapLock.writeLock().lock();
         if (ipMapping.containsKey(id)) { ipMapLock.writeLock().unlock(); return false; }
         ipMapping.put(id, ip);
+        saveMapping();
         ipMapLock.writeLock().unlock();
         return true;
     }
@@ -151,6 +154,7 @@ public class NameServer {
         ipMapLock.writeLock().lock();
         if (!ipMapping.containsKey(id)) { ipMapLock.writeLock().unlock(); return false;}
         ipMapping.put(id, ip);
+        saveMapping();
         ipMapLock.writeLock().unlock();
         return true;
     }
@@ -164,6 +168,7 @@ public class NameServer {
         ipMapLock.writeLock().lock();
         if (!ipMapping.containsKey(id)) { ipMapLock.writeLock().unlock(); return false;}
         ipMapping.remove(id);
+        saveMapping();
         ipMapLock.writeLock().unlock();
         return true;
     }
@@ -263,7 +268,30 @@ public class NameServer {
     }
     //</editor-fold>
 
+    //<editor-fold desc="failure agent">
+    public void launchFailureAgent(int failedNodeId){
+        this.ipMapLock.readLock().lock();
+        try {
+            FailureAgent agent = new FailureAgent(failedNodeId, this.getIpMapping());
+            int nextNode = this.getNextNode(failedNodeId);
+            String nextIp = this.ipMapping.get(nextNode);
+            agent.setFirstNode(nextNode);
 
+            System.out.println(agent.serialize());
+            int status =  Unirest.post("http://" + nextIp + ":8081/agent").body(agent.serialize()).asString().getStatus();
+            if (status == 200){
+                System.out.println("Failure agent successfully launched");
+                System.out.println("Failure agent send to " + nextNode + "\t" + nextIp);
+            }else{
+                System.out.println("Failed to launch failure agent");
+            }
+        }catch(Exception e){
+            e.printStackTrace();
+            System.out.println("Failed to launch failure agent");
+        }
+        this.ipMapLock.readLock().unlock();
+    }
+    //</editor-fold>
 
     //<editor-fold desc="getters & setters">
     /**

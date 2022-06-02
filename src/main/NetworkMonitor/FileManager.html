@@ -8,7 +8,7 @@
 
 
   <script src="scripts/utils.js"></script>
-  <script src="scripts/RefreshDashboard.js" defer></script>
+  <script src="scripts/RefreshFileManager.js" defer></script>
   <script src="scripts/GetData.js" defer></script> <!-- defer is used to load the script after the page is loaded -->
   <title>Network monitor</title>
 
@@ -98,7 +98,7 @@
             <li class="nav-divider">Menu</li>
 
             <li class="nav-item">
-              <a class="nav-link" href="#">
+              <a class="nav-link" href="Dashboard.html">
                 <i class="fa fa-home"></i>Dashboard</a>
             </li>
             <li class="nav-item">
@@ -110,7 +110,7 @@
                 <i class="fa fa-map" style="width:20px;"></i>Network map</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="FileManager.html">
+              <a class="nav-link" href="#">
                 <i class="fa fa-file" style="width:20px;"></i>Files</a>
             </li>
             <li class="nav-item">
@@ -126,148 +126,26 @@
 <div class="dashboard-wrapper">
   <div class="dashboard-content">
     <div class="row">
-      <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12 col-12">
-        <div class="card">
-          <h class="card-header">Nameserver</h>
-          <table class ="table-dark">
-            <thead></thead>
-            <tbody>
-              <tr>
-                <td>Status</td>
-                <td id="ns-status">online</td>
-              </tr>
-              <tr>
-                <td>Nodes</td>
-                <td id="ns-nodes">0</td>
-              </tr>
-              <tr>
-                <th colspan="2">UTILITIES</th>
-              </tr>
-              <tr>
-                <td>Discovery</td>
-                <td id="ns-discovery">Online</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+      <div class="col-12" style="margin-top:20px">
+        <table class ="table-dark text-size-22" style="" id ="file-table">
+          <thead>
+          <tr>
+            <th onclick="sortTable(0)">Hash</th>
+            <th onclick="sortTable(1)" style="min-width:300px;"><b>Filename</b></th>
+            <th onclick="sortTable(2)" style="min-width:150px; text-align:center"><b>Origin</b></th>
+            <th onclick="sortTable(3)" style="min-width:150px; text-align:center"><b>Owner</b></th>
+            <th onclick="sortTable(4)" style="min-width:50px;  text-align:center"><b>Status</b></th>
+
+          </tr>
+          </thead>
+          <tbody id="file-table-body">
+          </tbody>
+        </table>
       </div>
-      <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12 col-12">
-        <div class="card">
-          <h1 class="card-header card-dark">Nodes</h1>
-          <div class="scrollable-wrapper">
-            <table class ="table-dark table-scroll-fixed-headers">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Id</th>
-                  <th>IP</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody id="nodes-list" style = "max-height: 200px;"></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="row">
-      <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
-        <div class="card">
-          <h1 class="card-header">Details</h1>
-          <table class ="table-dark">
-            <thead></thead>
-            <tbody id="node-details">
-              <tr>
-                <td>Name</td>
-                <td id="node-details-name" colspan="2">please select a node</td>
-              </tr>
-              <tr>
-                <td>Status</td>
-                <td id="node-details-status" colspan="2">-</td></tr>
-              <tr>
-                <td>Id</td>
-                <td id="node-details-id" colspan="2">-</td>
-              </tr>
-              <tr>
-                <td>IP</td>
-                <td id="node-details-ip" colspan="2">-</td>
-              </tr>
-              <tr>
-                <td>Prev</td>
-                <td id="node-details-prev-id">-</td>
-                <td id="node-details-prev-ip">-</td>
-              </tr>
-              <tr>
-                <td>Next</td>
-                <td id="node-details-next-id">-</td>
-                <td id="node-details-next-ip">-</td>
-              </tr>
-              <tr>
-                <!--list of files in node-->
-                <td colspan="3">local files</td>
-              </tr>
-              <tr>
-                <td colspan="3"><p id="local"></p></td>
-              </tr>
-              <tr>
-                <!--list of replicas in node-->
-                <td colspan="3">replicas</td>
-              </tr>
-              <tr>
-                <td colspan="3"><p id="replica"></p></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
+   </div>
+ </div>
 </div>
 </div>
 
-<script>
-  document.getElementById("nsRefreshRate").oninput = function() {
-    document.getElementById("nsRefreshRateLabel").innerHTML = numberWithSpaces(this.value) +" ms";
-    try{
-      setDataRefreshRate(this.value);
-      saveSettings();
-    }catch(err){
-      console.log(err);
-    }
-
-  }
-  document.getElementById("nodeRefreshRate").oninput = function() {
-    document.getElementById("nodeRefreshRateLabel").innerHTML = numberWithSpaces(this.value) + " ms";
-     try{
-        setScreenRefreshRate(this.value);
-       saveSettings();
-    }catch(err){
-      console.log(err);
-    }
-  }
-  document.getElementById("ns-ip").oninput=function(){
-    try{
-      setNameServerIp(this.value);
-      saveSettings();
-    }catch(err){
-      console.log(err);
-    }
-  }
-  document.getElementById("ns-port").oninput=function(){
-    try{
-      setNameServerPort(this.value);
-      saveSettings();
-    }catch(err){
-      console.log(err);
-    }
-  }
-  document.getElementById("enable-ssh-tunnel").onclick=function(){
-    try{
-      saveSettings();
-    }catch(err){
-      console.log(err);
-    }
-  }
-</script>
 </body>
 </html>

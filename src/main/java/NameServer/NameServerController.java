@@ -1,7 +1,9 @@
 package NameServer;
 
+import Agents.FailureAgent;
 import Utils.Hashing;
-import org.json.simple.JSONArray;
+import kong.unirest.Unirest;
+import kong.unirest.UnirestException;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -16,7 +18,9 @@ import java.io.*;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
+
 
 //TODO: clean API:
 // Proposal:
@@ -80,16 +84,12 @@ public class NameServerController {
 
     @ResponseStatus(HttpStatus.OK) //200
     @GetMapping(value = "/ns", produces = "application/json")
-    /**
-     * Returns the status of the nameserver as a json string.
-     * In the json string is: if the NS is running; if Discovery is enabled; amount of nodes; mapping of the nodes.
-     */
     public String getNameServerStatus() {
         this.nameServer.getIpMapLock().readLock().lock();
         String response =  "{\"Status\": \"running\","+
                 "\"Utilities\":{" +
-                         "\"Discovery\":\"" + (this.socket == null?"disabled":"enabled")+"\"" +
-                    "}," +
+                    "\"Discovery\":\"" + (this.socket == null?"disabled":"enabled")+"\"" +
+                "}," +
                 "\"Nodes\":" + this.nameServer.getIpMapping().size() +"," +
                 "\"Mapping\":[" +
                 this.nameServer.getIpMapping().keySet().stream().map(s -> "{" + this.nameServer.nodeToString(s) + "}").collect(Collectors.joining(","))+
@@ -101,10 +101,10 @@ public class NameServerController {
 
     //<editor-fold desc="/ns/nodes">
     @ResponseStatus(HttpStatus.OK) // 200
-    @GetMapping(value = "/ns/nodes", produces = "application/json")
+    @GetMapping("/ns/nodes")
     public String getAllNodes() {
         this.nameServer.getIpMapLock().readLock().lock();
-        String response = "{" + this.nameServer.getIpMapping().entrySet().stream().map(e -> "\"" + e.getKey()+"\":\""+e.getValue() + "\"").collect(Collectors.joining(",")) + "}";
+        String response = "{" + this.nameServer.getIpMapping().entrySet().stream().map(e -> e.getKey()+" => "+e.getValue()).collect(Collectors.joining("\n")) + "}";
         this.nameServer.getIpMapLock().readLock().unlock();
         return response;
     }
@@ -168,7 +168,6 @@ public class NameServerController {
             throw new NodeAlreadyExistsException(id,ip); // return HttpStatus.CONFLICT 409
         }
         String response = "{\"link\":\"/ns/nodes/"+id+"\"}";
-        this.nameServer.getIpMapLock().writeLock().unlock();
         return response;
     }
 
@@ -204,17 +203,25 @@ public class NameServerController {
         }
         catch (IOException ignored) {}
         this.nameServer.getIpMapLock().writeLock().unlock();
+
+        this.nameServer.launchFailureAgent(nodeId);
     }
+
+
 
     //</editor-fold>
 
     //<editor-fold desc="/ns/files">
     @ResponseStatus(HttpStatus.NOT_IMPLEMENTED) // 501
-    @GetMapping(value = "/ns/files", produces = "application/json")
+    @GetMapping("/ns/files")
     public void getFiles() {}
 
     @ResponseStatus(HttpStatus.OK) // 200
-    @GetMapping(value = "/ns/files/{fileName}")
+    @GetMapping("/ns/files/{fileName}")
+    /**
+     * Get the location of a certain file. The hash of the file is then calculated and based on
+     * the hash the node on which the file should be stored is returned.
+     */
     public String getFile(@PathVariable String fileName) {
         this.logger.info("Request for file: " + fileName);
         int hash = Hashing.hash(fileName);
@@ -232,6 +239,14 @@ public class NameServerController {
     @ResponseStatus(HttpStatus.NOT_IMPLEMENTED) // 501
     @DeleteMapping("/ns/files/{fileName}")
     public void deleteFile(@PathVariable String fileName){}
+
+    @ResponseStatus(HttpStatus.OK) // 200
+    @GetMapping("/ns/files/{fileName}/id")
+    public int getFileId(@PathVariable String fileName){
+        this.logger.info("Request for file: " + fileName);
+        int hash = Hashing.hash(fileName);
+        return this.nameServer.getPrevNode(hash);
+    }
     //</editor-fold>
 
 
@@ -273,6 +288,8 @@ public class NameServerController {
 
             this.running = true;
             while (this.running) {
+                boolean success = false;
+                int Id = -1;
                 try {
                     byte[] receiveBuffer = new byte[512]; //make a new buffer for every request (to overwrite the old one)
                     DatagramPacket receivePacket = new DatagramPacket(receiveBuffer, receiveBuffer.length);
@@ -290,11 +307,13 @@ public class NameServerController {
                     System.out.println("Discovery package received! -> " + receivePacket.getAddress() + ":" + receivePacket.getPort());
 
                     String name = (String) jsonObject.get("name");
+
                     if (name == null) {
                         this.nameServerController.logger.info("Adding node failed");
                         response = "{\"status\":\"Access Denied\"}";
+                        success= false;
                     }else {
-                        int Id = Hashing.hash(name);
+                        Id = Hashing.hash(name);
                         System.out.println("Name: " + name);
                         System.out.println("Hashed name: " + Id);
                         if (this.nameServerController.nameServer.addNode(Id, ip)) {
@@ -305,8 +324,9 @@ public class NameServerController {
                                     "\"status\":\"OK\"," +
                                     "\"nodeCount\":" + this.nameServerController.nameServer.getIpMapping().size() + "," +
                                     "\"node\":" + this.nameServerController.nameServer.nodeToJson(Id) + "}";
-                            this.nameServerController.nameServer.getIpMapLock().readLock().unlock();
+                            success = true;
 
+                            this.nameServerController.nameServer.getIpMapLock().readLock().unlock();
                         } else {
                             //adding unsuccessful
                             this.nameServerController.logger.info("Adding node failed");
@@ -314,12 +334,41 @@ public class NameServerController {
                                     "\"type\":\"NS-offer\"," +
                                     "\"status\":\"Access Denied\"" +
                                     "}";
+                            success = false;
                         }
                     }
                     DatagramPacket responsePacket = new DatagramPacket(response.getBytes(StandardCharsets.UTF_8), response.length(), receivePacket.getAddress(), receivePacket.getPort());
                     this.nameServerController.socket.send(responsePacket);
+
+
+
                 }
-                catch (ParseException | IOException ignored) {}
+                catch (ParseException | IOException ignored) {
+
+                }
+
+                //notify previous node from the newly added node to update his replication table
+                if (success) {
+                    //notify the previous node that a new node has been created
+                    this.nameServerController.nameServer.getIpMapLock().readLock().lock();
+                    String ip = this.nameServerController.nameServer.getIpMapping().get(Id);
+                    String previousIp = this.nameServerController.nameServer.getPrevNodeIP(Id);
+                    JSONObject json = new JSONObject();
+                    json.put("id", Id);
+                    json.put("ip", ip);
+                    System.out.println(previousIp+":8081/files");
+                    try {
+                        System.out.println("Status:"
+                                + Unirest.post("http://" + previousIp + ":8081/files").body(json.toJSONString()).connectTimeout(5000).asString().getStatus()
+                        );
+                        this.nameServerController.nameServer.getIpMapLock().readLock().unlock();
+                    }catch (UnirestException e) {
+                        System.out.println("Unable to contact previous node");
+                        this.nameServerController.nameServer.getIpMapLock().readLock().unlock();
+                        //report failure of this node
+                        failNode(Id);
+                    }
+                }
             }
         }
 
