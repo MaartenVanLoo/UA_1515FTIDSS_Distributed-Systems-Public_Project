@@ -97,7 +97,7 @@ public class SyncAgent extends Thread {
                                 Unirest.delete("http://" + this.node.getNextNodeIP() + ":8082/fileList/" + fileName).asString();
                                 System.out.println("SyncAgent:\tNotified neighbour");
                             }
-                        }catch (Exception ignored){} //TODO: why do we get the "failed to respond to request" error?
+                        }catch (Exception ignored){}
                         return;
                     }catch(Exception e){
                         exchange.sendResponseHeaders(404,-1);
