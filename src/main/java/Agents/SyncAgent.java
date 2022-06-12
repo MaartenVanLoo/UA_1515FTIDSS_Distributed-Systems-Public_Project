@@ -267,6 +267,7 @@ public class SyncAgent extends Thread {
         if (this.multicastSocket == null) return false;
         if (!this.fileLocks.containsKey(fileName)) return true; //after this line we know the key fileName exists, no nullptr exceptions with get
         if (!this.fileLocks.get(fileName)) return true; //don't unlock a file that isn't locked
+        System.out.println("unlock file"+ fileName);
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("fileName",fileName);
         jsonObject.put("name",this.node.getName());
