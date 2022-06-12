@@ -38,7 +38,7 @@ public class startup {
                     }
 
                 }else if ("OPTIONS".equals(exchange.getRequestMethod())) {
-                    //cross origin preflight request
+                    // cross-origin preflight request
                     exchange.sendResponseHeaders(200, -1);
                 }
                 else {

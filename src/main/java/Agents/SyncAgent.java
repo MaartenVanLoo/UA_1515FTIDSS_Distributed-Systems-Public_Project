@@ -121,6 +121,7 @@ public class SyncAgent extends Thread {
         try {
             this.group = InetAddress.getByName(multicastIP);
             this.multicastSocket = new MulticastSocket(syncAgentPort); //UDP
+            this.multicastSocket.setLoopbackMode(false); //Do loopback! (true to disable but lock and unlock methods below are based on loopback to be enabled)
             this.multicastSocket.joinGroup(this.group);
             multicastListener = new MulticastListener();
         } catch (IOException e) {
