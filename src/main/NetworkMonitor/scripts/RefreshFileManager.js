@@ -77,6 +77,7 @@ function updateFileTable(){
         row.appendChild(local);
         row.appendChild(replica);
         row.appendChild(status);
+        row.appendChild(locked);
         table.appendChild(row);
     });
     sortTable();
@@ -94,7 +95,15 @@ function islocked(file){
     return false;
 }
 function lockOwner(file){
-    return "NotImplementedYet";
+    for (const node in nodeData){
+        locks = nodeData[node].locks;
+        for (const lock in locks){
+            if (locks[lock].locked && locks[lock].filename == file){
+                return locks[lock].owner
+            }
+        }
+    }
+    return "None";
 }
 function sortTable(n) {
     if (n === undefined) n = sortCol;

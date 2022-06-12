@@ -147,5 +147,49 @@
 </div>
 </div>
 
+<script>
+  document.getElementById("nsRefreshRate").oninput = function() {
+    document.getElementById("nsRefreshRateLabel").innerHTML = numberWithSpaces(this.value) +" ms";
+    try{
+      setDataRefreshRate(this.value);
+      saveSettings();
+    }catch(err){
+      console.log(err);
+    }
+
+  }
+  document.getElementById("nodeRefreshRate").oninput = function() {
+    document.getElementById("nodeRefreshRateLabel").innerHTML = numberWithSpaces(this.value) + " ms";
+    try{
+      setScreenRefreshRate(this.value);
+      saveSettings();
+    }catch(err){
+      console.log(err);
+    }
+  }
+  document.getElementById("ns-ip").oninput=function(){
+    try{
+      setNameServerIp(this.value);
+      saveSettings();
+    }catch(err){
+      console.log(err);
+    }
+  }
+  document.getElementById("ns-port").oninput=function(){
+    try{
+      setNameServerPort(this.value);
+      saveSettings();
+    }catch(err){
+      console.log(err);
+    }
+  }
+  document.getElementById("enable-ssh-tunnel").onclick=function(){
+    try{
+      saveSettings();
+    }catch(err){
+      console.log(err);
+    }
+  }
+</script>
 </body>
 </html>

@@ -200,6 +200,15 @@ public class SyncAgent extends Thread {
         int status = Unirest.delete("http://" + this.node.getNextNodeIP() + ":8082/fileList/" + filename).asString().getStatus();
         System.out.println("SyncAgent:\tDelete status: " + status);
         System.out.println("SyncAgent:\tNotification done");
+        //remove lock if exists
+        SyncAgent.this.fileMapLock.writeLock().lock();
+        if (fileLocks.containsKey(filename)){
+            fileLocks.put(filename,false);  // make sure the entry exists!
+            lockOwner.put(filename,"");     // make sure the entry exists!
+            fileLocks.remove(filename);
+            lockOwner.remove(filename);
+        }
+        SyncAgent.this.fileMapLock.writeLock().unlock();
     }
 
     public void getNeighbourList(){

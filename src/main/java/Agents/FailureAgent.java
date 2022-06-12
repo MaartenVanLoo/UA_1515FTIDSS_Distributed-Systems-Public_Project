@@ -135,7 +135,7 @@ public class FailureAgent implements Runnable, Serializable {
             //create new logfile
             System.out.println("FailureAgent:\tCreating new logfile for " + localFile.getName());
             this.node.getFileManager().createLogFile(FileManager.logFolder + "/"+ localFile.getName() + ".log");
-            System.out.println("FailureAgent:\tUpdating logfile for " + localFile.getName() + "target node: " + replicateIPAddr);
+            System.out.println("FailureAgent:\tUpdating logfile for " + localFile.getName());
             this.node.getFileManager().updateLogFile(localFile.getName(),replicateId,replicateIPAddr);
 
 
