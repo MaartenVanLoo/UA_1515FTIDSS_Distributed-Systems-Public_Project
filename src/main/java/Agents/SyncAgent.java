@@ -194,6 +194,10 @@ public class SyncAgent extends Thread {
             System.out.println("SyncAgent:\tFile not found!!");//enkel debug..
             return;
         }
+        // remove lock if exists (check done inside unlock function);
+        // unlock before removing file from file list!
+        this.unlockFile(filename);
+
         this.files.remove(filename);
         System.out.println("SyncAgent:\tNotify neighbours " + filename +  " is deleted");
         System.out.println("SyncAgent:\tNotifying :" + this.node.getNextNodeIP());
@@ -201,8 +205,7 @@ public class SyncAgent extends Thread {
         System.out.println("SyncAgent:\tDelete status: " + status);
         System.out.println("SyncAgent:\tNotification done");
 
-        //remove lock if exists (check done inside unlock function);
-        this.unlockFile(filename);
+
 
     }
 
