@@ -244,10 +244,13 @@ public class SyncAgent extends Thread {
 
 
     public synchronized boolean lockFile(String fileName){
-        fileMapLock.readLock().lock();
         if (this.multicastSocket == null) return false;
+        fileMapLock.writeLock().lock();
         if (this.fileLocks.containsKey(fileName)) {
-            if (this.fileLocks.get(fileName)) return false;
+            if (this.fileLocks.get(fileName)) {
+                fileMapLock.writeLock().unlock();
+                return false;
+            }
         }
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("fileName",fileName);
@@ -264,19 +267,20 @@ public class SyncAgent extends Thread {
 
         // Make sure the file is unlocked! => don't return from this function until the file is unlocked.
         // Therefore, don't count on loopback of multicast socket
-        this.fileMapLock.writeLock().lock();
+
         fileLocks.put(fileName,true);
         lockOwner.put(fileName,this.node.getName());
-        this.fileMapLock.writeLock().unlock();
-        fileMapLock.readLock().unlock();
+
+        fileMapLock.writeLock().unlock();
         return true;
     }
 
     public synchronized boolean unlockFile(String fileName){
-        fileMapLock.readLock().lock();
         if (this.multicastSocket == null) return false;
-        if (!this.fileLocks.containsKey(fileName)) return true; //after this line we know the key fileName exists, no nullptr exceptions with get
-        if (!this.fileLocks.get(fileName)) return true; //don't unlock a file that isn't locked
+        fileMapLock.writeLock().lock();
+        if (!this.fileLocks.containsKey(fileName)) {fileMapLock.writeLock().unlock(); return true;} //after this line we know the key fileName exists, no nullptr exceptions with get
+        if (!this.fileLocks.get(fileName)) {fileMapLock.writeLock().unlock(); return true;} //don't unlock a file that isn't locked
+
         System.out.println("unlock file"+ fileName);
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("fileName",fileName);
@@ -293,12 +297,10 @@ public class SyncAgent extends Thread {
 
         // Make sure the file is unlocked! => don't return from this function until the file is unlocked.
         // Therefore, don't count on loopback of multicast socket
-        this.fileMapLock.writeLock().lock();
         this.fileLocks.remove(fileName);
         this.lockOwner.remove(fileName);
-        this.fileMapLock.writeLock().unlock();
 
-        fileMapLock.readLock().unlock();
+        fileMapLock.writeLock().unlock();
         return true;
     }
 
