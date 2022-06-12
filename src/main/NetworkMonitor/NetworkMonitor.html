@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+
+<head>
+    <link rel="stylesheet" href="css/NetworkMonitor.css">
+    <meta charset="UTF-8">
+    <title>Network Monitor</title>
+
+</head>
+<body onload="askIPofNameserver()">
+
+<div class = "header">
+    <div class = "logo"><img src="images/logo.png" alt="Google Logo"></div>
+    <div class = "main-title"><h1>Network Monitor</h1></div>
+    <div class ="options"><button onclick="askIPofNameserver()" class="buttonOptions"><img class = "imgOptions" src="images/options.png">Options</button></div>
+</div>
+    <div class = "content">
+    <div class = "nameserver">
+        <table id = statusTable>
+            <tr>
+                <th colspan="2">Name Server</th>
+            </tr>
+            <tr>
+                <td>Status</td>
+                <td>ONLINE<img class="imgStatus" src="images/OK.png" alt="OK"></td>
+            </tr>
+            <tr>
+                <td>Nodes</td>
+                <td>0</td>
+            </tr>
+            <tr>
+                <th colspan="2">Utilities</th>
+            </tr>
+            <tr>
+                <td>Discovery</td>
+                <td>ONLINE<img class="imgStatus" src="images/OK.png" alt="OK"></td>
+            </tr>
+        </table>
+    </div>
+    <div class = "nodes">
+        <table id = nodesTable>
+            <tr>
+                <th colspan="5" >Nodes</th>
+            </tr>
+            <tr>
+                <th>Node</th>
+                <th>Id</th>
+                <th>IP</th>
+                <th colspan = "2">Status</th>
+            </tr>
+            <tr>
+                <td style="width: 15%;">name</td>
+                <td style="width: 15%;">XXXX</td>
+                <td style="width: 30%;">192.168.0.0</td>
+                <td style="width: 40%;">ONLINE<img class="imgStatus" src="images/OK.png" alt="OK"></td>
+            </tr>
+            <tr>
+                <td>name</td>
+                <td>XXXX</td>
+                <td>192.168.0.0</td>
+                <td>ONLINE<img class="imgStatus" src="images/ERROR.png" alt="OK"></td>
+            </tr>
+            <tr>
+                <td>name</td>
+                <td>XXXX</td>
+                <td>192.168.0.0</td>
+                <td>ONLINE<img class="imgStatus" src="images/WARNING.png" alt="OK"></td>
+            </tr>
+            <tr>
+                <td>name</td>
+                <td>XXXX</td>
+                <td>192.168.0.0</td>
+                <td>ONLINE<img class="imgStatus" src="images/Question.png" alt="OK"></td>
+            </tr>
+        </table>
+    </div>
+    <div class = "details">
+        <table id =detailsTable>
+            <tr>
+                <th colspan="3">Details</th>
+            </tr>
+            <tr>
+                <td>Node</td>
+                <td colspan="2">XXXX</td> <!--name-->
+            </tr>
+            <tr>
+                <td>Status</td>
+                <td colspan="2">ONLINE<img class="imgStatus" src="images/OK.png" alt="OK"></td> <!--status-->
+            </tr>
+            <tr>
+                <td>Id</td>
+                <td colspan="2">XXXX</td> <!--id-->
+            </tr>
+            <tr>
+                <td>IP</td>
+                <td colspan="2">192.168.0.0</td> <!--ip-->
+            </tr>
+            <tr>
+                <td>Next</td>
+                <td>0</td> <!--id-->
+                <td>0</td> <!--ip-->
+            </tr>
+            <tr>
+                <td>Prev</td>
+                <td>0</td> <!--id-->
+                <td>0</td> <!--ip-->
+            </tr>
+        </table>
+    </div>
+</div>
+<div class="footer">
+    <p>Text</p>
+</div>
+
+	<script src="scripts/NetworkMonitor.js"></script>
+	
+</body>
+</html>
