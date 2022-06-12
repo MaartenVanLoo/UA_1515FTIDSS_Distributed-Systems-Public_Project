@@ -213,6 +213,7 @@ public class SyncAgent extends Thread {
 
     public void getNeighbourList(){
         JSONParser parser = new JSONParser();
+        this.fileMapLock.writeLock().lock(); //take lock before rest call, otherwise another call might be removing the lock on this node later on.
         try {
             JSONObject neighbourFiles = (JSONObject) parser.parse(Unirest.get("http://" + this.node.getNextNodeIP() + ":8082/fileList").asString().getBody());
             JSONArray fileList =  (JSONArray)neighbourFiles.get("fileList");
@@ -231,17 +232,16 @@ public class SyncAgent extends Thread {
                     String filename = (String) lockObj.get("file"); if (filename == null) continue;
                     String owner = (String) lockObj.get("owner");
                     Boolean isLocked = (Boolean) lockObj.get("lock");
-                    this.fileMapLock.writeLock().lock();
                     if (!this.fileLocks.containsKey(filename)) {
                         this.fileLocks.put(filename, isLocked);
                     }
                     if (!this.lockOwner.containsKey(filename)) {
                         this.lockOwner.put(filename, owner);
                     }
-                    this.fileMapLock.writeLock().unlock();
                 }catch (Exception ignore) {}
             }
         }catch(Exception ignore){}
+        this.fileMapLock.writeLock().unlock();
     }
 
 
