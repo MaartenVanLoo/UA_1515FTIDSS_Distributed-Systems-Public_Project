@@ -82,8 +82,18 @@ function updateFileTable(){
     return;
 }
 function islocked(file){
-    console.log(file);
-    console.log(fileList[file]);
+    for (const node in nodeData){
+        locks = nodeData[node].locks;
+        for (const lock in locks){
+            if (locks[lock].locked && locks[lock].filename == file){
+                return true;
+            }
+        }
+    }
+    return false;
+}
+function lockOwner(file){
+    return "NotImplementedYet";
 }
 function sortTable(n) {
     if (n === undefined) n = sortCol;
