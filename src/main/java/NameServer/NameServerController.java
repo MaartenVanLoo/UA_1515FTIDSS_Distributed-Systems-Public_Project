@@ -366,7 +366,7 @@ public class NameServerController {
                         System.out.println("Unable to contact previous node");
                         this.nameServerController.nameServer.getIpMapLock().readLock().unlock();
                         //report failure of this node
-                        failNode(Id);
+                        failNode(this.nameServerController.nameServer.getPrevNode(Id));
                     }
                 }
             }
