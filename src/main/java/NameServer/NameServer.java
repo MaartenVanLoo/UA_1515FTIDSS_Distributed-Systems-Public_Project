@@ -239,21 +239,22 @@ public class NameServer {
         ipMapLock.readLock().lock();
         JSONObject json = new JSONObject();
 
-        if (this.ipMapping.containsKey(id)){
-            JSONObject node  = new JSONObject();
-            node.put("id", id);
-            node.put("ip", getNode(id));
-            json.put("node", node);
-            JSONObject next = new JSONObject();
-            next.put("id", getNextNode(id));
-            next.put("ip", getNode(getNextNode(id)));
-            json.put("next", next);
-            JSONObject prev = new JSONObject();
-            prev.put("id", getPrevNode(id));
-            prev.put("ip", getNode(getPrevNode(id)));
-            json.put("prev", prev);
+        if (!this.ipMapping.containsKey(id)){
+            ipMapLock.readLock().unlock();
+            throw new NameServer.NameServerStatusCodes.NodeNotFoundException(id);
         }
-
+        JSONObject node  = new JSONObject();
+        node.put("id", id);
+        node.put("ip", getNode(id));
+        json.put("node", node);
+        JSONObject next = new JSONObject();
+        next.put("id", getNextNode(id));
+        next.put("ip", getNode(getNextNode(id)));
+        json.put("next", next);
+        JSONObject prev = new JSONObject();
+        prev.put("id", getPrevNode(id));
+        prev.put("ip", getNode(getPrevNode(id)));
+        json.put("prev", prev);
         ipMapLock.readLock().unlock();
         return json.toString();
     }
