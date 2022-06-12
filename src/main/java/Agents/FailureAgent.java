@@ -55,7 +55,7 @@ public class FailureAgent implements Runnable, Serializable {
                 //failed node was owner of the replica! replica is lost!
                 recreateReplica(file);
             }else if (targetNode == this.node.getId()){
-                int oldPrevNode = (int)(dummyMap.lowerKey(hash) != null ? dummyMap.lowerKey(hash) : dummyMap.lastKey());
+                int oldPrevNode = (int)(dummyMap.lowerKey(this.node.getId()) != null ? dummyMap.lowerKey(this.node.getId()) : dummyMap.lastKey());
                 if (failedNodeId == oldPrevNode) {
                     //Edge case where you are the "owner and targetNode" and the failed node was your previous node!
                     recreateReplica(file);
