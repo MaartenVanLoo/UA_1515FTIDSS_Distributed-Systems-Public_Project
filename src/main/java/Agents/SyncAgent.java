@@ -80,10 +80,9 @@ public class SyncAgent extends Thread {
                 else if (exchange.getRequestMethod().equals("DELETE")){
                     try {
                         //delete file from files
-                        System.out.println("DELETE");
-                        System.out.println(exchange.getRequestURI());
+                        System.out.println("SyncAgent:\tDELETE request");
                         String fileName = exchange.getRequestURI().toString().replace("/fileList/", "");
-
+                        System.out.println("SyncAgent:\tfile to delete: " + fileName);
                         //need to consume all the data from the input stream before closing it (see  https://docs.oracle.com/javase/8/docs/jre/api/net/httpserver/spec/com/sun/net/httpserver/HttpExchange.html);
                         exchange.getRequestBody().readAllBytes();
                         exchange.getRequestBody().close();
@@ -93,10 +92,10 @@ public class SyncAgent extends Thread {
                         try {
                             if (this.files.contains(fileName)) {
                                 this.files.remove(fileName);
-                                System.out.println("Notify neighbours of deletion of file " + fileName);
-                                System.out.println("Notifing :" + this.node.getNextNodeIP());
+                                System.out.println("SyncAgent:\tNotify neighbours of deletion of file " + fileName);
+                                System.out.println("SyncAgent:\tNotifying :" + this.node.getNextNodeIP());
                                 Unirest.delete("http://" + this.node.getNextNodeIP() + ":8082/fileList/" + fileName).asString();
-                                System.out.println("notified");
+                                System.out.println("SyncAgent:\tNotified neighbour");
                             }
                         }catch (Exception ignored){} //TODO: why do we get the "failed to respond to request" error?
                         return;
@@ -121,6 +120,7 @@ public class SyncAgent extends Thread {
         try {
             this.group = InetAddress.getByName(multicastIP);
             this.multicastSocket = new MulticastSocket(syncAgentPort); //UDP
+            this.multicastSocket.setLoopbackMode(false); //Do loopback! (true to disable but lock and unlock methods below are based on loopback to be enabled)
             this.multicastSocket.joinGroup(this.group);
             multicastListener = new MulticastListener();
         } catch (IOException e) {
@@ -165,7 +165,7 @@ public class SyncAgent extends Thread {
             File dir = new File(FileManager.localFolder);
             File[] files = dir.listFiles();
             if (files == null || files.length == 0) {
-                System.out.println("No files in local folder");
+                System.out.println("SyncAgent:\tNo files in local folder");
                 return;
             }
             for (File file: files){
@@ -185,21 +185,21 @@ public class SyncAgent extends Thread {
             this.files.add(filename);
         }
         else{
-            System.out.println("File duplicate!!");//enkel debug..
+            System.out.println("SyncAgent:\tFile duplicate!!");//enkel debug..
         }
     }
 
     public void deleteLocalFile(String filename){
         if (!this.files.contains(filename)){
-            System.out.println("File not found!!");//enkel debug..
+            System.out.println("SyncAgent:\tFile not found!!");//enkel debug..
             return;
         }
         this.files.remove(filename);
-        System.out.println("Notify neighbours file deleted");
-        System.out.println("Notifing :" + this.node.getNextNodeIP());
+        System.out.println("SyncAgent:\tNotify neighbours" + filename +  " is deleted");
+        System.out.println("SyncAgent:\tNotifing :" + this.node.getNextNodeIP());
         int status = Unirest.delete("http://" + this.node.getNextNodeIP() + ":8082/fileList/" + filename).asString().getStatus();
-        System.out.println("Delete status: " + status);
-        System.out.println("Notification done");
+        System.out.println("SyncAgent:\tDelete status: " + status);
+        System.out.println("SyncAgent:\tNotification done");
     }
 
     public void getNeighbourList(){
@@ -290,7 +290,7 @@ public class SyncAgent extends Thread {
                 SyncAgent.this.multicastSocket.setSoTimeout(1000);
             } catch (SocketException e) {
                 e.printStackTrace();
-                System.out.println("Failed to set timeout in syncagent");
+                System.out.println("SyncAgent:\tFailed to set timeout in SyncAgent");
                 return;
             }
             while (SyncAgent.this.running){
@@ -308,7 +308,7 @@ public class SyncAgent extends Thread {
                     String action = (String)data.get("action");
 
                     if (fileName == null) {
-                        System.out.println("Received packet with no fileName");
+                        System.out.println("SyncAgent:\tReceived packet with no fileName");
                         continue;
                     }
                     //do specified action
@@ -316,15 +316,15 @@ public class SyncAgent extends Thread {
                     if (action.equals("lock")){
                         fileLocks.put(fileName,true);
                         lockOwner.put(fileName,nodeName);
-                        System.out.println("Locked file " + fileName + " by " + nodeName);
+                        System.out.println("SyncAgent:\tLocked file " + fileName + " by " + nodeName);
                     }else if(action.equals("unlock")){
                         fileLocks.put(fileName,false);  // make sure the entry exists!
                         lockOwner.put(fileName,"");     // make sure the entry exists!
                         fileLocks.remove(fileName);
                         lockOwner.remove(fileName);
-                        System.out.println("Unlocked file " + fileName);
+                        System.out.println("SyncAgent:\tUnlocked file " + fileName);
                     }else{
-                        System.out.println("Sync agent received bad lock request");
+                        System.out.println("SyncAgent:\tReceived bad lock request");
                     }
                     SyncAgent.this.fileMapLock.writeLock().unlock();
                 }
