@@ -6,6 +6,8 @@ import kong.unirest.Unirest;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.Base64;
 import java.util.Objects;
 import java.util.TreeMap;
@@ -140,12 +142,17 @@ public class FailureAgent implements Runnable, Serializable {
 
 
             //send file and logfile
-            FileTransfer.sendFile(localFile.getName(),FileManager.localFolder,FileManager.replicaFolder,replicateIPAddr);
-            FileTransfer.sendFile(localFile.getName() + ".log",FileManager.logFolder,FileManager.logFolder, replicateIPAddr);
-
-            //remove log file from this node
-            File logFile = new File(FileManager.logFolder + "/" + localFile.getName() + ".log");
-            logFile.delete();
+            if (this.node.getNextNodeId() == this.node.getId()) {
+                //only node in the network => copy file to replica folder
+                File replicaFile = new File(FileManager.replicaFolder + "/" + localFile.getName());
+                Files.copy(localFile.toPath(), replicaFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            }else {
+                FileTransfer.sendFile(localFile.getName(), FileManager.localFolder, FileManager.replicaFolder, replicateIPAddr);
+                FileTransfer.sendFile(localFile.getName() + ".log", FileManager.logFolder, FileManager.logFolder, replicateIPAddr);
+                //remove log file from this node
+                File logFile = new File(FileManager.logFolder + "/" + localFile.getName() + ".log");
+                logFile.delete();
+            }
         }catch (Exception e){
             e.printStackTrace();
             System.out.println("FailureAgent:\tFailed to recreate replica");
