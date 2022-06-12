@@ -35,6 +35,18 @@ public class NameServerStatusCodes {
         public NodeNotFoundException(String message) {
             super(message);
         }
+        /**
+         * Throws the appropriate HttpsStatus status codes. If a lock is specified,
+         * the lock will be released.
+         * This error sends a HttpsStatus.NOT_FOUND 404.
+         * @param message Message to be displayed
+         */
+        public NodeNotFoundException(String message, Lock lock) {
+            super(message);
+            if (lock != null) {
+                lock.unlock();
+            }
+        }
 
         /**
          * Throws the appropriate HttpsStatus status codes. If a lock is specified,
@@ -45,6 +57,8 @@ public class NameServerStatusCodes {
         public NodeNotFoundException(int nodeId) {
             super("Node with id " + nodeId + " can not be found on the network");
         }
+
+
     }
 
     @ResponseStatus(HttpStatus.CONFLICT)
@@ -98,7 +112,9 @@ public class NameServerStatusCodes {
          */
         public NodeAlreadyExistsException(int nodeId, String ip, Lock lock) {
             super("Node with id " + nodeId + " and ip " + ip + " already exists on the network");
-            lock.unlock();
+            if (lock != null) {
+                lock.unlock();
+            }
         }
     }
     //</editor-fold>
