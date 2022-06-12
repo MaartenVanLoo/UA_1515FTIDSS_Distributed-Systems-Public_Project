@@ -58,6 +58,7 @@ function updateFileTable(){
         let replica = document.createElement("td");
         let status = document.createElement("td");
         let locked = document.createElement("td");
+
         hash.innerHTML = String(fileList[key].hash).padStart(5);
         name.innerHTML = key;
         local.innerHTML = fileList[key].local === undefined? "":fileList[key].local;
@@ -65,7 +66,7 @@ function updateFileTable(){
         let ok = fileList[key].local !== undefined && fileList[key].replica !== undefined && fileList[key].local !== fileList[key].replica;
         status.innerHTML = ok?"<img src='images/OK.png' alt='OK' height='15' width='15'>" :
                             "<img src='images/ERROR.png' alt='ERROR' height='15' width='15'>";
-        locked.innerHTML = islocked(key)? "<img src='images/lock.png' alt='LOCKED' height='15' width='15'>":"";
+        locked.innerHTML = islocked(key)? "<img src='images/lock.png' alt='LOCKED' height='15' width='15' title="+lockOwner(key)+">":"";
 
         local.style.textAlign = "center";
         replica.style.textAlign = "center";
