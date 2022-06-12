@@ -195,8 +195,8 @@ public class SyncAgent extends Thread {
             return;
         }
         this.files.remove(filename);
-        System.out.println("SyncAgent:\tNotify neighbours" + filename +  " is deleted");
-        System.out.println("SyncAgent:\tNotifing :" + this.node.getNextNodeIP());
+        System.out.println("SyncAgent:\tNotify neighbours " + filename +  " is deleted");
+        System.out.println("SyncAgent:\tNotifying :" + this.node.getNextNodeIP());
         int status = Unirest.delete("http://" + this.node.getNextNodeIP() + ":8082/fileList/" + filename).asString().getStatus();
         System.out.println("SyncAgent:\tDelete status: " + status);
         System.out.println("SyncAgent:\tNotification done");

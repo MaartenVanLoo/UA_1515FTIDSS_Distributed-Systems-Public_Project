@@ -42,7 +42,7 @@ public class FileTransfer extends Thread {
             out.println(jsonObject.toJSONString());
             out.flush();
 
-            System.out.println("FileTransfer:\tSending: " + jsonObject.get("fileName")+" size: "+ fileSize);
+            System.out.println("FileTransfer:\tSending: " + sourceFilePath+" size: "+ fileSize);
             //receive acknowledgement of receiving file data
             String response = in.readLine();
             if(!response.equals("ACK")){
