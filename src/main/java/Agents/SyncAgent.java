@@ -26,7 +26,7 @@ public class SyncAgent extends Thread {
     private ArrayList<String> files;
     private volatile HashMap<String, Boolean> fileLocks;
     private volatile HashMap<String, String> lockOwner;
-    private ReadWriteLock fileMapLock = new ReentrantReadWriteLock();
+    private ReadWriteLock lock = new ReentrantReadWriteLock();
 
     private HttpServer server;
     private static final int syncAgentPort = 8082;
@@ -60,7 +60,7 @@ public class SyncAgent extends Thread {
                         fileList.add(file);
                     }
                     JSONArray lockList = new JSONArray();
-                    this.fileMapLock.readLock().lock();
+                    this.lock.readLock().lock();
                     for (String file: this.fileLocks.keySet()){
                         JSONObject lock = new JSONObject();
                         lock.put("file", file);
@@ -68,7 +68,7 @@ public class SyncAgent extends Thread {
                         lock.put("owner", this.lockOwner.get(file));
                         lockList.add(lock);
                     }
-                    this.fileMapLock.readLock().unlock();
+                    this.lock.readLock().unlock();
 
                     json.put("fileList", fileList);
                     json.put("lockList", lockList);
@@ -164,6 +164,7 @@ public class SyncAgent extends Thread {
     }
 
     public void makeLocalList(){//make a list out of local files.
+        this.lock.writeLock().lock();
         try {
             File dir = new File(FileManager.localFolder);
             File[] files = dir.listFiles();
@@ -177,6 +178,7 @@ public class SyncAgent extends Thread {
         }catch(Exception e){
             e.printStackTrace();
         }
+        this.lock.writeLock().unlock();
     }
 
     public ArrayList<String> getFileList(){
@@ -184,15 +186,18 @@ public class SyncAgent extends Thread {
     }
 
     public void addLocalFile(String filename){//update the local list when a new local file get's added.
+        this.lock.writeLock().lock();
         if(!this.files.contains(filename)){
             this.files.add(filename);
         }
         else{
             System.out.println("SyncAgent:\tFile duplicate!!");//enkel debug..
         }
+        this.lock.writeLock().unlock();
     }
 
     public void deleteLocalFile(String filename){
+        this.lock.writeLock().lock();
         if (!this.files.contains(filename)){
             System.out.println("SyncAgent:\tFile not found!!");//enkel debug..
             return;
@@ -207,7 +212,7 @@ public class SyncAgent extends Thread {
         int status = Unirest.delete("http://" + this.node.getNextNodeIP() + ":8082/fileList/" + filename).asString().getStatus();
         System.out.println("SyncAgent:\tDelete status: " + status);
         System.out.println("SyncAgent:\tNotification done");
-
+        this.lock.writeLock().unlock();
 
 
     }
@@ -219,6 +224,7 @@ public class SyncAgent extends Thread {
             JSONArray fileList =  (JSONArray)neighbourFiles.get("fileList");
             JSONArray lockList =  (JSONArray)neighbourFiles.get("lockList");
 
+            this.lock.writeLock().lock();
             //sync files
             for (Object file : fileList) {
                 if (!this.files.contains((String)file)) {
@@ -226,7 +232,6 @@ public class SyncAgent extends Thread {
                 }
             }
             //sync locks
-            this.fileMapLock.writeLock().lock();
             for (Object lock : lockList) {
                 try {
                     JSONObject lockObj = (JSONObject) lock;
@@ -241,17 +246,17 @@ public class SyncAgent extends Thread {
                     }
                 }catch (Exception ignore) {}
             }
-            this.fileMapLock.writeLock().unlock();
+            this.lock.writeLock().unlock();
         }catch(Exception ignore){}
     }
 
 
     public synchronized boolean lockFile(String fileName){
         if (this.multicastSocket == null) return false;
-        fileMapLock.writeLock().lock();
+        lock.writeLock().lock();
         if (this.fileLocks.containsKey(fileName)) {
             if (this.fileLocks.get(fileName)) {
-                fileMapLock.writeLock().unlock();
+                lock.writeLock().unlock();
                 return false;
             }
         }
@@ -274,15 +279,17 @@ public class SyncAgent extends Thread {
         fileLocks.put(fileName,true);
         lockOwner.put(fileName,this.node.getName());
 
-        fileMapLock.writeLock().unlock();
+        lock.writeLock().unlock();
         return true;
     }
 
     public synchronized boolean unlockFile(String fileName){
         if (this.multicastSocket == null) return false;
-        fileMapLock.writeLock().lock();
-        if (!this.fileLocks.containsKey(fileName)) {fileMapLock.writeLock().unlock(); return true;} //after this line we know the key fileName exists, no nullptr exceptions with get
-        if (!this.fileLocks.get(fileName)) {fileMapLock.writeLock().unlock(); return true;} //don't unlock a file that isn't locked
+        lock.writeLock().lock();
+        if (!this.fileLocks.containsKey(fileName)) {
+            lock.writeLock().unlock(); return true;} //after this line we know the key fileName exists, no nullptr exceptions with get
+        if (!this.fileLocks.get(fileName)) {
+            lock.writeLock().unlock(); return true;} //don't unlock a file that isn't locked
 
         System.out.println("unlock file"+ fileName);
         JSONObject jsonObject = new JSONObject();
@@ -303,7 +310,7 @@ public class SyncAgent extends Thread {
         this.fileLocks.remove(fileName);
         this.lockOwner.remove(fileName);
 
-        fileMapLock.writeLock().unlock();
+        lock.writeLock().unlock();
         return true;
     }
 
@@ -340,7 +347,7 @@ public class SyncAgent extends Thread {
                         continue;
                     }
                     // do specified action
-                    SyncAgent.this.fileMapLock.writeLock().lock();
+                    SyncAgent.this.lock.writeLock().lock();
                     if (action.equals("lock")){
                         fileLocks.put(fileName,true);
                         lockOwner.put(fileName,nodeName);
@@ -354,7 +361,7 @@ public class SyncAgent extends Thread {
                     }else{
                         System.out.println("SyncAgent:\tReceived bad lock request");
                     }
-                    SyncAgent.this.fileMapLock.writeLock().unlock();
+                    SyncAgent.this.lock.writeLock().unlock();
                 }
                 catch(java.net.SocketTimeoutException ignore){}
                 catch(Exception e){

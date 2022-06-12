@@ -227,7 +227,7 @@ public class FileTransfer extends Thread {
 
                 switch (action) {
                     case "delete":
-                        System.out.println("FileTransfer:\tDeleting" + fileName + " ...");
+                        System.out.println("FileTransfer:\tDeleting " + fileName + " ...");
                         File file = new File(fileName);
                         if (file.exists()) {
                             file.delete();
