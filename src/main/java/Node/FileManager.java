@@ -404,7 +404,7 @@ public class FileManager extends Thread {
             //update downloads
             JSONArray downloads = (JSONArray) jsonObject.get("downloads");
             downloads.add(newOwner);
-            jsonObject.put("downloads", downloads);
+            //jsonObject.put("downloads", downloads);
 
             //write log file
             FileWriter writer = new FileWriter(logFile);
