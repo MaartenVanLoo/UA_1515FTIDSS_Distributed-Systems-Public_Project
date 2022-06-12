@@ -152,7 +152,8 @@ public class SyncAgent extends Thread {
                 getNeighbourList();
             }
             try {
-                Thread.sleep(this.node.isSetUp()?5000:100);
+                long sleep = 10000 + (long)((Math.random()-0.5) * 2000);
+                Thread.sleep(this.node.isSetUp()?sleep:100);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -213,7 +214,6 @@ public class SyncAgent extends Thread {
 
     public void getNeighbourList(){
         JSONParser parser = new JSONParser();
-        //take lock before rest call, otherwise another call might be removing the lock on this while waiting for a response
         try {
             JSONObject neighbourFiles = (JSONObject) parser.parse(Unirest.get("http://" + this.node.getNextNodeIP() + ":8082/fileList").asString().getBody());
             JSONArray fileList =  (JSONArray)neighbourFiles.get("fileList");
@@ -327,7 +327,7 @@ public class SyncAgent extends Thread {
                     SyncAgent.this.multicastSocket.receive(packet);
                     String received  = new String(packet.getData(),0,packet.getLength());
 
-                    //parse recieved data (should be JSON format)
+                    //parse received data (should be JSON format)
                     JSONParser parser = new JSONParser();
                     JSONObject data = (JSONObject) parser.parse(received);
 
@@ -339,7 +339,7 @@ public class SyncAgent extends Thread {
                         System.out.println("SyncAgent:\tReceived packet with no fileName");
                         continue;
                     }
-                    //do specified action
+                    // do specified action
                     SyncAgent.this.fileMapLock.writeLock().lock();
                     if (action.equals("lock")){
                         fileLocks.put(fileName,true);
