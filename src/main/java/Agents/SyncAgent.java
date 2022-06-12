@@ -261,6 +261,13 @@ public class SyncAgent extends Thread {
         }catch(Exception e){
             e.printStackTrace();
         }
+
+        // Make sure the file is unlocked! => don't return from this function until the file is unlocked.
+        // Therefore, don't count on loopback of multicast socket
+        this.fileMapLock.writeLock().lock();
+        fileLocks.put(fileName,true);
+        lockOwner.put(fileName,this.node.getName());
+        this.fileMapLock.writeLock().unlock();
         fileMapLock.readLock().unlock();
         return true;
     }
@@ -283,6 +290,14 @@ public class SyncAgent extends Thread {
         }catch(Exception e){
             e.printStackTrace();
         }
+
+        // Make sure the file is unlocked! => don't return from this function until the file is unlocked.
+        // Therefore, don't count on loopback of multicast socket
+        this.fileMapLock.writeLock().lock();
+        this.fileLocks.remove(fileName);
+        this.lockOwner.remove(fileName);
+        this.fileMapLock.writeLock().unlock();
+
         fileMapLock.readLock().unlock();
         return true;
     }
