@@ -103,7 +103,7 @@ public class FileManager extends Thread {
 
                     System.out.println("FileManager:\tReplicating " + file.getName() + " to " + replicateIPAddr);
                     //send file to replica
-                    FileTransfer.sendFile(file.getName(), localFolder, replicaFolder, replicateIPAddr);//
+                    FileTransfer.sendFile(file.getName(), localFolder, replicaFolder, replicateIPAddr);
                     //update log file
                     this.updateLogFile(file.getName(), replicateId, replicateIPAddr);
                     //send file to log

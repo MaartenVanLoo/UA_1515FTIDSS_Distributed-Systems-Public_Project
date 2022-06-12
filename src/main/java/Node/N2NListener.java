@@ -368,7 +368,7 @@ public class N2NListener extends Thread {
             @Override
             public void run() {
                 //note: other case in which the next node is updated is handled by the nameserver notifying the previous node
-                System.out.println("N2N:\t\tupdate fileLocationOtherNewNode " + new_id);
+                System.out.println("N2N:\t\tupdate fileLocation Other NewNode " + new_id);
                 node.getFileManager().update();
             }
         };
