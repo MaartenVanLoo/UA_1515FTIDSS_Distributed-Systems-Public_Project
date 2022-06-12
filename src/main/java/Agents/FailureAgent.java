@@ -60,6 +60,8 @@ public class FailureAgent implements Runnable, Serializable {
                     //Edge case where you are the "owner and targetNode" and the failed node was your previous node!
                     recreateReplica(file);
                 }
+            }else{
+                System.out.println("FailureAgent:\tFile " + file.getName() + " doesn't has to be replicated");
             }
         }
 
