@@ -60,6 +60,7 @@ public class SyncAgent extends Thread {
                         fileList.add(file);
                     }
                     JSONArray lockList = new JSONArray();
+                    this.fileMapLock.readLock().lock();
                     for (String file: this.fileLocks.keySet()){
                         JSONObject lock = new JSONObject();
                         lock.put("file", file);
@@ -67,6 +68,7 @@ public class SyncAgent extends Thread {
                         lock.put("owner", this.lockOwner.get(file));
                         lockList.add(lock);
                     }
+                    this.fileMapLock.readLock().unlock();
 
                     json.put("fileList", fileList);
                     json.put("lockList", lockList);
