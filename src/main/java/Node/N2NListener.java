@@ -82,11 +82,11 @@ public class N2NListener extends Thread {
                         pingAckHandler(receivedPacket,jsonObject);
                         break;
                     case "PingNack":
-                        System.out.println("N2N:\tReceived ping nack message from " + sourceIp);
+                        System.out.println("N2N:\t\tReceived ping nack message from " + sourceIp);
                         pingNackHandler(receivedPacket,jsonObject);
                         break;
                     default:
-                        System.out.println("N2N:\tUnknown message type: " + type);
+                        System.out.println("N2N:\t\tUnknown message type: " + type);
                         break;
                 }
             }
@@ -220,7 +220,7 @@ public class N2NListener extends Thread {
     private void failureHandler(DatagramPacket receivedPacket,JSONObject jsonObject){
 
         if (!jsonObject.containsKey("nodeId")){
-            System.out.println("N2N:\tBad formatted failure message");
+            System.out.println("N2N:\t\tBad formatted failure message");
         }
         long nodeId = (long)jsonObject.get("nodeId");
         //check if nodeId = neighbourId
@@ -232,15 +232,15 @@ public class N2NListener extends Thread {
                 JSONObject json = (JSONObject) this.node.getParser().parse(response);
                 JSONObject prevNode = (JSONObject) json.get("prev");
                 JSONObject nextNode = (JSONObject) json.get("next");
-                this.node.setPrevNodeId((long)prevNode.get("id")); System.out.println("N2N:\tupdate prevNodeId: "+this.node.getPrevNodeId());
-                this.node.setPrevNodeIP((String)prevNode.get("ip")); System.out.println("N2N:\tupdate prevNodeIP: "+this.node.getPrevNodeIP());
-                this.node.setNextNodeId((long)nextNode.get("id")); System.out.println("N2N:\tupdate nextNodeId: "+this.node.getNextNodeId());
-                this.node.setNextNodeIP((String)nextNode.get("ip")); System.out.println("N2N:\tupdate nextNodeIP: "+this.node.getNextNodeIP());
+                this.node.setPrevNodeId((long)prevNode.get("id")); System.out.println("N2N:\t\tupdate prevNodeId: "+this.node.getPrevNodeId());
+                this.node.setPrevNodeIP((String)prevNode.get("ip")); System.out.println("N2N:\t\tupdate prevNodeIP: "+this.node.getPrevNodeIP());
+                this.node.setNextNodeId((long)nextNode.get("id")); System.out.println("N2N:\t\tupdate nextNodeId: "+this.node.getNextNodeId());
+                this.node.setNextNodeIP((String)nextNode.get("ip")); System.out.println("N2N:\t\tupdate nextNodeIP: "+this.node.getNextNodeIP());
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }else{
-            System.out.println("N2N:\tNodeID " + nodeId + " is not a neighbour");
+            System.out.println("N2N:\t\tNodeID " + nodeId + " is not a neighbour");
         }
         //reset counter to avoid cascading failures
         this.pingNode.resetPrev();
@@ -266,10 +266,10 @@ public class N2NListener extends Thread {
                 JSONObject json = (JSONObject) this.node.getParser().parse(response);
                 JSONObject prevNode = (JSONObject) json.get("prev");
                 JSONObject nextNode = (JSONObject) json.get("next");
-                this.node.setPrevNodeId((long)prevNode.get("id")); System.out.println("N2N:\tupdate prevNodeId: "+this.node.getPrevNodeId());
-                this.node.setPrevNodeIP((String)prevNode.get("ip")); System.out.println("N2N:\tupdate prevNodeIP: "+this.node.getPrevNodeIP());
-                this.node.setNextNodeId((long)nextNode.get("id")); System.out.println("N2N:\tupdate nextNodeId: "+this.node.getNextNodeId());
-                this.node.setNextNodeIP((String)nextNode.get("ip")); System.out.println("N2N:\tupdate nextNodeIP: "+this.node.getNextNodeIP());
+                this.node.setPrevNodeId((long)prevNode.get("id")); System.out.println("N2N:\t\tupdate prevNodeId: "+this.node.getPrevNodeId());
+                this.node.setPrevNodeIP((String)prevNode.get("ip")); System.out.println("N2N:\t\tupdate prevNodeIP: "+this.node.getPrevNodeIP());
+                this.node.setNextNodeId((long)nextNode.get("id")); System.out.println("N2N:\t\tupdate nextNodeId: "+this.node.getNextNodeId());
+                this.node.setNextNodeIP((String)nextNode.get("ip")); System.out.println("N2N:\t\tupdate nextNodeIP: "+this.node.getNextNodeIP());
             }catch (Exception e){
                 e.printStackTrace();
             }
@@ -368,7 +368,7 @@ public class N2NListener extends Thread {
             @Override
             public void run() {
                 //note: other case in which the next node is updated is handled by the nameserver notifying the previous node
-                System.out.println("N2N:\tupdate fileLocationOtherNewNode " + new_id);
+                System.out.println("N2N:\t\tupdate fileLocationOtherNewNode " + new_id);
                 node.getFileManager().update();
             }
         };

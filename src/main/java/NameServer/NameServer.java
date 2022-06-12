@@ -137,7 +137,22 @@ public class NameServer {
      */
     public boolean addNode(int id, String ip) {
         ipMapLock.writeLock().lock();
-        if (ipMapping.containsKey(id)) { ipMapLock.writeLock().unlock(); return false; }
+        if (ipMapping.containsKey(id)) {
+            //probe node:
+            int status = 404;
+            try {
+                status = Unirest.get("http://" + ip + ":8081/agent").asString().getStatus();
+            }catch (Exception ignore){}
+            if (status == 200){
+                // node in ipmapping and reachable! => return false;
+                ipMapLock.writeLock().unlock();
+                return false;
+            }else{
+                //node in ipMapping but unreachable! => remove from map
+                ipMapping.remove(id);
+                //below correct settings will be set
+            }
+        }
         ipMapping.put(id, ip);
         saveMapping();
         ipMapLock.writeLock().unlock();

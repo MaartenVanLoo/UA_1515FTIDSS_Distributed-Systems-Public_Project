@@ -97,7 +97,7 @@ public class SyncAgent extends Thread {
                                 Unirest.delete("http://" + this.node.getNextNodeIP() + ":8082/fileList/" + fileName).asString();
                                 System.out.println("SyncAgent:\tNotified neighbour");
                             }
-                        }catch (Exception ignored){} //TODO: why do we get the "failed to respond to request" error?
+                        }catch (Exception ignored){}
                         return;
                     }catch(Exception e){
                         exchange.sendResponseHeaders(404,-1);
@@ -267,6 +267,7 @@ public class SyncAgent extends Thread {
         if (this.multicastSocket == null) return false;
         if (!this.fileLocks.containsKey(fileName)) return true; //after this line we know the key fileName exists, no nullptr exceptions with get
         if (!this.fileLocks.get(fileName)) return true; //don't unlock a file that isn't locked
+        System.out.println("unlock file"+ fileName);
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("fileName",fileName);
         jsonObject.put("name",this.node.getName());
