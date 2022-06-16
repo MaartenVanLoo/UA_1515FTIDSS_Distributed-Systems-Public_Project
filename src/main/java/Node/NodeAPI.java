@@ -49,13 +49,13 @@ public class NodeAPI {
                     try {
                         JSONObject jsonObject = (JSONObject) this.node.getParser().parse(content);
                         if (jsonObject.get("method").equals("shutdown")) {
-                            System.out.println("Shutting down node");
+                            System.out.println("NodeAPI:\tShutting down node");
                             this.node.shutdown(true);
                             exchange.sendResponseHeaders(200, -1);
-                            System.out.println("Node shut down, exiting...");
+                            System.out.println("NodeAPI:\tNode shut down, exiting...");
                             System.exit(0);
                         } else if (jsonObject.get("method").equals("terminate")) {
-                            System.out.println("Terminating node");
+                            System.out.println("NodeAPI:\tTerminating node");
                             exchange.sendResponseHeaders(200, -1);
                             System.exit(0);
                         } else {
@@ -130,21 +130,15 @@ public class NodeAPI {
 
         } catch (Exception e) {
             this.server = null;
-            System.out.println("Error creating http server");
+            System.out.println("NodeAPI:\tError creating http server");
         }
         this.start();
     }
     public boolean updateFileLocations(String requestBody) {
         try{
-            System.out.println("####################################");
-            System.out.println("Updating replicated file locations");
-            System.out.println("Body: " + requestBody);
-            System.out.println("####################################");
-            JSONObject jsonObject = (JSONObject) this.node.getParser().parse(requestBody.toString());
-            long newNodeId = (long) jsonObject.get("id");
-            String newNodeIp = (String) jsonObject.get("ip");
+            System.out.println("NodeAPI:\tUpdating replicated file locations");
             this.node.getFileManager().update();
-            System.out.println("Update replicated file locations complete");
+            System.out.println("NodeAPI:\tUpdate replicated file locations complete");
         }catch(Exception e) {
             e.printStackTrace();
             return false;

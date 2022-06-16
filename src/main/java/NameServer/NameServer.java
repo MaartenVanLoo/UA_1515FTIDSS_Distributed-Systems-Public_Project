@@ -13,6 +13,7 @@ import java.util.TreeMap;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
+import NameServer.NameServerStatusCodes.*;
 
 //TODO: Add write to file on updates
 /**
@@ -136,7 +137,10 @@ public class NameServer {
      */
     public boolean addNode(int id, String ip) {
         ipMapLock.writeLock().lock();
-        if (ipMapping.containsKey(id)) { ipMapLock.writeLock().unlock(); return false; }
+        if (ipMapping.containsKey(id)) {
+                ipMapLock.writeLock().unlock();
+                return false;
+        }
         ipMapping.put(id, ip);
         saveMapping();
         ipMapLock.writeLock().unlock();
@@ -238,6 +242,10 @@ public class NameServer {
     public String nodeToJson(int id){
         ipMapLock.readLock().lock();
         JSONObject json = new JSONObject();
+
+        if (!this.ipMapping.containsKey(id)){
+            throw new NodeNotFoundException("Node with id " + id + " can not be found on the network",ipMapLock.readLock());
+        }
         JSONObject node  = new JSONObject();
         node.put("id", id);
         node.put("ip", getNode(id));

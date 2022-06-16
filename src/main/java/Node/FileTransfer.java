@@ -5,6 +5,7 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import java.io.*;
+import java.net.ConnectException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Objects;
@@ -27,7 +28,7 @@ public class FileTransfer extends Thread {
 
             File file = new File(sourceFilePath);
             if (!file.exists()) {
-                System.out.println(file.getName() + " does not exist");
+                System.out.println("FileTransfer:\t" + file.getName() + " does not exist");
                 socket.close();
                 return false;
             }
@@ -42,11 +43,11 @@ public class FileTransfer extends Thread {
             out.println(jsonObject.toJSONString());
             out.flush();
 
-            System.out.println("Sending: " + jsonObject.get("fileName")+" size: "+ fileSize);
+            System.out.println("FileTransfer:\tSending: " + sourceFilePath+" size: "+ fileSize);
             //receive acknowledgement of receiving file data
             String response = in.readLine();
             if(!response.equals("ACK")){
-                System.out.println("Error sending file data");
+                System.out.println("FileTransfer:\tError sending file data");
                 socket.close();
                 return false;
             }
@@ -58,8 +59,9 @@ public class FileTransfer extends Thread {
             while((current = bufferedInputStream.read(buffer)) > 0){
                 socket.getOutputStream().write(buffer, 0, (int)current);
                 total += current;
-                System.out.print("Sending file... " + (total * 100) / fileSize + "% complete!\r");
+                System.out.print("FileTransfer:\tSending file... " + (total * 100) / fileSize + "%\r");
             }
+            System.out.println("FileTransfer:\tSending file... 100% complete!");
             socket.getOutputStream().flush();
             bufferedInputStream.close();
 
@@ -210,11 +212,11 @@ public class FileTransfer extends Thread {
                 //receive file name
                 inputLine = in.readLine();
                 if(inputLine == null){
-                    System.out.println("Received null");
+                    System.out.println("FileTransfer:\tReceived null");
                     in.close();
                     out.close();
                     clientSocket.close();
-                    throw new IOException("File name not received!");
+                    throw new IOException("FileTransfer:\tFile name not received!");
                 }
 
                 JSONParser parser = new JSONParser();
@@ -225,7 +227,7 @@ public class FileTransfer extends Thread {
 
                 switch (action) {
                     case "delete":
-                        System.out.println("Deleting file...");
+                        System.out.println("FileTransfer:\tDeleting " + fileName + " ...");
                         File file = new File(fileName);
                         if (file.exists()) {
                             file.delete();
@@ -235,7 +237,7 @@ public class FileTransfer extends Thread {
                         //send filename received
                         out.println("ACK");
                         out.flush();
-                        System.out.println("Receiving file: " + fileName);
+                        System.out.println("FileTransfer:\tReceiving file: " + fileName);
 
                         // receive file
                         byte[] buffer = new byte[1024];
@@ -286,8 +288,8 @@ public class FileTransfer extends Thread {
 
     @Override
     public void run() {
-        System.out.println("Starting server");
-        System.out.println("Server host ip:");
+        System.out.println("FileTransfer:\tStarting server");
+        System.out.println("FileTransfer:\tServer host ip:");
         try {
             this.startListener(LISTENING_PORT);
         } catch (IOException e) {

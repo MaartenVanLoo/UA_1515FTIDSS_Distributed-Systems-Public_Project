@@ -52,7 +52,7 @@ public class PingNode extends Thread{
                 prevAddress = InetAddress.getByName(this.node.getPrevNodeIP());
                 //System.out.println("PingNode: prev address: " + this.node.getPrevNodeIP());
             } catch (UnknownHostException e) {
-                System.out.println("Unable to find neighbor ips");
+                System.out.println("PingNode:\tUnable to find neighbor ips");
                 this.node.printStatus();
                 continue;
             }

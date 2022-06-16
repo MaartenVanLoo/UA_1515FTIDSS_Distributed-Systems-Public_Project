@@ -80,7 +80,7 @@ public class Node {
 
 
         DatagramSocket socket = new DatagramSocket(SENDING_PORT);
-        socket.setSoTimeout(1000);
+        socket.setSoTimeout(2000);
         DatagramPacket discoveryPacket = new DatagramPacket(message.getBytes(), message.length(),
                 broadcastIp, LISTENING_PORT);
 
@@ -150,7 +150,6 @@ public class Node {
     // ask the naming server for the location of a file
     public void getFileLocation(String filename) {
         try {
-            //String url = "http://" + this.NS_ip + ":8081/ns/getFile?fileName="+filename;
             System.out.println(Unirest.get("/ns/files/{fileName}").routeParam("fileName", filename)
                     .asString().getBody());
         } catch (Exception e) {
@@ -386,16 +385,41 @@ public class Node {
         executorService.scheduleAtFixedRate(validator, 1, 5, TimeUnit.SECONDS);
 
 
-        Thread.sleep(5000); //wait 5 seconds
+        Thread.sleep(4000); //wait 4 seconds
+        String lockedfile = "";
         //try to lock a file
         try {
             File[] localfiles = node.getFileManager().getLocalFiles();
-            node.getSyncAgent().lockFile(localfiles[0].getName());
+            if (localfiles.length > 0) {
+                lockedfile = localfiles[0].getName();
+                node.getSyncAgent().lockFile(lockedfile);
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
-        Thread.sleep(liveTime);
+        Thread.sleep(4000); //wait 4 seconds
+        //try to unlock the locked file
+        try {
+            File[] localfiles = node.getFileManager().getLocalFiles();
+            if (localfiles.length > 0) {
+                lockedfile = localfiles[0].getName();
+                node.getSyncAgent().unlockFile(lockedfile);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        //try to lock a second file
+        try {
+            File[] localfiles = node.getFileManager().getLocalFiles();
+            if (localfiles.length > 1) {
+                lockedfile = localfiles[1].getName();
+                node.getSyncAgent().lockFile(lockedfile);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
+        Thread.sleep(liveTime);
         executorService.shutdownNow();
         node.shutdown();
     }

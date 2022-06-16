@@ -5,6 +5,10 @@ import Utils.Hashing;
 import kong.unirest.Unirest;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+import java.util.Base64;
 import java.util.Objects;
 import java.util.TreeMap;
 
@@ -91,12 +95,14 @@ public class FailureAgent implements Runnable, Serializable {
             if (targetNode == this.failedNodeId) {
                 //failed node was owner of the replica! replica is lost!
                 recreateReplica(file);
-            } else if (targetNode == this.node.getId()) {
-                int oldPrevNode = (int) (dummyMap.lowerKey(hash) != null ? dummyMap.lowerKey(hash) : dummyMap.lastKey());
+            }else if (targetNode == this.node.getId()){
+                int oldPrevNode = (int)(dummyMap.lowerKey(this.node.getId()) != null ? dummyMap.lowerKey(this.node.getId()) : dummyMap.lastKey());
                 if (failedNodeId == oldPrevNode) {
                     //Edge case where you are the "owner and targetNode" and the failed node was your previous node!
                     recreateReplica(file);
                 }
+            }else{
+                System.out.println("FailureAgent:\tFile " + file.getName() + " doesn't has to be replicated");
             }
         }
 
@@ -106,13 +112,13 @@ public class FailureAgent implements Runnable, Serializable {
             long origin = FileManager.getOrigin(file.getName());
             if (origin == -1) {
                 //failed to find origin in logfile => remove file
-                System.out.println("Failed to find origin in logfile, removing replica");
+                System.out.println("FailureAgent:\tFailed to find origin in logfile, removing replica");
                 this.node.getSyncAgent().deleteLocalFile(file.getName());
                 file.delete();
                 continue;
             }
-            if (origin == failedNodeId) {
-                System.out.println("Removing file from failed node " + file.getName());
+            if (origin == failedNodeId){
+                System.out.println("FailureAgent:\tRemoving file from failed node " + file.getName());
                 File logFile = new File(FileManager.logFolder + "/" + file.getName() + ".log");
                 this.node.getSyncAgent().deleteLocalFile(file.getName());
                 file.delete();
@@ -123,21 +129,21 @@ public class FailureAgent implements Runnable, Serializable {
         //done updating, now send the agent to the next node
         if (this.node.getNextNodeId() == this.firstNode) {
             //done sending the agent around
-            System.out.println("Failure agent done.");
+            System.out.println("FailureAgent:\tdone.");
             return;
         }
         try {
             String nextIP = this.node.getNextNodeIP();
             this.node = null; //Note: this is needed because a "node" object is not serializable
             int status = Unirest.post("http://" + nextIP + ":8081/agent").body(this.serialize()).asString().getStatus();
-            if (status == 200) {
-                System.out.println("Successfully sent agent to next node.");
+            if (status == 200){
+                System.out.println("FailureAgent:\tSuccessfully sent agent to next node.");
             } else {
-                System.out.println("Failed to send agent to next node.");
+                System.out.println("FailureAgent:\tFailed to send agent to next node.");
             }
         } catch (Exception e) {
             e.printStackTrace();
-            System.out.println("Error in serialization, failed to forward failure agent");
+            System.out.println("FailureAgent:\tError in serialization, failed to forward failure agent");
         }
     }
 
@@ -194,22 +200,27 @@ public class FailureAgent implements Runnable, Serializable {
             }
 
             //create new logfile
-            System.out.println("Creating new logfile for " + localFile.getName());
-            this.node.getFileManager().createLogFile(FileManager.logFolder + "/" + localFile.getName() + ".log");
-            System.out.println("Updating logfile for " + localFile.getName() + "target node: " + replicateIPAddr);
-            this.node.getFileManager().updateLogFile(localFile.getName(), replicateId, replicateIPAddr);
+            System.out.println("FailureAgent:\tCreating new logfile for " + localFile.getName());
+            this.node.getFileManager().createLogFile(FileManager.logFolder + "/"+ localFile.getName() + ".log");
+            System.out.println("FailureAgent:\tUpdating logfile for " + localFile.getName());
+            this.node.getFileManager().updateLogFile(localFile.getName(),replicateId,replicateIPAddr);
 
 
             //send file and logfile
-            FileTransfer.sendFile(localFile.getName(), FileManager.localFolder, FileManager.replicaFolder, replicateIPAddr);
-            FileTransfer.sendFile(localFile.getName() + ".log", FileManager.logFolder, FileManager.logFolder, replicateIPAddr);
-
-            //remove log file from this node
-            File logFile = new File(FileManager.logFolder + "/" + localFile.getName() + ".log");
-            logFile.delete();
-        } catch (Exception e) {
+            if (this.node.getNextNodeId() == this.node.getId()) {
+                //only node in the network => copy file to replica folder
+                File replicaFile = new File(FileManager.replicaFolder + "/" + localFile.getName());
+                Files.copy(localFile.toPath(), replicaFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            }else {
+                FileTransfer.sendFile(localFile.getName(), FileManager.localFolder, FileManager.replicaFolder, replicateIPAddr);
+                FileTransfer.sendFile(localFile.getName() + ".log", FileManager.logFolder, FileManager.logFolder, replicateIPAddr);
+                //remove log file from this node
+                File logFile = new File(FileManager.logFolder + "/" + localFile.getName() + ".log");
+                logFile.delete();
+            }
+        }catch (Exception e){
             e.printStackTrace();
-            System.out.println("Failed to recreate replica");
+            System.out.println("FailureAgent:\tFailed to recreate replica");
         }
     }
 

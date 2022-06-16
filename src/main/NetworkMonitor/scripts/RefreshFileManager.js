@@ -57,6 +57,8 @@ function updateFileTable(){
         let local = document.createElement("td");
         let replica = document.createElement("td");
         let status = document.createElement("td");
+        let locked = document.createElement("td");
+
         hash.innerHTML = String(fileList[key].hash).padStart(5);
         name.innerHTML = key;
         local.innerHTML = fileList[key].local === undefined? "":fileList[key].local;
@@ -64,6 +66,7 @@ function updateFileTable(){
         let ok = fileList[key].local !== undefined && fileList[key].replica !== undefined && fileList[key].local !== fileList[key].replica;
         status.innerHTML = ok?"<img src='images/OK.png' alt='OK' height='15' width='15'>" :
                             "<img src='images/ERROR.png' alt='ERROR' height='15' width='15'>";
+        locked.innerHTML = islocked(key)? "<img src='images/lock.png' alt='LOCKED' height='15' width='15' title="+lockOwner(key)+">":"";
 
         local.style.textAlign = "center";
         replica.style.textAlign = "center";
@@ -74,12 +77,34 @@ function updateFileTable(){
         row.appendChild(local);
         row.appendChild(replica);
         row.appendChild(status);
+        row.appendChild(locked);
         table.appendChild(row);
     });
     sortTable();
     return;
 }
-
+function islocked(file){
+    for (const node in nodeData){
+        locks = nodeData[node].locks;
+        for (const lock in locks){
+            if (locks[lock].locked && locks[lock].filename == file){
+                return true;
+            }
+        }
+    }
+    return false;
+}
+function lockOwner(file){
+    for (const node in nodeData){
+        locks = nodeData[node].locks;
+        for (const lock in locks){
+            if (locks[lock].locked && locks[lock].filename == file){
+                return locks[lock].owner
+            }
+        }
+    }
+    return "None";
+}
 function sortTable(n) {
     if (n === undefined) n = sortCol;
     else if (n === sortCol) {

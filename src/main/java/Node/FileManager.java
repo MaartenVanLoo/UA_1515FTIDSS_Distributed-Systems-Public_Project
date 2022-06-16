@@ -40,18 +40,18 @@ public class FileManager extends Thread {
             }
             int nodeCount = getNodeCount();
             String launchDirectory = System.getProperty("user.dir"); // get the current directory
-            System.out.println("Current directory: " + launchDirectory); // print the current directory
+            System.out.println("FileManager:\tCurrent directory: " + launchDirectory); // print the current directory
             File dir = new File(launchDirectory + "/" + localFolder); // get the  new directory(/local)
-            System.out.println("Directory: " + dir.getCanonicalPath()); // print the directory
+            System.out.println("FileManager:\tDirectory: " + dir.getCanonicalPath()); // print the directory
             File[] files = dir.listFiles(); // get the files in the directory
             if (files == null || files.length == 0) {// if there are no files in the directory
-                System.out.println("No files in local folder"); // print that there are no files in the directory
+                System.out.println("FileManager:\tNo files in local folder"); // print that there are no files in the directory
                 return;
             }
             for (File file : files) { // for each file in the directory
-                System.out.println("File: " + file.getName()); // print the file name
+                System.out.println("FileManager:\tFile: " + file.getName()); // print the file name
             }
-            System.out.println("NodeCount: " + nodeCount); // print the node count
+            System.out.println("FileManager:\tNodeCount: " + nodeCount); // print the node count
             // Get the names of the files by using the .getName() method
             for (File file : files) {
                 //create logfile
@@ -81,7 +81,7 @@ public class FileManager extends Thread {
 
                 if (nodeCount == 1){
                     //just copy from local to replica folders
-                    System.out.println("Copying "+ file.getName() +" to replica folder");
+                    System.out.println("FileManager:\tCopying "+ file.getName() +" to replica folder");
                     File localFile=new File(launchDirectory + "/" + localFolder + "/" + file.getName());
                     File replicaFile = new File(launchDirectory + "/" + replicaFolder + "/" + file.getName());
                     Files.copy(localFile.toPath(), replicaFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
@@ -101,9 +101,9 @@ public class FileManager extends Thread {
                     }
 
 
-                    System.out.println("Replicating " + file.getName() + " to " + replicateIPAddr);
+                    System.out.println("FileManager:\tReplicating " + file.getName() + " to " + replicateIPAddr);
                     //send file to replica
-                    FileTransfer.sendFile(file.getName(), localFolder, replicaFolder, replicateIPAddr);//
+                    FileTransfer.sendFile(file.getName(), localFolder, replicaFolder, replicateIPAddr);
                     //update log file
                     this.updateLogFile(file.getName(), replicateId, replicateIPAddr);
                     //send file to log
@@ -113,11 +113,11 @@ public class FileManager extends Thread {
                     f.delete();
 
                 } catch (Exception e) {
-                    System.out.println("Error: " + e.getMessage());
+                    System.out.println("FileManager:\tError: " + e.getMessage());
                 }
             }
         } catch (Exception e) {
-            System.err.println(e.getMessage());
+            System.err.println("FileManager:\t"+ e.getMessage());
         }
     }
 
@@ -204,9 +204,7 @@ public class FileManager extends Thread {
             for (WatchEvent<?> event : key.pollEvents()) {
                 //sleep(50);
                 //fileEvents.add(event.kind().toString() + " " + event.context().toString());
-                System.out.println(
-                        "Event kind:" + event.kind()
-                                + ". File affected: " + event.context() + ".");
+                System.out.println("FileManager:\t" + event.kind().toString() + " " + event.context().toString());
 
                 File file = new File(event.context().toString());
                 String replicateIPAddr = Unirest.get("/ns/files/{filename}")
@@ -228,12 +226,12 @@ public class FileManager extends Thread {
                         //[fallthrough]
                     case "ENTRY_MODIFY":
                         try {
-                            System.out.println("Replicating " + file.getName() + " to " + replicateIPAddr);
+                            System.out.println("FileManager:\tReplicating " + file.getName() + " to " + replicateIPAddr);
                             //send file to replica
                             FileTransfer.sendFile(file.getName(), localFolder, replicaFolder, replicateIPAddr);
-                            System.out.println("Modification handled");
+                            System.out.println("FileManager:\tModification handled");
                         } catch (Exception e) {
-                            System.out.println("Modification Error: " + e.getMessage() + " File:" + file.getName());
+                            System.out.println("FileManager:\tModification Error: " + e.getMessage() + " File:" + file.getName());
                         }
                         break;
                     case "ENTRY_DELETE":
@@ -241,9 +239,9 @@ public class FileManager extends Thread {
                             FileTransfer.deleteFile(file.getName(), replicaFolder, replicateIPAddr);
                             FileTransfer.deleteFile(file.getName() + ".log", logFolder, replicateIPAddr);
                             this.node.getSyncAgent().deleteLocalFile(file.getName());
-                            System.out.println("Deletion handled");
+                            System.out.println("FileManager:\tDeletion handled");
                         }catch(Exception e){
-                            System.out.println("Deletion Error: " + e.getMessage() + " File:" + file.getName());
+                            System.out.println("FileManager:\tDeletion Error: " + e.getMessage() + " File:" + file.getName());
                         }
                         break;
                 }
@@ -254,12 +252,12 @@ public class FileManager extends Thread {
 
     public synchronized void shutDown() {
         String launchDirectory = System.getProperty("user.dir");
-        System.out.println("Current directory: " + launchDirectory);
+        System.out.println("FileManager:\tCurrent directory: " + launchDirectory);
         File dir = new File(launchDirectory + "/" + localFolder); //get the local folder
         //System.out.println("Directory: " + dir.getCanonicalPath()); //vieze ai zeg
         File[] files = dir.listFiles(); //get all files in the directory
         if (files == null || files.length == 0) {
-            System.out.println("No files in local folder");
+            System.out.println("FileManager:\tNo files in local folder");
         }
         else {
             // Remove replications of local files
@@ -274,7 +272,7 @@ public class FileManager extends Thread {
                         deleteIPAddr = this.node.getPrevNodeIP();
                     }
 
-                    System.out.println("Deleting " + file.getName() + " to " + deleteIPAddr);
+                    System.out.println("FileManager:\tDeleting " + file.getName() + " to " + deleteIPAddr);
                     //delete file to replica
                     FileTransfer.deleteFile(file.getName(), replicaFolder, deleteIPAddr);
                     //delete log file
@@ -282,7 +280,7 @@ public class FileManager extends Thread {
 
                     this.node.getSyncAgent().deleteLocalFile(file.getName());
                 } catch (Exception e) {
-                    System.out.println("Error: " + e.getMessage());
+                    System.out.println("FileManager:\tError: " + e.getMessage());
                 }
             }
         }
@@ -292,7 +290,7 @@ public class FileManager extends Thread {
         //System.out.println("Directory: " + dir.getCanonicalPath());
         files = dir.listFiles();
         if (files == null || files.length == 0) {
-            System.out.println("No files in replica folder");
+            System.out.println("FileManager:\tNo files in replica folder");
             return;
         }
         for (File file : files) {
@@ -311,11 +309,11 @@ public class FileManager extends Thread {
                     replicateIPAddr = (String) ((JSONObject) targetNode.get("prev")).get("ip");
                     replicateId = (long) ((JSONObject) targetNode.get("prev")).get("id");
                 }catch (Exception e) {
-                    System.out.println("Error in parsing target node information" + target);
+                    System.out.println("FileManager:\tError in parsing target node information" + target);
                     e.printStackTrace();
                 }
             }
-            System.out.println("Replicating " + file.getName() + " to " + replicateIPAddr);
+            System.out.println("FileManager:\tReplicating " + file.getName() + " to " + replicateIPAddr);
 
             //send file to replica
             FileTransfer.sendFile(file.getName(), replicaFolder, replicaFolder, replicateIPAddr);
@@ -411,7 +409,7 @@ public class FileManager extends Thread {
             writer.write(jsonObject.toJSONString());
             writer.close();
         } catch (Exception e){
-            System.out.println("Error in updating log file\n" + logFileContent);
+            System.out.println("FileManager:\tError in updating log file\n" + logFileContent);
             e.printStackTrace();
         }
     }
@@ -428,7 +426,7 @@ public class FileManager extends Thread {
             //check if target is owner
             JSONObject origin = (JSONObject) jsonObject.get("origin");
             if (origin.get("ip").equals(targetIP)) {
-                System.out.println("Target is origin");
+                System.out.println("FileManager:\tTarget is origin");
                 return true;
             }
         }
