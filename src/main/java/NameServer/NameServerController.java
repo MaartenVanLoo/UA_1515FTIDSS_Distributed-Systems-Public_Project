@@ -1,26 +1,26 @@
 package NameServer;
 
-import Agents.FailureAgent;
 import Utils.Hashing;
 import kong.unirest.Unirest;
 import kong.unirest.UnirestException;
+import org.apache.log4j.ConsoleAppender;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
+import org.apache.log4j.PatternLayout;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.*;
 
-import NameServer.NameServerStatusCodes.* ;
+import NameServer.NameServerStatusCodes.*;
+
 import java.io.*;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.stream.Collectors;
-
 
 //TODO: clean API:
 // Proposal:
@@ -40,33 +40,60 @@ import java.util.stream.Collectors;
 // future:
 // GET /ns/nodes => get a list of all available nodes and there configuration in JSON, use "?" to set constraints, filter, the list
 
-//Overview:
-// /ns
-//  --> /ns/nodes
-//      --> /ns/nodes/{nodeId}
-//      --> /ns/nodes/{nodeId}/fail
-//      --> /ns/nodes/name/{name}
-//  --> /ns/files
-//      --> /ns/files/{fileName}
-
-//usefull info:
-//https://spring.io/blog/2013/11/01/exception-handling-in-spring-mvc
-//https://www.restapitutorial.com/lessons/httpmethods.html#:~:text=The%20primary%20or%20most%2Dcommonly,but%20are%20utilized%20less%20frequently.
-//https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/GET
-//https://stackoverflow.com/questions/39835648/how-do-i-get-the-json-in-a-response-body-with-spring-annotaion
-@CrossOrigin(origins = "*") //Use to allow access from any origin
+/**
+ * Class for handling REST API requests.<br>
+ * Overview:<br>
+ * /ns_________________________returns a JSON with the status of the name server.<br>
+ * /ns/nodes___________________returns a JSON with the nodes currently registered.<br>
+ * /ns/nodes/{nodeId}__________returns a JSON of the node with the given id.<br>
+ * /ns/nodes/{nodeId}/fail_____deletes the node that failed and notifies the other nodes.<br>
+ * /ns/files_____________________returns a JSON with all the files in the system (NOT IMPLEMENTED)<br>
+ * /ns/files/{fileName}________returns the IP of the node that has the file with the given name.<br>
+ * /ns/files/{fileName}/id_____returns the ID of the node that has the file with the given name.
+ */
+@CrossOrigin(origins = "*") //Used to allow access from any origin
 @RestController
 public class NameServerController {
-    Logger logger = LoggerFactory.getLogger(NameServerController.class);
 
+    /**
+     * Logger for this class
+     */
+    Logger logger = Logger.getLogger(NameServerController.class);
+
+    /**
+     * Port to send UDP packets from.
+     */
     static final int DATAGRAM_PORT = 8001;
+
+    /**
+     * NameServer object which contains the logic behind the NameServer application
+     */
     private NameServer nameServer;
+
+    /**
+     * Parser for all the JSON messages.
+     */
     private JSONParser jsonParser = new JSONParser();
 
+    /**
+     * Object for handling the UDP Discovery packets.
+     */
     DiscoveryHandler discoveryHandler;
+
+    /**
+     * DatagramSocket for sending UDP packets.
+     */
     private DatagramSocket socket;
 
+    /**
+     * Constructor for the NameServerController.<br>
+     * Initializes the NameServer object and the DiscoveryHandler object, and starts the DiscoveryHandler thread.
+     */
     public NameServerController() {
+        ConsoleAppender consoleAppender = new ConsoleAppender(new PatternLayout("%d{HH:mm:ss} %p %c{1}: %m%n"));
+        consoleAppender.setThreshold(Level.ALL);
+        logger.addAppender(consoleAppender);
+
         this.nameServer = new NameServer();
         try {
             this.socket = new DatagramSocket(DATAGRAM_PORT);
@@ -78,56 +105,89 @@ public class NameServerController {
         discoveryHandler.start();
     }
 
+    /**
+     * Returns the NameServer object.
+     *
+     * @return NameServer object
+     */
     public NameServer getNameServer() {
         return this.nameServer;
     }
 
+    /**
+     * Method for handling the GET request for the /ns endpoint.<br>
+     * Returns a JSON with the status of the NameServer in a JSON format.
+     *
+     * @return JSON with the status of the NameServer.
+     */
     @ResponseStatus(HttpStatus.OK) //200
     @GetMapping(value = "/ns", produces = "application/json")
     public String getNameServerStatus() {
         this.nameServer.getIpMapLock().readLock().lock();
-        String response =  "{\"Status\": \"running\","+
-                "\"Utilities\":{" +
-                    "\"Discovery\":\"" + (this.socket == null?"disabled":"enabled")+"\"" +
-                "}," +
-                "\"Nodes\":" + this.nameServer.getIpMapping().size() +"," +
-                "\"Mapping\":[" +
-                this.nameServer.getIpMapping().keySet().stream().map(s -> "{" + this.nameServer.nodeToString(s) + "}").collect(Collectors.joining(","))+
-                "]}";
+        String response =
+                "{\"Status\": \"running\"," +
+                        "\"Utilities\":{" +
+                        "\"Discovery\":\"" + (this.socket == null ? "disabled" : "enabled") + "\"" +
+                        "}," +
+                        "\"Nodes\":" + this.nameServer.getIpMapping().size() + "," +
+                        "\"Mapping\":[" +
+                        this.nameServer.getIpMapping().keySet().stream().map(s -> "{" + this.nameServer.nodeToString(s) + "}").collect(Collectors.joining(",")) +
+                        "]}";
         this.nameServer.getIpMapLock().readLock().unlock();
         return response;
     }
 
-
-    //<editor-fold desc="/ns/nodes">
+    /**
+     * Method for handling the GET request for the /ns/nodes endpoint.<br>
+     * Returns a String with the nodes currently registered in the NameServer.
+     *
+     * @return String with the nodes currently registered.
+     */
     @ResponseStatus(HttpStatus.OK) // 200
     @GetMapping("/ns/nodes")
     public String getAllNodes() {
         this.nameServer.getIpMapLock().readLock().lock();
-        String response = "{" + this.nameServer.getIpMapping().entrySet().stream().map(e -> e.getKey()+" => "+e.getValue()).collect(Collectors.joining("\n")) + "}";
+        String response = "{" + this.nameServer.getIpMapping().entrySet().stream().map(e -> e.getKey() + " => " + e.getValue()).collect(Collectors.joining("\n")) + "}";
         this.nameServer.getIpMapLock().readLock().unlock();
         return response;
     }
 
+    /**
+     * Method for handling the GET request for the /ns/nodes/{nodeId} endpoint.<br>
+     * Returns a String of the node with the given id in a JSON format.
+     *
+     * @param nodeId id of the node to get
+     * @return JSON formatted String of the node.
+     */
     @ResponseStatus(HttpStatus.OK) // 200
     @GetMapping(value = "/ns/nodes/{nodeId}", produces = "application/json")
     public String getNode(@PathVariable int nodeId) {
         return this.nameServer.nodeToJson(nodeId); //no need for lock as this is only 1 operation (every method is thread safe)
     }
 
+    /**
+     * Method for handling the PUT request for the /ns/nodes/{nodeId} endpoint.<br>
+     * Updates the IP address of the node with the given id.
+     *
+     * @param nodeId   id of the node to update
+     * @param nodeJson JSON formatted String of the node to update
+     */
     @ResponseStatus(HttpStatus.NO_CONTENT) // 204
     @PutMapping("/ns/nodes/{nodeId}")
     public void putNode(@PathVariable int nodeId, @RequestBody String nodeJson) {
-        String ip = "";
+        String ip;
         try {
+            // parse the JSON string to get the IP address
             JSONObject node = (JSONObject) this.jsonParser.parse(nodeJson);
-            ip = node.get("ip")!=null?(String) node.get("ip"):null;
-            if (ip == null)  throw new JSONInvalidFormatException("No ip specified"); //return "HttpStatus.BAD_REQUEST" 400
+            ip = node.get("ip") != null ? (String) node.get("ip") : null;
+            if (ip == null)
+                throw new JSONInvalidFormatException("No ip specified"); //return "HttpStatus.BAD_REQUEST" 400
         } catch (ParseException e) {
             logger.warn("Invalid JSON format for node update");
             return; //TODO: return: "HttpStatus.NOT_FOUND"; 404
         }
 
+        // update the node
         this.nameServer.getIpMapLock().writeLock().lock();
         boolean updateStatus = this.nameServer.updateNode(nodeId, ip);
         if (!updateStatus) {//Node wasn't found => create new node
@@ -137,26 +197,34 @@ public class NameServerController {
         this.nameServer.getIpMapLock().writeLock().unlock();
     }
 
+    /**
+     * Method for handling the POST request for the /ns/nodes/{nodeId} endpoint.<br>
+     * Creates a new node with the given JSON String of a node.
+     *
+     * @param nodeJson JSON formatted String of the node to create
+     * @return JSON formatted String with the link to the node.
+     */
     @ResponseStatus(HttpStatus.CREATED) // 201
-    @PostMapping(value = "/ns/nodes", consumes = "application/json", produces = "application/json")
+    @PostMapping(value = "/ns/nodes/{nodeId}", consumes = "application/json", produces = "application/json")
     public String postNode(@RequestBody String nodeJson) {
-        logger.debug("New post request");
-        String name = "";
-        String ip = "";
+        logger.info("New post request");
+        String name;    // name of the node
+        String ip;      // ip of the node
         try {
+            // parse the JSON string to get the name and IP address
             JSONObject node = (JSONObject) this.jsonParser.parse(nodeJson);
-            name = node.get("name")!=null?(String) node.get("name"):null;
-            ip = node.get("ip")!=null?(String) node.get("ip"):null;
-            if (name == null){
-                logger.debug("Invalid JSON format for node creation: no name specified");
+            name = node.get("name") != null ? (String) node.get("name") : null;
+            ip = node.get("ip") != null ? (String) node.get("ip") : null;
+            if (name == null) {
+                logger.warn("Invalid JSON format for node creation: no name specified");
                 throw new JSONInvalidFormatException("No name specified"); //return "HttpStatus.BAD_REQUEST" 400
             }
-            if (ip == null){
-                logger.debug("Invalid JSON format for node creation: no ip specified");
+            if (ip == null) {
+                logger.warn("Invalid JSON format for node creation: no ip specified");
                 throw new JSONInvalidFormatException("No ip specified"); //return "HttpStatus.BAD_REQUEST" 400
             }
         } catch (ParseException e) {
-            logger.debug("Invalid JSON format for node creation" + e.getMessage());
+            logger.warn("Invalid JSON format for node creation" + e.getMessage());
             throw new JSONInvalidFormatException(e.getMessage()); //return "HttpStatus.BAD_REQUEST" 400
         }
         int id = Hashing.hash(name);
@@ -165,12 +233,17 @@ public class NameServerController {
         boolean status = this.nameServer.addNode(id, ip);
         if (!status) {
             this.nameServer.getIpMapLock().writeLock().unlock();
-            throw new NodeAlreadyExistsException(id,ip); // return HttpStatus.CONFLICT 409
+            throw new NodeAlreadyExistsException(id, ip); // return HttpStatus.CONFLICT 409
         }
-        String response = "{\"link\":\"/ns/nodes/"+id+"\"}";
+        String response = "{\"link\":\"/ns/nodes/" + id + "\"}";
         return response;
     }
 
+    /**
+     * Method for handling the DELETE request for the /ns/nodes/{nodeId} endpoint.<br>
+     * Deletes the node with the given id.
+     * @param nodeId id of the node to delete
+     */
     @ResponseStatus(HttpStatus.OK) // 200
     @DeleteMapping("/ns/nodes/{nodeId}")
     public void deleteNode(@PathVariable int nodeId) {
@@ -180,76 +253,96 @@ public class NameServerController {
         }
     }
 
+    /**
+     * Method for handling the DELETE request for the /ns/nodes/{nodeId}/fail endpoint.<br>
+     * Deletes the node that failed from the map in the NameServer. Then it notifies the previous and next nodes with
+     * respect to the node tha failed. Finally, it launches the FailureAgent for the node with the given id.
+     * @param nodeId id of the node that failed
+     */
     @ResponseStatus(HttpStatus.OK) // 200
     @DeleteMapping("/ns/nodes/{nodeId}/fail")
     public void failNode(@PathVariable int nodeId) {
         this.nameServer.getIpMapLock().writeLock().lock();
         boolean status = this.nameServer.deleteNode(nodeId);
-        String message = "{\"nodeId\":"+nodeId+",\"type\":\"Failure\"}";
-        System.out.println(message);
+        String message = "{\"nodeId\":" + nodeId + ",\"type\":\"Failure\"}";
+        logger.info(message);
         try {
             if (status) {
                 //notify neighbors of failed node
-                DatagramPacket packetNext = new DatagramPacket(message.getBytes(), message.length(), InetAddress.getByName(this.nameServer.getNextNodeIP(nodeId)), NameServer.DATAGRAM_PORT);
+                DatagramPacket packetNext = new DatagramPacket(message.getBytes(), message.length(), InetAddress.getByName(this.nameServer.getNextNodeIP(nodeId)), DATAGRAM_PORT);
                 this.socket.send(packetNext);
-                DatagramPacket packetPrev = new DatagramPacket(message.getBytes(), message.length(), InetAddress.getByName(this.nameServer.getPrevNodeIP(nodeId)), NameServer.DATAGRAM_PORT);
+                DatagramPacket packetPrev = new DatagramPacket(message.getBytes(), message.length(), InetAddress.getByName(this.nameServer.getPrevNodeIP(nodeId)), DATAGRAM_PORT);
                 this.socket.send(packetPrev);
-            }else{
+            } else {
                 // This node is not alive and someone reports a failure. (This is a duplicate message)
                 // Thus, something might went wrong, notify everyone of node failure.
-                DatagramPacket packet = new DatagramPacket(message.getBytes(), message.length(), InetAddress.getByName("255.255.255.255"), NameServer.DATAGRAM_PORT);
+                DatagramPacket packet = new DatagramPacket(message.getBytes(), message.length(), InetAddress.getByName("255.255.255.255"), DATAGRAM_PORT);
                 this.socket.send(packet);
             }
+        } catch (IOException ignored) {
         }
-        catch (IOException ignored) {}
         this.nameServer.getIpMapLock().writeLock().unlock();
 
         this.nameServer.launchFailureAgent(nodeId);
     }
 
-
-
-    //</editor-fold>
-
-    //<editor-fold desc="/ns/files">
+    /**
+     * Method for handling the GET request for the /ns/files endpoint.<br>
+     * Should return a list of the files in the system, but this is NOT IMPLEMENTED yet.
+     */
     @ResponseStatus(HttpStatus.NOT_IMPLEMENTED) // 501
     @GetMapping("/ns/files")
-    public void getFiles() {}
+    public void getFiles() {
+    }
 
-    @ResponseStatus(HttpStatus.OK) // 200
-    @GetMapping("/ns/files/{fileName}")
     /**
      * Get the location of a certain file. The hash of the file is then calculated and based on
      * the hash the node on which the file should be stored is returned.
+     * @param fileName name of the file to get the location of
+     * @return the IP of the node that should store the file
      */
+    @ResponseStatus(HttpStatus.OK) // 200
+    @GetMapping("/ns/files/{fileName}")
     public String getFile(@PathVariable String fileName) {
         this.logger.info("Request for file: " + fileName);
         int hash = Hashing.hash(fileName);
         return this.nameServer.getPrevNodeIP(hash);
     }
 
+    /*
     @ResponseStatus(HttpStatus.NOT_IMPLEMENTED) // 501
     @PutMapping("/ns/files/{fileName}")
-    public void putFile(@PathVariable String fileName){}
+    public void putFile(@PathVariable String fileName) {
+    }
 
     @ResponseStatus(HttpStatus.NOT_IMPLEMENTED) // 501
     @PostMapping("/ns/files/{fileName}")
-    public void postFile(@PathVariable String fileName){}
+    public void postFile(@PathVariable String fileName) {
+    }
 
     @ResponseStatus(HttpStatus.NOT_IMPLEMENTED) // 501
     @DeleteMapping("/ns/files/{fileName}")
-    public void deleteFile(@PathVariable String fileName){}
+    public void deleteFile(@PathVariable String fileName) {
+    }
+    */
 
+    /**
+     * Method for handling the GET request for the /ns/files/{fileName}/id endpoint.<br>
+     * Returns the id of the node where the file with the given name is stored.
+     * @param fileName name of the file to get the location of
+     * @return the id of the node where the file is stored
+     */
     @ResponseStatus(HttpStatus.OK) // 200
     @GetMapping("/ns/files/{fileName}/id")
-    public int getFileId(@PathVariable String fileName){
+    public int getFileId(@PathVariable String fileName) {
         this.logger.info("Request for file: " + fileName);
         int hash = Hashing.hash(fileName);
         return this.nameServer.getPrevNode(hash);
     }
-    //</editor-fold>
 
-
+    /**
+     * Prints the nodes that are currently registered in the NameServer, every 10 seconds.
+     */
     @Scheduled(fixedRate = 10000)
     public void printMapping() {
         this.nameServer.getIpMapLock().readLock().lock();
@@ -261,15 +354,36 @@ public class NameServerController {
     }
 
     /**
-     *  Automatic discovery of new nodes. Listens for broadcast packets.
+     * Class for handling the UDP Discovery packets sent by the nodes that join the system. <br>
+     * Automatic discovery of new nodes. Listens for broadcast packets.
      */
-    private class DiscoveryHandler extends Thread{
+    private class DiscoveryHandler extends Thread {
+
+        /**
+         * Logger for the DiscoveryHandler class.
+         */
+        Logger logger = Logger.getLogger(DiscoveryHandler.class);
+
+        /**
+         * Pointer to the NameServerController.
+         */
         NameServerController nameServerController;
+
+        /**
+         * Boolean to mark if the DiscoveryHandler is running.
+         */
         boolean running = false;
 
-
-        private DiscoveryHandler(){}
+        /**
+         * Constructor for the DiscoveryHandler class.<br>
+         * Initializes the socket that has to listen for broadcast packets.
+         * @param nameServerController pointer to the NameServerController
+         */
         public DiscoveryHandler(NameServerController nameServerController) {
+            ConsoleAppender consoleAppender = new ConsoleAppender(new PatternLayout("%d{HH:mm:ss} %p %c{1}: %m%n"));
+            consoleAppender.setThreshold(Level.ALL);
+            logger.addAppender(consoleAppender);
+
             this.setDaemon(true); //make sure the thread dies when the main thread dies
             this.nameServerController = nameServerController;
             try {
@@ -282,8 +396,15 @@ public class NameServerController {
             }
         }
 
+        /**
+         * Main method for the DiscoveryHandler thread.<br>
+         * Listens for broadcast packets. If the type of packet equals to "Discovery", the node is added to the NameServer.
+         * If the node was successfully added, the node is notified of the successful addition. The previous node is also
+         * notified of the successful addition so it can update its replication table.
+         */
         @Override
         public void run() {
+            // return if socket is null
             if (this.nameServerController.socket == null) return;
 
             this.running = true;
@@ -295,31 +416,33 @@ public class NameServerController {
                     DatagramPacket receivePacket = new DatagramPacket(receiveBuffer, receiveBuffer.length);
                     this.nameServerController.socket.receive(receivePacket);
                     String data = new String(receivePacket.getData()).trim();
-                    String ip = receivePacket.getAddress().getHostAddress();
+                    String ip = receivePacket.getAddress().getHostAddress();    // ip of the node that sent the packet
                     String response;
 
                     JSONParser parser = new JSONParser();
                     JSONObject jsonObject = (JSONObject) parser.parse(data);
                     String type = (String) jsonObject.get("type");
 
-                    if (!type.equals("Discovery")) {continue;} //do not respond on non discovery packets
+                    if (!type.equals("Discovery")) {
+                        continue;
+                    } //do not respond on non discovery packets
 
-                    System.out.println("Discovery package received! -> " + receivePacket.getAddress() + ":" + receivePacket.getPort());
+                    logger.info("Discovery package received! -> " + receivePacket.getAddress() + ":" + receivePacket.getPort());
 
-                    String name = (String) jsonObject.get("name");
+                    String name = (String) jsonObject.get("name");      // name of the node that sent the packet
 
                     if (name == null) {
                         this.nameServerController.logger.info("Adding node failed");
-                        response = "{\"status\":\"Access Denied\"}";
-                        success= false;
-                    }else {
+                        response = "{\"status\":\"Access Denied\"}";        // send response to the node that it couldn't be added to the NameServer
+                        success = false;
+                    } else {
                         Id = Hashing.hash(name);
-                        System.out.println("Name: " + name);
-                        System.out.println("Hashed name: " + Id);
+                        logger.info("Name: " + name);
+                        logger.info("Hashed name: " + Id);
                         if (this.nameServerController.nameServer.addNode(Id, ip)) {
                             //adding successful
                             this.nameServerController.nameServer.getIpMapLock().readLock().lock();
-                            response = "{" +
+                            response = "{" +                    // repond with the amount of nodes in the system and the hash of the node that was added
                                     "\"type\":\"NS-offer\"," +
                                     "\"status\":\"OK\"," +
                                     "\"nodeCount\":" + this.nameServerController.nameServer.getIpMapping().size() + "," +
@@ -330,7 +453,7 @@ public class NameServerController {
                         } else {
                             //adding unsuccessful
                             this.nameServerController.logger.info("Adding node failed");
-                            response = "{" +
+                            response = "{" +        // send response to the node that it couldn't be added to the NameServer
                                     "\"type\":\"NS-offer\"," +
                                     "\"status\":\"Access Denied\"" +
                                     "}";
@@ -343,29 +466,27 @@ public class NameServerController {
                     this.nameServerController.socket.send(responsePacket);
 
 
-
-                }
-                catch (ParseException | IOException ignored) {
-
+                } catch (ParseException | IOException ignored) {
+                    logger.warn("An error occurred while handling the discovery packet");
                 }
 
                 //notify previous node from the newly added node to update his replication table
                 if (success) {
                     //notify the previous node that a new node has been created
                     this.nameServerController.nameServer.getIpMapLock().readLock().lock();
-                    String ip = this.nameServerController.nameServer.getIpMapping().get(Id);
-                    String previousIp = this.nameServerController.nameServer.getPrevNodeIP(Id);
+                    String ip = this.nameServerController.nameServer.getIpMapping().get(Id);    // get the ip of the node that was added
+                    String previousIp = this.nameServerController.nameServer.getPrevNodeIP(Id); // get the ip of the previous node
                     JSONObject json = new JSONObject();
                     json.put("id", Id);
                     json.put("ip", ip);
-                    System.out.println(previousIp+":8081/files");
+                    logger.info(previousIp + ":8081/files");
                     try {
-                        System.out.println("Status:"
+                        logger.info("Status:"
                                 + Unirest.post("http://" + previousIp + ":8081/files").body(json.toJSONString()).connectTimeout(5000).asString().getStatus()
                         );
                         this.nameServerController.nameServer.getIpMapLock().readLock().unlock();
-                    }catch (UnirestException e) {
-                        System.out.println("Unable to contact previous node");
+                    } catch (UnirestException e) {
+                        logger.warn("Unable to contact previous node");
                         this.nameServerController.nameServer.getIpMapLock().readLock().unlock();
                         //report failure of this node
                         failNode(this.nameServerController.nameServer.getPrevNode(Id));
@@ -374,14 +495,19 @@ public class NameServerController {
             }
         }
 
-        public void terminate(){
+        /**
+         * Stops the DiscoveryHandler thread.
+         */
+        public void terminate() {
             this.running = false;
         }
     }
 
 
-
-    // main method
+    /**
+     * Main method for the NameServerController thread.<br>
+     * Used for testing purposes only.
+     */
     public void run() {
         System.out.println("Starting NameServer...");
         try {
@@ -390,8 +516,7 @@ public class NameServerController {
             nameServerController.putNode(6, "192.168.0.6");
             nameServerController.putNode(7, "192.168.0.7");
             nameServerController.putNode(8, "192.168.0.8");
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
             System.out.println("NamingServer failed to start.");
         }

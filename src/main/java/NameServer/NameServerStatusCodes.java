@@ -5,17 +5,19 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 import java.util.concurrent.locks.Lock;
 
-//note: this also works!
-// throw new ResponseStatusException(HttpStatus.CONFLICT, "Node with id " + id + " already exists on the network at " + ip);
-
+/**
+ * Class with a collection of exception classes that can be thrown by the NameServerController.<br>
+ * <br>
+ * note: the following also works!<br>
+ * throw new ResponseStatusException(HttpStatus.CONFLICT, "Node with id " + id + " already exists on the network at " + ip);
+ */
 public class NameServerStatusCodes {
-    //<editor-fold desc="200 status codes">
-    @ResponseStatus(HttpStatus.CREATED)
-    public static void NodeCreated(){};
-
-    //</editor-fold>
 
     //<editor-fold desc="Node errors">
+
+    /**
+     * Exception thrown when the node that has to be modified or deleted doesn't exist.
+     */
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public static class NodeNotFoundException extends RuntimeException{
         /**
@@ -52,7 +54,7 @@ public class NameServerStatusCodes {
          * Throws the appropriate HttpsStatus status codes. If a lock is specified,
          * the lock will be released.
          * This error sends a HttpsStatus.NOT_FOUND 404.
-         * @param nodeId NodeId of the node that already exists
+         * @param nodeId NodeId of the node that cannot be found
          */
         public NodeNotFoundException(int nodeId) {
             super("Node with id " + nodeId + " can not be found on the network");
@@ -61,6 +63,9 @@ public class NameServerStatusCodes {
 
     }
 
+    /**
+     * Exception thrown when the node that has to be created, already exists.
+     */
     @ResponseStatus(HttpStatus.CONFLICT)
     public static class NodeAlreadyExistsException extends RuntimeException{
         /**
@@ -120,6 +125,10 @@ public class NameServerStatusCodes {
     //</editor-fold>
 
     //<editor-fold desc="json errors">
+
+    /**
+     * Exception thrown when a field is missing in the json.
+     */
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public static class JSONFieldNotFoundException extends RuntimeException{
         /**
@@ -145,6 +154,9 @@ public class NameServerStatusCodes {
         }
     }
 
+    /**
+     * Exception thrown when a JSON has the wrong format.
+     */
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public static class JSONInvalidFormatException extends RuntimeException{
 
