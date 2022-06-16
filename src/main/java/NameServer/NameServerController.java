@@ -337,6 +337,8 @@ public class NameServerController {
                             success = false;
                         }
                     }
+
+                    // port 8000
                     DatagramPacket responsePacket = new DatagramPacket(response.getBytes(StandardCharsets.UTF_8), response.length(), receivePacket.getAddress(), receivePacket.getPort());
                     this.nameServerController.socket.send(responsePacket);
 

@@ -21,15 +21,17 @@ import NameServer.NameServerStatusCodes.*;
  * All methods are thread-safe.
  */
 public class NameServer {
-    // <editor-fold desc="params">
+
     Logger logger = LoggerFactory.getLogger(NameServer.class);
 
     static final int DATAGRAM_PORT = 8001;
 
-    private final String mappingFile = "nameServerMap.json";    // default file where the info of the nodes is stored
-    private final TreeMap<Integer,String> ipMapping = new TreeMap<>();  // id => ip mapping of nodes; HAS TO BE PRIVATE!!!
-    private ReadWriteLock ipMapLock = new ReentrantReadWriteLock();     // read/write lock for locking resources while reading of writing them
-    // </editor-fold>
+    /** Default file where the info of the nodes is stored */
+    private final String mappingFile = "nameServerMap.json";
+    /** Map of the nodes in the network and their IPs. */
+    private final TreeMap<Integer,String> ipMapping = new TreeMap<>();
+    /** Read/write lock for locking resources while reading of writing them */
+    private ReadWriteLock ipMapLock = new ReentrantReadWriteLock();
 
     /**
      * Constructor of the NameServer. Loads the info of the nodes stored in the mappingFile.

@@ -5,7 +5,9 @@ import java.io.OutputStream;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+
 import Node.*;
+
 import java.io.File;
 import java.util.HashMap;
 import java.util.concurrent.Executors;
@@ -15,6 +17,10 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import com.sun.net.httpserver.HttpServer;
 
 import kong.unirest.Unirest;
+import org.apache.log4j.ConsoleAppender;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
+import org.apache.log4j.PatternLayout;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -22,31 +28,61 @@ import org.json.simple.parser.JSONParser;
 
 public class SyncAgent extends Thread {
 
-    /** The node that this agent is associated with. */
+    /**
+     * Logger for displaying info in the console about what the application is doing.
+     */
+    private final Logger logger = Logger.getLogger(FailureAgent.class);
+
+    /**
+     * The node that this agent is associated with.
+     */
     private Node node;
-    /** ArrayList of all files in the system. */
+    /**
+     * ArrayList of all files in the system.
+     */
     private ArrayList<String> files;
-    /** HashMap of all files in the system and whether or not they're locked. **/
+    /**
+     * HashMap of all files in the system and whether or not they're locked.
+     **/
     private volatile HashMap<String, Boolean> fileLocks;
-    /** HashMap of all files in the system and the owner of the lock. **/
+    /**
+     * HashMap of all files in the system and the owner of the lock.
+     **/
     private volatile HashMap<String, String> lockOwner;
+    /**
+     * Lock for locking variables when they are being read or written.
+     */
     private ReadWriteLock lock = new ReentrantReadWriteLock();
 
-    /** The HttpServer to retrieve the file list from. **/
+    /**
+     * The HttpServer to retrieve the file list from.
+     **/
     private HttpServer server;
-    /** The port on which the HttpServer is running and the MulticastListener is listening on. **/
+    /**
+     * The port on which the HttpServer is running and the MulticastListener is listening on.
+     **/
     private static final int syncAgentPort = 8082;
 
-    /** The socket on which the MultiCastListener is listening. **/
+    /**
+     * The socket on which the MultiCastListener is listening.
+     **/
     private MulticastSocket multicastSocket;
-    /** The IP address of the multicast group. **/
-    private static final String multicastIP ="224.0.0.100"; //https://en.wikipedia.org/wiki/Multicast_address
-    /** The Multicast group the MulticastListener is listening on. **/
+    /**
+     * The IP address of the multicast group.
+     **/
+    private static final String multicastIP = "224.0.0.100"; //https://en.wikipedia.org/wiki/Multicast_address
+    /**
+     * The Multicast group the MulticastListener is listening on.
+     **/
     private InetAddress group;
-    /** The multicast listener. **/
+    /**
+     * The multicast listener.
+     **/
     private MulticastListener multicastListener;
 
-    /** Boolean to indicate whether or not the SyncAgent is running. Set to "true" in the "run()" method. **/
+    /**
+     * Boolean to indicate whether or not the SyncAgent is running. Set to "true" in the "run()" method.
+     **/
     private volatile boolean running = false;
 
     /**
@@ -56,9 +92,14 @@ public class SyncAgent extends Thread {
      * On receiving a "DELETE" request at "[nodeIP]:8082/fileList/[filename]", the SyncAgent will remove the file from the
      * system.
      * After the Http server is setup, the SyncAgent will also setup its MulticastListener.
+     *
      * @param node The node that this agent is associated with.
      */
     public SyncAgent(Node node) {
+        ConsoleAppender consoleAppender = new ConsoleAppender(new PatternLayout("%d{HH:mm:ss} %p %c{1}: %m%n"));
+        consoleAppender.setThreshold(Level.ALL);
+        logger.addAppender(consoleAppender);
+
         this.setDaemon(true);
         this.node = node;
         this.files = new ArrayList<>();
@@ -75,12 +116,12 @@ public class SyncAgent extends Thread {
                     //send file list in body
                     JSONObject json = new JSONObject();
                     JSONArray fileList = new JSONArray();
-                    for (String file: this.files){
+                    for (String file : this.files) {
                         fileList.add(file);
                     }
                     JSONArray lockList = new JSONArray();
                     this.lock.readLock().lock();
-                    for (String file: this.fileLocks.keySet()){
+                    for (String file : this.fileLocks.keySet()) {
                         JSONObject lock = new JSONObject();
                         lock.put("file", file);
                         lock.put("lock", this.fileLocks.get(file));
@@ -97,13 +138,12 @@ public class SyncAgent extends Thread {
                     outputStream.write(response.getBytes());
                     outputStream.flush();
                     outputStream.close();
-                }
-                else if (exchange.getRequestMethod().equals("DELETE")){
+                } else if (exchange.getRequestMethod().equals("DELETE")) {
                     try {
                         //delete file from files
-                        System.out.println("SyncAgent:\tDELETE request");
+                        logger.info("DELETE request");
                         String fileName = exchange.getRequestURI().toString().replace("/fileList/", "");
-                        System.out.println("SyncAgent:\tfile to delete: " + fileName);
+                        logger.info("file to delete: " + fileName);
                         //need to consume all the data from the input stream before closing it (see  https://docs.oracle.com/javase/8/docs/jre/api/net/httpserver/spec/com/sun/net/httpserver/HttpExchange.html);
                         exchange.getRequestBody().readAllBytes();
                         exchange.getRequestBody().close();
@@ -113,21 +153,21 @@ public class SyncAgent extends Thread {
                         try {
                             if (this.files.contains(fileName)) {
                                 this.files.remove(fileName);
-                                System.out.println("SyncAgent:\tNotify neighbours of deletion of file " + fileName);
-                                System.out.println("SyncAgent:\tNotifying :" + this.node.getNextNodeIP());
+                                logger.info("Notify neighbours of deletion of file " + fileName);
+                                logger.info("Notifying :" + this.node.getNextNodeIP());
                                 Unirest.delete("http://" + this.node.getNextNodeIP() + ":8082/fileList/" + fileName).asString();
-                                System.out.println("SyncAgent:\tNotified neighbour");
+                                logger.info("Notified neighbour");
                             }
-                        }catch (Exception ignored){}
+                        } catch (Exception ignored) {
+                        }
                         return;
-                    }catch(Exception e){
-                        exchange.sendResponseHeaders(404,-1);
+                    } catch (Exception e) {
+                        exchange.sendResponseHeaders(404, -1);
                         exchange.close();
-                        e.printStackTrace();
+                        logger.error("Failed to delete file.\n" + e.getMessage());
                         return;
                     }
-                }
-                else{
+                } else {
                     exchange.sendResponseHeaders(501, -1);
                 }
                 exchange.close();
@@ -145,7 +185,7 @@ public class SyncAgent extends Thread {
             this.multicastSocket.joinGroup(this.group);
             multicastListener = new MulticastListener();
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error("MulticastSocket could not be created.\n" + e.getMessage());
         }
         //start thread
         this.start();
@@ -153,6 +193,7 @@ public class SyncAgent extends Thread {
 
     /**
      * Get the HashMap of files with their lock status.
+     *
      * @return HashMap of files with their lock status.
      */
     public HashMap<String, Boolean> getFileLocks() {
@@ -161,6 +202,7 @@ public class SyncAgent extends Thread {
 
     /**
      * Get the HashMap of files with the node that locked it.
+     *
      * @return HashMap of files with the node that locked it.
      */
     public HashMap<String, String> getLockOwner() {
@@ -179,13 +221,13 @@ public class SyncAgent extends Thread {
         if (this.server != null) this.server.start();
         if (this.multicastListener != null) this.multicastListener.start();
 
-        while (running){
-            if (this.node.isSetUp()){
+        while (running) {
+            if (this.node.isSetUp()) {
                 getNeighbourList();
             }
             try {
-                long sleep = 10000 + (long)((Math.random()-0.5) * 2000);
-                Thread.sleep(this.node.isSetUp()?sleep:100);
+                long sleep = 10000 + (long) ((Math.random() - 0.5) * 2000);
+                Thread.sleep(this.node.isSetUp() ? sleep : 100);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -198,19 +240,19 @@ public class SyncAgent extends Thread {
     /**
      * Makes a list of files that the current node has.
      */
-    public void makeLocalList(){//make a list out of local files.
+    public void makeLocalList() {
         this.lock.writeLock().lock();
         try {
             File dir = new File(FileManager.localFolder);
             File[] files = dir.listFiles();
             if (files == null || files.length == 0) {
-                System.out.println("SyncAgent:\tNo files in local folder");
+                logger.info("No files in local folder");
                 return;
             }
-            for (File file: files){
+            for (File file : files) {
                 this.files.add(file.getName());
             }
-        }catch(Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
         this.lock.writeLock().unlock();
@@ -218,23 +260,24 @@ public class SyncAgent extends Thread {
 
     /**
      * Returns the list of files in the system according to the this node.
+     *
      * @return the list of files.
      */
-    public ArrayList<String> getFileList(){
+    public ArrayList<String> getFileList() {
         return this.files;
     }
 
     /**
      * Updates the local list when a new local file gets added.
+     *
      * @param filename the name of the file that was added.
      */
-    public void addLocalFile(String filename){//update the local list when a new local file get's added.
+    public void addLocalFile(String filename) {
         this.lock.writeLock().lock();
-        if(!this.files.contains(filename)){
+        if (!this.files.contains(filename)) {
             this.files.add(filename);
-        }
-        else{
-            System.out.println("SyncAgent:\tFile duplicate!!");//enkel debug..
+        } else {
+            logger.info("List of local files already contains file: " + filename);
         }
         this.lock.writeLock().unlock();
     }
@@ -242,12 +285,13 @@ public class SyncAgent extends Thread {
     /**
      * When a file has been deleted, it will be removed from the map of all files in the system, and the next node will
      * be notified.
+     *
      * @param filename the name of the file that was deleted.
      */
-    public void deleteLocalFile(String filename){
+    public void deleteLocalFile(String filename) {
         this.lock.writeLock().lock();
-        if (!this.files.contains(filename)){
-            System.out.println("SyncAgent:\tFile not found!!");//enkel debug..
+        if (!this.files.contains(filename)) {
+            logger.info("File not found! Can't delete file: " + filename);
             return;
         }
         // remove lock if exists (check done inside unlock function);
@@ -255,11 +299,11 @@ public class SyncAgent extends Thread {
         this.unlockFile(filename);
 
         this.files.remove(filename);
-        System.out.println("SyncAgent:\tNotify neighbours " + filename +  " is deleted");
-        System.out.println("SyncAgent:\tNotifying :" + this.node.getNextNodeIP());
+        logger.info("Notify neighbours " + filename + " is deleted");
+        logger.info("Notifying :" + this.node.getNextNodeIP());
         int status = Unirest.delete("http://" + this.node.getNextNodeIP() + ":8082/fileList/" + filename).asString().getStatus();
-        System.out.println("SyncAgent:\tDelete status: " + status);
-        System.out.println("SyncAgent:\tNotification done");
+        logger.info("Delete status: " + status);
+        logger.info("Notification done");
         this.lock.writeLock().unlock();
 
 
@@ -269,17 +313,17 @@ public class SyncAgent extends Thread {
      * Retrieves the list of files from the next node and updates its own list of files. The list of locks for each file
      * will also be updated.
      */
-    public void getNeighbourList(){
+    public void getNeighbourList() {
         JSONParser parser = new JSONParser();
         try {
             JSONObject neighbourFiles = (JSONObject) parser.parse(Unirest.get("http://" + this.node.getNextNodeIP() + ":8082/fileList").asString().getBody());
-            JSONArray fileList =  (JSONArray)neighbourFiles.get("fileList");
-            JSONArray lockList =  (JSONArray)neighbourFiles.get("lockList");
+            JSONArray fileList = (JSONArray) neighbourFiles.get("fileList");
+            JSONArray lockList = (JSONArray) neighbourFiles.get("lockList");
 
             this.lock.writeLock().lock();
             //sync files
             for (Object file : fileList) {
-                if (!this.files.contains((String)file)) {
+                if (!this.files.contains((String) file)) {
                     this.files.add((String) file);
                 }
             }
@@ -287,7 +331,8 @@ public class SyncAgent extends Thread {
             for (Object lock : lockList) {
                 try {
                     JSONObject lockObj = (JSONObject) lock;
-                    String filename = (String) lockObj.get("file"); if (filename == null) continue;
+                    String filename = (String) lockObj.get("file");
+                    if (filename == null) continue;
                     String owner = (String) lockObj.get("owner");
                     Boolean isLocked = (Boolean) lockObj.get("lock");
                     if (!this.fileLocks.containsKey(filename)) {
@@ -296,45 +341,44 @@ public class SyncAgent extends Thread {
                     if (!this.lockOwner.containsKey(filename)) {
                         this.lockOwner.put(filename, owner);
                     }
-                }catch (Exception ignore) {}
+                } catch (Exception ignore) {
+                }
             }
             this.lock.writeLock().unlock();
-        }catch(Exception ignore){}
+        } catch (Exception ignore) {
+        }
     }
 
     /**
      * Sets the lock for a file.
      * Makes a JSON object with the file name and the lock status. Then it will send a UDP message to the multicast group.
+     *
      * @param fileName the name of the file that is being locked.
      * @return true if the lock was successful, false otherwise.
      */
-    public synchronized boolean lockFile(String fileName){
+    public synchronized boolean lockFile(String fileName) {
         if (this.multicastSocket == null) return false;
         lock.writeLock().lock();
-        if (this.fileLocks.containsKey(fileName)) {
-            if (this.fileLocks.get(fileName)) {
-                lock.writeLock().unlock();
-                return false;
-            }
+        // if the list of filelocks does contain the file and the file was already locked, return
+        if (this.fileLocks.containsKey(fileName) && this.fileLocks.get(fileName)) {
+            lock.writeLock().unlock();
+            return false;
         }
         JSONObject jsonObject = new JSONObject();
-        jsonObject.put("fileName",fileName);
-        jsonObject.put("name",this.node.getName());
-        jsonObject.put("action","lock");
+        jsonObject.put("fileName", fileName);
+        jsonObject.put("name", this.node.getName());
+        jsonObject.put("action", "lock");
 
         String message = jsonObject.toJSONString();
-        DatagramPacket packet = new DatagramPacket(message.getBytes(StandardCharsets.UTF_8),message.length(), this.group,SyncAgent.syncAgentPort);
+        DatagramPacket packet = new DatagramPacket(message.getBytes(StandardCharsets.UTF_8), message.length(), this.group, SyncAgent.syncAgentPort);
         try {
             this.multicastSocket.send(packet);
-        }catch(Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
-        // Make sure the file is unlocked! => don't return from this function until the file is unlocked.
-        // Therefore, don't count on loopback of multicast socket
-
-        fileLocks.put(fileName,true);
-        lockOwner.put(fileName,this.node.getName());
+        fileLocks.put(fileName, true);
+        lockOwner.put(fileName, this.node.getName());
 
         lock.writeLock().unlock();
         return true;
@@ -343,28 +387,35 @@ public class SyncAgent extends Thread {
     /**
      * Unlocks a file.
      * Makes a JSON object with the file name and the lock status. Then it will send a UDP message to the multicast group.
+     *
      * @param fileName The file to unlock.
      * @return True if the file was unlocked, false otherwise.
      */
-    public synchronized boolean unlockFile(String fileName){
+    public synchronized boolean unlockFile(String fileName) {
         if (this.multicastSocket == null) return false;
         lock.writeLock().lock();
+        // if the list of filelocks doesn't contain the file, the file must not be locked, thus return
         if (!this.fileLocks.containsKey(fileName)) {
-            lock.writeLock().unlock(); return true;} //after this line we know the key fileName exists, no nullptr exceptions with get
+            lock.writeLock().unlock();
+            return true;
+        } //after this line we know the key fileName exists, no nullptr exceptions with get
+        // if the file is not locked, return
         if (!this.fileLocks.get(fileName)) {
-            lock.writeLock().unlock(); return true;} //don't unlock a file that isn't locked
+            lock.writeLock().unlock();
+            return true;
+        } //don't unlock a file that isn't locked
 
-        System.out.println("unlock file"+ fileName);
+        System.out.println("unlock file" + fileName);
         JSONObject jsonObject = new JSONObject();
-        jsonObject.put("fileName",fileName);
-        jsonObject.put("name",this.node.getName());
-        jsonObject.put("action","unlock");
+        jsonObject.put("fileName", fileName);
+        jsonObject.put("name", this.node.getName());
+        jsonObject.put("action", "unlock");
 
         String message = jsonObject.toJSONString();
-        DatagramPacket packet = new DatagramPacket(message.getBytes(StandardCharsets.UTF_8),message.length(), this.group,SyncAgent.syncAgentPort);
+        DatagramPacket packet = new DatagramPacket(message.getBytes(StandardCharsets.UTF_8), message.length(), this.group, SyncAgent.syncAgentPort);
         try {
             this.multicastSocket.send(packet);
-        }catch(Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
@@ -380,15 +431,18 @@ public class SyncAgent extends Thread {
     /**
      * Class that handles the UDP messages about locking and unlocking files.
      */
-    private class MulticastListener extends Thread{
+    private class MulticastListener extends Thread {
 
-        /** Buffer for the UDP message. **/
+        /**
+         * Buffer for the UDP message.
+         **/
         private byte[] buf = new byte[256];
 
         /**
          * Constructor for the MulticastListener class.
          */
-        public MulticastListener() {}
+        public MulticastListener() {
+        }
 
         /**
          * Runs the MulticastListener thread.
@@ -401,53 +455,52 @@ public class SyncAgent extends Thread {
                 SyncAgent.this.multicastSocket.setSoTimeout(1000);
             } catch (SocketException e) {
                 e.printStackTrace();
-                System.out.println("SyncAgent:\tFailed to set timeout in SyncAgent");
+                logger.info("Failed to set timeout in SyncAgent");
                 return;
             }
-            while (SyncAgent.this.running){
-                try{
-                    DatagramPacket packet = new DatagramPacket(buf,buf.length);
+            while (SyncAgent.this.running) {
+                try {
+                    DatagramPacket packet = new DatagramPacket(buf, buf.length);
                     SyncAgent.this.multicastSocket.receive(packet);
-                    String received  = new String(packet.getData(),0,packet.getLength());
+                    String received = new String(packet.getData(), 0, packet.getLength());
 
                     //parse received data (should be JSON format)
                     JSONParser parser = new JSONParser();
                     JSONObject data = (JSONObject) parser.parse(received);
 
-                    String fileName = (String)data.get("fileName");
-                    String nodeName = (String)data.get("name");
-                    String action = (String)data.get("action");
+                    String fileName = (String) data.get("fileName");
+                    String nodeName = (String) data.get("name");
+                    String action = (String) data.get("action");
 
                     if (fileName == null) {
-                        System.out.println("SyncAgent:\tReceived packet with no fileName");
+                        logger.warn("Received packet with no fileName");
                         continue;
                     }
                     // do specified action
                     SyncAgent.this.lock.writeLock().lock();
-                    if (action.equals("lock")){
-                        fileLocks.put(fileName,true);
-                        lockOwner.put(fileName,nodeName);
-                        System.out.println("SyncAgent:\tLocked file " + fileName + " by " + nodeName);
-                    }else if(action.equals("unlock")){
-                        fileLocks.put(fileName,false);  // make sure the entry exists!
-                        lockOwner.put(fileName,"");     // make sure the entry exists!
+                    if (action.equals("lock")) {
+                        fileLocks.put(fileName, true);
+                        lockOwner.put(fileName, nodeName);
+                        logger.info("Locked file " + fileName + " by " + nodeName);
+                    } else if (action.equals("unlock")) {
+                        fileLocks.put(fileName, false);  // make sure the entry exists!
+                        lockOwner.put(fileName, "");     // make sure the entry exists!
                         fileLocks.remove(fileName);
                         lockOwner.remove(fileName);
-                        System.out.println("SyncAgent:\tUnlocked file " + fileName);
-                    }else{
-                        System.out.println("SyncAgent:\tReceived bad lock request");
+                        logger.info("Unlocked file " + fileName);
+                    } else {
+                        logger.warn("Received bad lock request");
                     }
                     SyncAgent.this.lock.writeLock().unlock();
-                }
-                catch(java.net.SocketTimeoutException ignore){}
-                catch(Exception e){
+                } catch (java.net.SocketTimeoutException ignore) {
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
 
             }
             try {
                 SyncAgent.this.multicastSocket.leaveGroup(SyncAgent.this.group);
-            }catch (Exception e){
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }

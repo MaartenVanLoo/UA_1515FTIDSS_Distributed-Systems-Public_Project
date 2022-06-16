@@ -5,15 +5,14 @@ import Utils.Hashing;
 import kong.unirest.Unirest;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
-import java.util.Base64;
 import java.util.Objects;
 import java.util.TreeMap;
 
 import Node.FileManager;
 import Node.FileTransfer;
+import org.apache.log4j.*;
 
 /**
  * A class that handles the failure of a node.
@@ -23,6 +22,11 @@ import Node.FileTransfer;
 public class FailureAgent implements Runnable, Serializable {
 
     private static final long serialVersionUID = 1L;
+
+    /**
+     * Logger for displaying info in the console about what the application is doing.
+     */
+    private final Logger logger = Logger.getLogger(FailureAgent.class);
 
     /**
      * The node this FailureAgent is running on.
@@ -49,7 +53,10 @@ public class FailureAgent implements Runnable, Serializable {
      */
     public FailureAgent(long failedNodeId, TreeMap<Integer, String> allNodes) {
         this.failedNodeId = (int) failedNodeId;
-        this.allNodes = new TreeMap<Integer, String>(allNodes);
+        this.allNodes = new TreeMap<>(allNodes);
+        ConsoleAppender consoleAppender = new ConsoleAppender(new PatternLayout("%d{HH:mm:ss} %p %c{1}: %m%n"));
+        consoleAppender.setThreshold(Level.ALL);
+        logger.addAppender(consoleAppender);
     }
 
     /**
@@ -64,7 +71,7 @@ public class FailureAgent implements Runnable, Serializable {
     /**
      * Sets the node where the FailureAgent started.
      *
-     * @param node
+     * @param node the node where the FailureAgent started.
      */
     public void setFirstNode(int node) {
         this.firstNode = node;
@@ -81,9 +88,15 @@ public class FailureAgent implements Runnable, Serializable {
     public void run() {
         //setup
         File[] localFiles = getLocalFiles();
-        if (localFiles == null) return;
+        if (localFiles == null) {
+            logger.info("No local files to update.");
+            return;
+        }
         File[] replicatedFiles = getReplicatedFiles();
-        if (replicatedFiles == null) return;
+        if (replicatedFiles == null) {
+            logger.info("No replicated files to update.");
+            return;
+        }
         TreeMap<Integer, String> dummyMap = getDummyMap();
 
         //update localFiles:
@@ -95,14 +108,14 @@ public class FailureAgent implements Runnable, Serializable {
             if (targetNode == this.failedNodeId) {
                 //failed node was owner of the replica! replica is lost!
                 recreateReplica(file);
-            }else if (targetNode == this.node.getId()){
-                int oldPrevNode = (int)(dummyMap.lowerKey(this.node.getId()) != null ? dummyMap.lowerKey(this.node.getId()) : dummyMap.lastKey());
+            } else if (targetNode == this.node.getId()) {
+                int oldPrevNode = (int) (dummyMap.lowerKey(this.node.getId()) != null ? dummyMap.lowerKey(this.node.getId()) : dummyMap.lastKey());
                 if (failedNodeId == oldPrevNode) {
                     //Edge case where you are the "owner and targetNode" and the failed node was your previous node!
                     recreateReplica(file);
                 }
-            }else{
-                System.out.println("FailureAgent:\tFile " + file.getName() + " doesn't has to be replicated");
+            } else {
+                logger.info("File " + file.getName() + " doesn't have to be replicated");
             }
         }
 
@@ -112,13 +125,13 @@ public class FailureAgent implements Runnable, Serializable {
             long origin = FileManager.getOrigin(file.getName());
             if (origin == -1) {
                 //failed to find origin in logfile => remove file
-                System.out.println("FailureAgent:\tFailed to find origin in logfile, removing replica");
+                logger.info("Failed to find origin in logfile, removing replica");
                 this.node.getSyncAgent().deleteLocalFile(file.getName());
                 file.delete();
                 continue;
             }
-            if (origin == failedNodeId){
-                System.out.println("FailureAgent:\tRemoving file from failed node " + file.getName());
+            if (origin == failedNodeId) {
+                logger.info("Removing file from failed node " + file.getName());
                 File logFile = new File(FileManager.logFolder + "/" + file.getName() + ".log");
                 this.node.getSyncAgent().deleteLocalFile(file.getName());
                 file.delete();
@@ -129,21 +142,21 @@ public class FailureAgent implements Runnable, Serializable {
         //done updating, now send the agent to the next node
         if (this.node.getNextNodeId() == this.firstNode) {
             //done sending the agent around
-            System.out.println("FailureAgent:\tdone.");
+            logger.info("FailureAgent finished updating files.");
             return;
         }
         try {
             String nextIP = this.node.getNextNodeIP();
             this.node = null; //Note: this is needed because a "node" object is not serializable
             int status = Unirest.post("http://" + nextIP + ":8081/agent").body(this.serialize()).asString().getStatus();
-            if (status == 200){
-                System.out.println("FailureAgent:\tSuccessfully sent agent to next node.");
+            if (status == 200) {
+                logger.info("Successfully sent agent to next node.");
             } else {
-                System.out.println("FailureAgent:\tFailed to send agent to next node.");
+                logger.warn("Failed to send agent to next node.");
             }
         } catch (Exception e) {
             e.printStackTrace();
-            System.out.println("FailureAgent:\tError in serialization, failed to forward failure agent");
+            logger.error("Error in serialization, failed to forward failure agent");
         }
     }
 
@@ -200,27 +213,27 @@ public class FailureAgent implements Runnable, Serializable {
             }
 
             //create new logfile
-            System.out.println("FailureAgent:\tCreating new logfile for " + localFile.getName());
-            this.node.getFileManager().createLogFile(FileManager.logFolder + "/"+ localFile.getName() + ".log");
-            System.out.println("FailureAgent:\tUpdating logfile for " + localFile.getName());
-            this.node.getFileManager().updateLogFile(localFile.getName(),replicateId,replicateIPAddr);
+            logger.info("Creating new logfile for " + localFile.getName());
+            this.node.getFileManager().createLogFile(FileManager.logFolder + "/" + localFile.getName() + ".log");
+            logger.info("Updating logfile for " + localFile.getName());
+            this.node.getFileManager().updateLogFile(localFile.getName(), replicateId, replicateIPAddr);
 
 
             //send file and logfile
             if (this.node.getNextNodeId() == this.node.getId()) {
-                //only node in the network => copy file to replica folder
+                //this is the only node in the network => copy file to replica folder
                 File replicaFile = new File(FileManager.replicaFolder + "/" + localFile.getName());
                 Files.copy(localFile.toPath(), replicaFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-            }else {
+            } else {
                 FileTransfer.sendFile(localFile.getName(), FileManager.localFolder, FileManager.replicaFolder, replicateIPAddr);
                 FileTransfer.sendFile(localFile.getName() + ".log", FileManager.logFolder, FileManager.logFolder, replicateIPAddr);
                 //remove log file from this node
                 File logFile = new File(FileManager.logFolder + "/" + localFile.getName() + ".log");
                 logFile.delete();
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
-            System.out.println("FailureAgent:\tFailed to recreate replica");
+            logger.error("Failed to recreate replica");
         }
     }
 
