@@ -391,7 +391,7 @@ public class NameServerController {
                 this.nameServerController.socket.setSoTimeout(888);
             } catch (SocketException e) {
                 this.nameServerController.socket = null;
-                System.out.println("Automatic node discovery disabled");
+                logger.warn("Automatic node discovery disabled");
                 e.printStackTrace();
             }
         }
@@ -509,7 +509,7 @@ public class NameServerController {
      * Used for testing purposes only.
      */
     public void run() {
-        System.out.println("Starting NameServer...");
+        logger.info("Starting NameServer...");
         try {
             NameServerController nameServerController = new NameServerController();
             nameServerController.putNode(5, "192.168.0.5");
@@ -518,7 +518,7 @@ public class NameServerController {
             nameServerController.putNode(8, "192.168.0.8");
         } catch (Exception e) {
             e.printStackTrace();
-            System.out.println("NamingServer failed to start.");
+            logger.error("NamingServer failed to start.");
         }
     }
 }

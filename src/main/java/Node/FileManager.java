@@ -1,31 +1,55 @@
 package Node;
 
-import NameServer.NameServerStatusCodes;
-import Utils.Hashing;
 import kong.unirest.Unirest;
-import kong.unirest.UnirestException;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
 import java.io.*;
-import java.net.Socket;
 import java.util.*;
 import java.nio.file.*;
 import java.util.stream.Collectors;
 
+/**
+ * FileManager class is used to manage the files on the node.
+ */
 public class FileManager extends Thread {
+
+    /**
+     * The node that the file manager is associated with.
+     */
     private Node node;
+
+    /**
+     * The folder where the local files of the node are stored.
+     */
     public final static String localFolder = "local";
+
+    /**
+     * The folder where the replicated files of other nodes are stored.
+     */
     public final static String replicaFolder = "replica";
+
+    /**
+     * The folder where the log files of the replicated files are stored.
+     */
     public final static String logFolder = "log";
 
+    /**
+     * A WatchService object used to monitor the local folder for changes.
+     */
     WatchService watchService = FileSystems.getDefault().newWatchService();
+
+    /**
+     * The path to the folder the WatchService is monitoring.
+     */
     Path path = Paths.get("./local");
 
-    private static final int SENDING_PORT = 8004;
-
-
+    /**
+     * The constructor of the FileManager class.
+     * @param node The node that the file manager is associated with.
+     * @throws IOException If the filesystem doesn't support a WatchService.
+     */
     public FileManager(Node node) throws IOException {
         super("FileManager");
         this.node = node;
@@ -55,7 +79,7 @@ public class FileManager extends Thread {
             // Get the names of the files by using the .getName() method
             for (File file : files) {
                 //create logfile
-                File logFile = new File(launchDirectory + "/"+ logFolder + "/" + file.getName() + ".log");
+                File logFile = new File(launchDirectory + "/" + logFolder + "/" + file.getName() + ".log");
                 if (!logFile.exists()) {
                     logFile.createNewFile();
                 }
@@ -73,19 +97,19 @@ public class FileManager extends Thread {
                 logfile.put("origin", source);
                 logfile.put("downloads", downloads);
                 //put the JSONObject in the file
-                try (PrintWriter out = new PrintWriter(new FileWriter(logFile, false))){
+                try (PrintWriter out = new PrintWriter(new FileWriter(logFile, false))) {
                     out.write(logfile.toString());
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
 
-                if (nodeCount == 1){
+                if (nodeCount == 1) {
                     //just copy from local to replica folders
-                    System.out.println("FileManager:\tCopying "+ file.getName() +" to replica folder");
-                    File localFile=new File(launchDirectory + "/" + localFolder + "/" + file.getName());
+                    System.out.println("FileManager:\tCopying " + file.getName() + " to replica folder");
+                    File localFile = new File(launchDirectory + "/" + localFolder + "/" + file.getName());
                     File replicaFile = new File(launchDirectory + "/" + replicaFolder + "/" + file.getName());
                     Files.copy(localFile.toPath(), replicaFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-                    this.updateLogFile(file.getName(),this.node.getId(),this.node.getIP());
+                    this.updateLogFile(file.getName(), this.node.getId(), this.node.getIP());
                     continue;
                 }
 
@@ -117,22 +141,22 @@ public class FileManager extends Thread {
                 }
             }
         } catch (Exception e) {
-            System.err.println("FileManager:\t"+ e.getMessage());
+            System.err.println("FileManager:\t" + e.getMessage());
         }
     }
 
-    public synchronized  void update(){
+    public synchronized void update() {
         File[] replicatedFiles = this.getReplicatedFiles();
-        for (File file : replicatedFiles){
+        for (File file : replicatedFiles) {
             try {
                 String fileName = file.getName();
                 String replicateIPAddr = Unirest.get("/ns/files/{filename}").routeParam("filename", file.getName()).asString().getBody();
                 long replicateId = Integer.parseInt(Unirest.get("/ns/files/{filename}/id").routeParam("filename", file.getName()).asString().getBody());
-                if (targetIsOrigin(fileName, replicateIPAddr)){
+                if (targetIsOrigin(fileName, replicateIPAddr)) {
                     replicateId = getPrevNode(replicateId);
                     replicateIPAddr = getNodeIp(replicateId);
                 }
-                if (replicateId != this.node.getId()){
+                if (replicateId != this.node.getId()) {
                     //update log file
                     this.updateLogFile(fileName, replicateId, replicateIPAddr);
                     //send log file
@@ -151,39 +175,38 @@ public class FileManager extends Thread {
         }
     }
 
-    private int getNodeCount(){
+    private int getNodeCount() {
         try {
             String nameserver = Unirest.get("/ns").asString().getBody();
             JSONParser parser = new JSONParser();
             JSONObject json = (JSONObject) parser.parse(nameserver);
-            return (int)((long) json.get("Nodes"));
-        }
-        catch (Exception e){
+            return (int) ((long) json.get("Nodes"));
+        } catch (Exception e) {
             return -1;
         }
     }
-    private int getPrevNode(long nodeId){
+
+    private int getPrevNode(long nodeId) {
         try {
             //Request nodeId configuration from nameserver
             String response = Unirest.get("/ns/nodes/{nodeId}").routeParam("nodeId", String.valueOf(nodeId)).asString().getBody();
             JSONParser parser = new JSONParser();
             JSONObject json = (JSONObject) parser.parse(response);
             JSONObject prevNode = (JSONObject) json.get("prev");
-            return (int)((long) prevNode.get("id"));
-        }
-        catch (Exception e){
+            return (int) ((long) prevNode.get("id"));
+        } catch (Exception e) {
             return -1;
         }
     }
-    private String getNodeIp(long nodeId){
-        try{
+
+    private String getNodeIp(long nodeId) {
+        try {
             String response = Unirest.get("/ns/nodes/{nodeId}").routeParam("nodeId", String.valueOf(nodeId)).asString().getBody();
             JSONParser parser = new JSONParser();
             JSONObject json = (JSONObject) parser.parse(response);
             JSONObject prevNode = (JSONObject) json.get("node");
             return (String) prevNode.get("ip");
-        }
-        catch (Exception e){
+        } catch (Exception e) {
             return "";
         }
     }
@@ -218,9 +241,9 @@ public class FileManager extends Thread {
                 switch (event.kind().toString()) {
                     case "ENTRY_CREATE":
                         //Create log file
-                        this.createLogFile(FileManager.logFolder + "/"+ file.getName() + ".log");
-                        this.updateLogFile(file.getName(),replicateId,replicateIPAddr);
-                        FileTransfer.sendFile(file.getName() + ".log", logFolder,logFolder, replicateIPAddr);
+                        this.createLogFile(FileManager.logFolder + "/" + file.getName() + ".log");
+                        this.updateLogFile(file.getName(), replicateId, replicateIPAddr);
+                        FileTransfer.sendFile(file.getName() + ".log", logFolder, logFolder, replicateIPAddr);
                         //update sync agent:
                         this.node.getSyncAgent().addLocalFile(file.getName());
                         //[fallthrough]
@@ -235,12 +258,12 @@ public class FileManager extends Thread {
                         }
                         break;
                     case "ENTRY_DELETE":
-                       try {
+                        try {
                             FileTransfer.deleteFile(file.getName(), replicaFolder, replicateIPAddr);
                             FileTransfer.deleteFile(file.getName() + ".log", logFolder, replicateIPAddr);
                             this.node.getSyncAgent().deleteLocalFile(file.getName());
                             System.out.println("FileManager:\tDeletion handled");
-                        }catch(Exception e){
+                        } catch (Exception e) {
                             System.out.println("FileManager:\tDeletion Error: " + e.getMessage() + " File:" + file.getName());
                         }
                         break;
@@ -258,8 +281,7 @@ public class FileManager extends Thread {
         File[] files = dir.listFiles(); //get all files in the directory
         if (files == null || files.length == 0) {
             System.out.println("FileManager:\tNo files in local folder");
-        }
-        else {
+        } else {
             // Remove replications of local files
             for (File file : files) {
                 //send fileName to NameServer
@@ -308,7 +330,7 @@ public class FileManager extends Thread {
                     JSONObject targetNode = (JSONObject) parser.parse(target);
                     replicateIPAddr = (String) ((JSONObject) targetNode.get("prev")).get("ip");
                     replicateId = (long) ((JSONObject) targetNode.get("prev")).get("id");
-                }catch (Exception e) {
+                } catch (Exception e) {
                     System.out.println("FileManager:\tError in parsing target node information" + target);
                     e.printStackTrace();
                 }
@@ -320,9 +342,9 @@ public class FileManager extends Thread {
             //delete file
             file.delete();
             //update log file
-            updateLogFile(file.getName(),replicateId, replicateIPAddr);
+            updateLogFile(file.getName(), replicateId, replicateIPAddr);
             //send log file
-            FileTransfer.sendFile(file.getName() + ".log", logFolder,logFolder, replicateIPAddr);
+            FileTransfer.sendFile(file.getName() + ".log", logFolder, logFolder, replicateIPAddr);
             //delete logfile
             File logFile = new File(logFolder + "/" + file.getName() + ".log");
             logFile.delete();
@@ -367,8 +389,7 @@ public class FileManager extends Thread {
         try {
             File local = new File("./local");
             return local.listFiles();
-        }
-        catch (Exception e){
+        } catch (Exception e) {
             return new File[]{};
         }
     }
@@ -377,8 +398,7 @@ public class FileManager extends Thread {
         try {
             File local = new File("./replica");
             return local.listFiles();
-        }
-        catch (Exception e){
+        } catch (Exception e) {
             return new File[]{};
         }
     }
@@ -387,7 +407,7 @@ public class FileManager extends Thread {
         String logFileContent = "";
         try {
             //load log file
-            File logFile = new File( logFolder + "/"+ fileName + ".log");
+            File logFile = new File(logFolder + "/" + fileName + ".log");
 
             BufferedReader reader = new BufferedReader(new FileReader(logFile));
             JSONParser parser = new JSONParser();
@@ -408,7 +428,7 @@ public class FileManager extends Thread {
             FileWriter writer = new FileWriter(logFile);
             writer.write(jsonObject.toJSONString());
             writer.close();
-        } catch (Exception e){
+        } catch (Exception e) {
             System.out.println("FileManager:\tError in updating log file\n" + logFileContent);
             e.printStackTrace();
         }
@@ -429,8 +449,7 @@ public class FileManager extends Thread {
                 System.out.println("FileManager:\tTarget is origin");
                 return true;
             }
-        }
-        catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return false;
@@ -438,7 +457,7 @@ public class FileManager extends Thread {
 
     public void createLogFile(String filename) throws IOException {
         //Create log file
-        JSONObject owner  = new JSONObject();
+        JSONObject owner = new JSONObject();
         owner.put("id", this.node.getId());
         owner.put("ip", this.node.getIP());
         JSONObject origin = new JSONObject();
@@ -457,7 +476,7 @@ public class FileManager extends Thread {
     }
 
 
-    public static long getOrigin(String fileName){
+    public static long getOrigin(String fileName) {
         long origin = -1;
         try {
             File logFile = new File(logFolder + "/" + fileName + ".log");
@@ -469,9 +488,8 @@ public class FileManager extends Thread {
             reader.close();
             //check if target is owner
             JSONObject fileOrigin = (JSONObject) jsonObject.get("origin");
-            origin = (long)fileOrigin.get("id");
-        }
-        catch (Exception e){
+            origin = (long) fileOrigin.get("id");
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return origin;
