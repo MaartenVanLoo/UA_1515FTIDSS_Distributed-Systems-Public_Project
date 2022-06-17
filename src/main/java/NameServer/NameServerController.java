@@ -467,7 +467,9 @@ public class NameServerController {
 
 
                 } catch (ParseException | IOException ignored) {
-                    logger.warn("An error occurred while handling the discovery packet: "+ignored.getMessage());
+                    // Since we're working with the default socket timeout of 1 second, this exception is thrown a lot when there are no
+                    // nodes entering the network.
+                    //logger.warn("An error occurred while handling the discovery packet: "+ignored.getMessage());
                 }
 
                 //notify previous node from the newly added node to update his replication table
