@@ -329,7 +329,7 @@ public class NameServerController {
     @ResponseStatus(HttpStatus.OK) // 200
     @GetMapping("/ns/files/{fileName}/id")
     public int getFileId(@PathVariable String fileName) {
-        this.logger.info("Request for file: " + fileName);
+        //this.logger.info("Request for file: " + fileName);
         int hash = Hashing.hash(fileName);
         return this.nameServer.getPrevNode(hash);
     }
