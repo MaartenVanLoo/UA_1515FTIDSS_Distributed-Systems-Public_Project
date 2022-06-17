@@ -223,7 +223,7 @@ public class NameServerController {
      * the hash the node on which the file should be stored is returned.
      */
     public String getFile(@PathVariable String fileName) {
-        this.logger.info("Request for file: " + fileName);
+        //this.logger.info("Request for file: " + fileName);
         int hash = Hashing.hash(fileName);
         return this.nameServer.getPrevNodeIP(hash);
     }
