@@ -27,12 +27,6 @@ import org.json.simple.parser.JSONParser;
 
 
 public class SyncAgent extends Thread {
-
-    /**
-     * Logger for displaying info in the console about what the application is doing.
-     */
-    private final Logger logger = Logger.getLogger(FailureAgent.class);
-
     /**
      * The node that this agent is associated with.
      */
@@ -96,10 +90,6 @@ public class SyncAgent extends Thread {
      * @param node The node that this agent is associated with.
      */
     public SyncAgent(Node node) {
-        ConsoleAppender consoleAppender = new ConsoleAppender(new PatternLayout("%d{HH:mm:ss} %p %c{1}: %m%n"));
-        consoleAppender.setThreshold(Level.ALL);
-        logger.addAppender(consoleAppender);
-
         this.setDaemon(true);
         this.node = node;
         this.files = new ArrayList<>();
@@ -141,9 +131,9 @@ public class SyncAgent extends Thread {
                 } else if (exchange.getRequestMethod().equals("DELETE")) {
                     try {
                         //delete file from files
-                        logger.info("DELETE request");
+                        System.out.println("SyncAgent:\tDELETE request");
                         String fileName = exchange.getRequestURI().toString().replace("/fileList/", "");
-                        logger.info("file to delete: " + fileName);
+                        System.out.println("SyncAgent:\tfile to delete: " + fileName);
                         //need to consume all the data from the input stream before closing it (see  https://docs.oracle.com/javase/8/docs/jre/api/net/httpserver/spec/com/sun/net/httpserver/HttpExchange.html);
                         exchange.getRequestBody().readAllBytes();
                         exchange.getRequestBody().close();
@@ -153,10 +143,10 @@ public class SyncAgent extends Thread {
                         try {
                             if (this.files.contains(fileName)) {
                                 this.files.remove(fileName);
-                                logger.info("Notify neighbours of deletion of file " + fileName);
-                                logger.info("Notifying :" + this.node.getNextNodeIP());
+                                System.out.println("SyncAgent:\tNotify neighbours of deletion of file " + fileName);
+                                System.out.println("SyncAgent:\tNotifying :" + this.node.getNextNodeIP());
                                 Unirest.delete("http://" + this.node.getNextNodeIP() + ":8082/fileList/" + fileName).asString();
-                                logger.info("Notified neighbour");
+                                System.out.println("SyncAgent:\tNotified neighbour");
                             }
                         } catch (Exception ignored) {
                         }
@@ -164,7 +154,7 @@ public class SyncAgent extends Thread {
                     } catch (Exception e) {
                         exchange.sendResponseHeaders(404, -1);
                         exchange.close();
-                        logger.error("Failed to delete file.\n" + e.getMessage());
+                        e.printStackTrace();
                         return;
                     }
                 } else {
@@ -185,7 +175,7 @@ public class SyncAgent extends Thread {
             this.multicastSocket.joinGroup(this.group);
             multicastListener = new MulticastListener();
         } catch (IOException e) {
-            logger.error("MulticastSocket could not be created.\n" + e.getMessage());
+            e.printStackTrace();
         }
         //start thread
         this.start();
@@ -246,7 +236,7 @@ public class SyncAgent extends Thread {
             File dir = new File(FileManager.localFolder);
             File[] files = dir.listFiles();
             if (files == null || files.length == 0) {
-                logger.info("No files in local folder");
+                System.out.println("SyncAgent:\tNo files in local folder");
                 return;
             }
             for (File file : files) {
@@ -277,7 +267,7 @@ public class SyncAgent extends Thread {
         if (!this.files.contains(filename)) {
             this.files.add(filename);
         } else {
-            logger.info("List of local files already contains file: " + filename);
+            System.out.println("SyncAgent:\tFile duplicate!!");
         }
         this.lock.writeLock().unlock();
     }
@@ -291,7 +281,7 @@ public class SyncAgent extends Thread {
     public void deleteLocalFile(String filename) {
         this.lock.writeLock().lock();
         if (!this.files.contains(filename)) {
-            logger.info("File not found! Can't delete file: " + filename);
+            System.out.println("SyncAgent:\tFile not found!!");
             return;
         }
         // remove lock if exists (check done inside unlock function);
@@ -299,11 +289,11 @@ public class SyncAgent extends Thread {
         this.unlockFile(filename);
 
         this.files.remove(filename);
-        logger.info("Notify neighbours " + filename + " is deleted");
-        logger.info("Notifying :" + this.node.getNextNodeIP());
+        System.out.println("SyncAgent:\tNotify neighbours " + filename +  " is deleted");
+        System.out.println("SyncAgent:\tNotifying :" + this.node.getNextNodeIP());
         int status = Unirest.delete("http://" + this.node.getNextNodeIP() + ":8082/fileList/" + filename).asString().getStatus();
-        logger.info("Delete status: " + status);
-        logger.info("Notification done");
+        System.out.println("SyncAgent:\tDelete status: " + status);
+        System.out.println("SyncAgent:\tNotification done");
         this.lock.writeLock().unlock();
 
 
@@ -455,7 +445,7 @@ public class SyncAgent extends Thread {
                 SyncAgent.this.multicastSocket.setSoTimeout(1000);
             } catch (SocketException e) {
                 e.printStackTrace();
-                logger.info("Failed to set timeout in SyncAgent");
+                System.out.println("SyncAgent:\tFailed to set timeout in SyncAgent");
                 return;
             }
             while (SyncAgent.this.running) {
@@ -473,7 +463,7 @@ public class SyncAgent extends Thread {
                     String action = (String) data.get("action");
 
                     if (fileName == null) {
-                        logger.warn("Received packet with no fileName");
+                        System.out.println("SyncAgent:\tReceived packet with no fileName");
                         continue;
                     }
                     // do specified action
@@ -481,15 +471,15 @@ public class SyncAgent extends Thread {
                     if (action.equals("lock")) {
                         fileLocks.put(fileName, true);
                         lockOwner.put(fileName, nodeName);
-                        logger.info("Locked file " + fileName + " by " + nodeName);
+                        System.out.println("SyncAgent:\tLocked file " + fileName + " by " + nodeName);
                     } else if (action.equals("unlock")) {
                         fileLocks.put(fileName, false);  // make sure the entry exists!
                         lockOwner.put(fileName, "");     // make sure the entry exists!
                         fileLocks.remove(fileName);
                         lockOwner.remove(fileName);
-                        logger.info("Unlocked file " + fileName);
+                        System.out.println("SyncAgent:\tUnlocked file " + fileName);
                     } else {
-                        logger.warn("Received bad lock request");
+                        System.out.println("SyncAgent:\tReceived bad lock request");
                     }
                     SyncAgent.this.lock.writeLock().unlock();
                 } catch (java.net.SocketTimeoutException ignore) {
