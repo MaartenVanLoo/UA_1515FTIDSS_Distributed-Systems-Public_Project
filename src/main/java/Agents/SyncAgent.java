@@ -21,7 +21,9 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
-
+/**
+ * This class is an agent handling synchronisation of information between the different nodes.
+ */
 public class SyncAgent extends Thread {
     /**
      * The node that this agent is associated with.
