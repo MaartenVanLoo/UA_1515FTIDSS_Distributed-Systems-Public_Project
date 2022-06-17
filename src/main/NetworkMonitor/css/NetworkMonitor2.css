@@ -12,12 +12,29 @@ body {
     color: #71748d;
     background-color: #efeff6;
     -webkit-font-smoothing: antialiased;
-    min-width: 100px;
+    min-width: 600px;
     margin:0;
 
 }
 html{
     -webkit-text-size-adjust: 100%;
+}
+
+ul {
+    display: block;
+    list-style-type: disc;
+    margin-block-start: .1em;
+    margin-block-end: .1em;
+    margin-inline-start: 0px;
+    margin-inline-end: 0px;
+    padding-inline-start: 40px;
+}
+p {
+    display: block;
+    margin-block-start: .2em;
+    margin-block-end: .2em;
+    margin-inline-start: 0px;
+    margin-inline-end: 0px;
 }
 
 /*--------------------------
@@ -41,7 +58,7 @@ html{
     padding: 0px;
     border-bottom: 1px solid #e6e6f2;
     box-shadow: 0px 0px 28px 0px rgba(82, 63, 105, 0.13);
-    min-height: 80px;
+    min-height: 50px;
 
     display: flex;
     flex-wrap: nowrap;
@@ -111,15 +128,15 @@ html{
 
 .nav-left-sidebar {
     position: fixed;
-    width: 264px;
+    width: 200px;
     height: 100%;
-    top: 80px;
+    top: 70px;
     overflow: auto;
     background-color: #fff;
     -webkit-box-shadow: 0px 0px 28px 0px rgb(82 63 105 / 13%);
     box-shadow: 0px 0px 28px 0px rgb(82 63 105 / 13%);
     -webkit-transition: all 0.3s ease;
-    font-size: 20px;
+    font-size: 18px;
 }
 .nav-left-sidebar .navbar-nav{
     width: 100%
@@ -279,7 +296,7 @@ input[type="text"]{
   -webkit-user-select: none;
   touch-action: manipulation;
   width: 100%;
-  height: 45px;
+  height: 40px;
   word-break: break-word;
   border: 0;
 }
@@ -310,7 +327,7 @@ input[type="text"]{
     -webkit-user-select: none;
     touch-action: manipulation;
     width: 100%;
-    height: 45px;
+    height: 40px;
     word-break: break-word;
     border: 0;
 }
@@ -325,7 +342,7 @@ input[type="text"]{
 .dashboard-wrapper {
     position: relative;
     left: 0;
-    margin-left: 266px;
+    margin-left: 202px;
     margin-right: 15px;
     min-height: 200px !important;
 }
@@ -333,7 +350,7 @@ input[type="text"]{
     width:100%;
     margin-right: auto;
     margin-left: auto;
-    margin-top:8px;
+    margin-top:-5px;
     padding-left:3px;
 }
 
@@ -350,14 +367,14 @@ input[type="text"]{
     background-color: #fff;
     background-clip: border-box;
     border-radius: 0.25rem;
-    font-size: 20px;
+    font-size: 16px;
 }
 .card-header {
     padding: 0.75rem 1.25rem;
     margin-bottom: 0;
     background-color: #fff;
     border-bottom: 1px solid #e6e6f2;
-    font-size: 24px;
+    font-size: 22px;
     font-weight: 600;
 }
 .card-header:first-child {

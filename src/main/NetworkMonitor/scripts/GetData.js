@@ -10,23 +10,23 @@ let nodeLastPing = {};      //last answer from the nodes
 let newDataAvailable = true; //set true to instantly trigger update of screen
 
 let sshTunnelMap = {
-    "192.168.48.2":
+    "172.19.0.2":
     {"host-name":"host0",
         "ip":"127.0.0.1",
         "port":8081	},
-    "192.168.48.3":
+    "172.19.0.6":
     {"host-name":"host1",
         "ip":"127.0.0.1",
         "port":8082	},
-    "192.168.48.5":
+    "172.19.0.3":
     {"host-name":"host2",
         "ip":"127.0.0.1",
         "port":8083	},
-    "192.168.48.4":
+    "172.19.0.4":
     {"host-name":"host3",
         "ip":"127.0.0.1",
         "port":8084	},
-    "192.168.48.6":
+    "172.19.0.5":
     {"host-name":"host4",
         "ip":"127.0.0.1",
         "port":8085	}

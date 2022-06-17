@@ -23,6 +23,7 @@ function updateFileTable(){
     //nameServerData["Mapping"].map((e) => {return e["ip"]});
     let fileList = {};
     for (const node in nodeData){
+        if (nodeData[node] ===null) continue;
         //loop over local files
         for (const file in nodeData[node].local){
             let key = nodeData[node].local[file];
@@ -66,7 +67,7 @@ function updateFileTable(){
         let ok = fileList[key].local !== undefined && fileList[key].replica !== undefined && fileList[key].local !== fileList[key].replica;
         status.innerHTML = ok?"<img src='images/OK.png' alt='OK' height='15' width='15'>" :
                             "<img src='images/ERROR.png' alt='ERROR' height='15' width='15'>";
-        locked.innerHTML = islocked(key)? "<img src='images/lock.png' alt='LOCKED' height='15' width='15' title="+lockOwner(key)+">":"";
+        locked.innerHTML = islocked(key)? "<img src='images/lock.png' alt='LOCKED' height='22' width='22' title="+lockOwner(key)+">":"";
 
         local.style.textAlign = "center";
         replica.style.textAlign = "center";

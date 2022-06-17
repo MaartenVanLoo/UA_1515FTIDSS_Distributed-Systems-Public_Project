@@ -253,7 +253,7 @@ public class NameServerController {
     @Scheduled(fixedRate = 10000)
     public void printMapping() {
         this.nameServer.getIpMapLock().readLock().lock();
-        this.logger.info("Current mapping: " + this.nameServer.getIpMapping());
+        this.logger.info("Current mapping: ");
         for (Map.Entry<Integer, String> entry : this.nameServer.getIpMapping().entrySet()) {
             System.out.println("Key: " + entry.getKey() + " Value: " + entry.getValue());
         }
