@@ -17,10 +17,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import com.sun.net.httpserver.HttpServer;
 
 import kong.unirest.Unirest;
-import org.apache.log4j.ConsoleAppender;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-import org.apache.log4j.PatternLayout;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
