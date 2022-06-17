@@ -17,22 +17,12 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import com.sun.net.httpserver.HttpServer;
 
 import kong.unirest.Unirest;
-import org.apache.log4j.ConsoleAppender;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-import org.apache.log4j.PatternLayout;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
 
 public class SyncAgent extends Thread {
-
-    /**
-     * Logger for displaying info in the console about what the application is doing.
-     */
-    private final Logger logger = Logger.getLogger(FailureAgent.class);
-
     /**
      * The node that this agent is associated with.
      */
@@ -96,10 +86,6 @@ public class SyncAgent extends Thread {
      * @param node The node that this agent is associated with.
      */
     public SyncAgent(Node node) {
-        ConsoleAppender consoleAppender = new ConsoleAppender(new PatternLayout("%d{HH:mm:ss} %p %c{1}: %m%n"));
-        consoleAppender.setThreshold(Level.ALL);
-        logger.addAppender(consoleAppender);
-
         this.setDaemon(true);
         this.node = node;
         this.files = new ArrayList<>();

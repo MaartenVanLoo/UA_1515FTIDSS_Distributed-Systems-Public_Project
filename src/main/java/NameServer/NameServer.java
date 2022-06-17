@@ -2,7 +2,8 @@ package NameServer;
 
 import Agents.FailureAgent;
 import kong.unirest.Unirest;
-import org.apache.log4j.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -26,7 +27,7 @@ public class NameServer {
     /**
      * Logger for this class.
      */
-    private final Logger logger = Logger.getLogger(NameServer.class);
+    private final Logger logger = LoggerFactory.getLogger(NameServer.class);
     /**
      * Default file where the info of the nodes is stored
      */
@@ -44,9 +45,6 @@ public class NameServer {
      * Constructor of the NameServer. Loads the info of the nodes stored in the mappingFile.
      */
     public NameServer() {
-        ConsoleAppender consoleAppender = new ConsoleAppender(new PatternLayout("%d{HH:mm:ss} %p %c{1}: %m%n"));
-        consoleAppender.setThreshold(Level.ALL);
-        logger.addAppender(consoleAppender);
         loadMapping();
     }
 

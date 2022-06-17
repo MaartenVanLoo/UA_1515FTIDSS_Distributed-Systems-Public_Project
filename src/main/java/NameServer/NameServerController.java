@@ -3,10 +3,8 @@ package NameServer;
 import Utils.Hashing;
 import kong.unirest.Unirest;
 import kong.unirest.UnirestException;
-import org.apache.log4j.ConsoleAppender;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-import org.apache.log4j.PatternLayout;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -58,7 +56,7 @@ public class NameServerController {
     /**
      * Logger for this class
      */
-    Logger logger = Logger.getLogger(NameServerController.class);
+    Logger logger = LoggerFactory.getLogger(NameServerController.class);
 
     /**
      * Port to send UDP packets from.
@@ -90,10 +88,6 @@ public class NameServerController {
      * Initializes the NameServer object and the DiscoveryHandler object, and starts the DiscoveryHandler thread.
      */
     public NameServerController() {
-        ConsoleAppender consoleAppender = new ConsoleAppender(new PatternLayout("%d{HH:mm:ss} %p %c{1}: %m%n"));
-        consoleAppender.setThreshold(Level.ALL);
-        logger.addAppender(consoleAppender);
-
         this.nameServer = new NameServer();
         try {
             this.socket = new DatagramSocket(DATAGRAM_PORT);
@@ -362,7 +356,7 @@ public class NameServerController {
         /**
          * Logger for the DiscoveryHandler class.
          */
-        Logger logger = Logger.getLogger(DiscoveryHandler.class);
+        Logger logger = LoggerFactory.getLogger(DiscoveryHandler.class);
 
         /**
          * Pointer to the NameServerController.
@@ -380,10 +374,6 @@ public class NameServerController {
          * @param nameServerController pointer to the NameServerController
          */
         public DiscoveryHandler(NameServerController nameServerController) {
-            ConsoleAppender consoleAppender = new ConsoleAppender(new PatternLayout("%d{HH:mm:ss} %p %c{1}: %m%n"));
-            consoleAppender.setThreshold(Level.ALL);
-            logger.addAppender(consoleAppender);
-
             this.setDaemon(true); //make sure the thread dies when the main thread dies
             this.nameServerController = nameServerController;
             try {
