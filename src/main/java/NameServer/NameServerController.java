@@ -467,7 +467,7 @@ public class NameServerController {
 
 
                 } catch (ParseException | IOException ignored) {
-                    logger.warn("An error occurred while handling the discovery packet");
+                    logger.warn("An error occurred while handling the discovery packet: "+ignored.getMessage());
                 }
 
                 //notify previous node from the newly added node to update his replication table
